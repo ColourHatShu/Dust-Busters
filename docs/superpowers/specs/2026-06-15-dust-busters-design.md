@@ -8,12 +8,15 @@
 Dust Busters is a web application that connects customers with vetted home
 cleaners. A customer requests a cleaning for a future date/time; the request is
 broadcast in real time to all cleaners serving that area; the first cleaner to
-accept wins the job. The customer pays a 60% deposit to confirm (online, UPI via
-Razorpay) and the remaining 40% after the job is completed. We already have
-cleaners recruited; the immediate goal is to ship the website and attract
+accept wins the job. The customer pays a 60% deposit to confirm (online, cards /
+Interac via Stripe) and the remaining 40% after the job is completed. We already
+have cleaners recruited; the immediate goal is to ship the website and attract
 customers.
 
-Budget is ₹0 to start, so every component must have a usable free tier, and the
+**Launch market:** Courtenay, British Columbia, Canada. Currency: CAD.
+Hourly rate: $20/hr.
+
+Budget is $0 to start, so every component must have a usable free tier, and the
 design must grow without a rewrite.
 
 ## 2. Goals & Non-Goals
@@ -35,14 +38,16 @@ design must grow without a rewrite.
 | Decision | Choice |
 |---|---|
 | Platform | Web application (website) only |
-| Stack | Next.js (Vercel) + Supabase + Razorpay |
-| Pricing | Per-hour rate (platform-fixed); price = hours × rate |
+| Stack | Next.js (Vercel) + Supabase + Stripe |
+| Market | Courtenay, BC, Canada; CAD currency |
+| Pricing | Per-hour rate (platform-fixed) = $20/hr CAD; price = hours × rate |
 | Timing | Scheduled for a future date/time |
 | Assignment | Real-time broadcast; first cleaner to accept wins |
 | Re-broadcast | If accepted cleaner backs out, re-ring remaining cleaners |
-| Area matching | By city/zone (or pincode) the cleaner serves — no GPS |
+| Area matching | By city/zone (or postal code) the cleaner serves — no GPS |
 | Payment | Online; 60% deposit + 40% on completion |
 | Deposit timing | 60% charged after a cleaner accepts; 40% after completion |
+| Cleaner onboarding | Self-register, then admin verifies ID before they get jobs |
 | Roles | Customer, Cleaner, Admin |
 | Trust | Verified-cleaner profile, price breakdown, "pay rest after satisfaction", secure-payment + cancellation/support footer shown before any charge |
 
@@ -53,9 +58,9 @@ design must grow without a rewrite.
 - **Backend:** Supabase — Postgres database, Auth, Realtime (powers the
   broadcast), Row-Level Security (enforces address masking), Storage (cleaner
   photos / ID docs).
-- **Payments:** Razorpay (UPI/cards). Two separate captures per booking: deposit
-  (60%) and balance (40%). Requires business KYC before live keys work; build
-  against test keys first.
+- **Payments:** Stripe (cards / Interac, CAD). Two separate captures per booking:
+  deposit (60%) and balance (40%) via Stripe PaymentIntents. Requires business
+  details/verification before live keys work; build against test keys first.
 - **Realtime broadcast:** cleaners subscribe to a Supabase Realtime channel for
   their served area(s); new offers appear instantly. Acceptance is an atomic DB
   operation so only the first cleaner wins.
@@ -65,14 +70,14 @@ design must grow without a rewrite.
 ```
 profiles          id, role (customer|cleaner|admin), name, phone, created_at
 cleaner_details   profile_id, areas_served[], id_verified, verified_at, active
-settings          hourly_rate, deposit_percent (=60), currency   (single row)
+settings          hourly_rate (=20), deposit_percent (=60), currency (=CAD)  (single row)
 bookings          id, customer_id, cleaner_id (null until accepted),
                   scheduled_at, hours, area, full_address (gated),
                   total_amount, deposit_amount, balance_amount, status, created_at
 booking_offers    id, booking_id, cleaner_id, state (rung|accepted|declined|expired),
                   responded_at
-payments          id, booking_id, type (deposit|balance), razorpay_id, amount,
-                  status, paid_at
+payments          id, booking_id, type (deposit|balance), stripe_payment_intent_id,
+                  amount, status, paid_at
 reviews           id, booking_id, rating, comment, created_at
 ```
 
@@ -113,12 +118,14 @@ deactivate, remove); Settings (hourly rate, deposit %).
 Before any charge, the payment screen must show: verified cleaner profile (photo,
 name, ⭐ rating, jobs completed, "✓ ID-verified" badge); clear price breakdown
 (hours × rate, 60% now, 40% later); reassurance that the 40% is paid only after
-satisfaction; secure-payment indicator (Razorpay), cancellation policy, and
-support contact. Cleaners must be ID-verified by admin before they can receive
-jobs. Exact address never shown until deposit is paid AND cleaner is verified.
+satisfaction; secure-payment indicator (Stripe), cancellation policy, and
+support contact. Cleaners self-register but must be ID-verified by admin before
+they can receive jobs. Exact address never shown until deposit is paid AND
+cleaner is verified.
 
 ## 8. Open Items / Risks
-- Razorpay business KYC can take days — build on test keys, swap to live later.
+- Stripe business verification can take a few days — build on test keys, swap to
+  live later. Confirm Interac/eligible payment methods for a sole proprietor in BC.
 - Define the "backs out shortly after" window (e.g., cleaner may cancel within
   N minutes / up to X hours before the slot) — to be finalized in the plan.
 - Decline/expiry timeout for offers (how long before an un-answered offer is
