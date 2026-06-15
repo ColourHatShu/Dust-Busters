@@ -1,0 +1,9 @@
+# Brainstorming visual-companion scratch files
+.superpowers/
+
+# Node / Next.js (added now so future build artifacts are ignored)
+node_modules/
+.next/
+out/
+.env*.local
+.vercel
