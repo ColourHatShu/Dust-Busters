@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import StatusLive from "./StatusLive";
+import { payDeposit, payBalance } from "./payment-actions";
 
 const STATUS_LABEL: Record<string, string> = {
   broadcasting: "Finding a cleaner near you...",
@@ -48,6 +49,9 @@ export default async function BookingStatusPage({
     .select("full_address")
     .eq("booking_id", id)
     .maybeSingle();
+
+  const showDeposit = booking.status === "accepted";
+  const showBalance = booking.status === "completed";
 
   return (
     <main className="mx-auto max-w-lg p-6">
@@ -112,9 +116,43 @@ export default async function BookingStatusPage({
         </div>
       </div>
 
-      {booking.status === "accepted" && (
-        <p className="mt-4 text-center text-sm text-gray-500">
-          Secure deposit payment is being set up (next milestone).
+      {showDeposit && (
+        <div className="mt-4">
+          <p className="mb-2 text-sm text-green-700">
+            You pay the rest only after the cleaning is done to your satisfaction.
+          </p>
+          <form
+            action={async () => {
+              "use server";
+              await payDeposit(booking.id);
+            }}
+          >
+            <button className="w-full rounded bg-blue-600 p-3 font-medium text-white">
+              Pay ${Number(booking.deposit_amount).toFixed(2)} deposit securely
+            </button>
+          </form>
+        </div>
+      )}
+
+      {showBalance && (
+        <div className="mt-4">
+          <form
+            action={async () => {
+              "use server";
+              await payBalance(booking.id);
+            }}
+          >
+            <button className="w-full rounded bg-blue-600 p-3 font-medium text-white">
+              Pay ${Number(booking.balance_amount).toFixed(2)} balance securely
+            </button>
+          </form>
+        </div>
+      )}
+
+      {(showDeposit || showBalance) && (
+        <p className="mt-3 text-center text-xs text-gray-500">
+          Secured by Stripe. Free cancellation up to 2 hours before. Need help?
+          support@dustbusters.ca
         </p>
       )}
     </main>
