@@ -1,0 +1,127 @@
+import { redirect, notFound } from "next/navigation";
+import { getSessionProfile } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { openDispute } from "./actions";
+import Link from "next/link";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
+
+const DISPUTE_CATEGORIES = [
+  { value: "no_show", label: "Cleaner did not show up" },
+  { value: "poor_quality", label: "Poor cleaning quality" },
+  { value: "property_damage", label: "Property damage" },
+  { value: "payment_issue", label: "Payment issue" },
+  { value: "other", label: "Other" },
+];
+
+const DISPUTE_ALLOWED_STATUSES = ["deposit_paid", "in_progress", "completed"];
+
+export default async function DisputePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+
+  const supabase = await createClient();
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, status, customer_id")
+    .eq("id", id)
+    .single();
+
+  if (!booking || booking.customer_id !== user.id) notFound();
+  if (!DISPUTE_ALLOWED_STATUSES.includes(booking.status)) {
+    redirect(`/bookings/${id}`);
+  }
+
+  async function handleSubmit(formData: FormData) {
+    "use server";
+    const category = formData.get("category") as string;
+    const description = formData.get("description") as string;
+    await openDispute(id, category, description);
+  }
+
+  return (
+    <main className="mx-auto max-w-lg space-y-6 p-6">
+      <div>
+        <Link
+          href={`/bookings/${id}`}
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-accent mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to booking
+        </Link>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+            <AlertTriangle className="h-5 w-5 text-red-600" strokeWidth={1.5} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Report an Issue</h1>
+            <p className="text-sm text-slate-500">Our team will review your report within 24 hours.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="card space-y-6">
+        <form action={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label htmlFor="category" className="block text-sm font-medium text-slate-700">
+              Issue category
+            </label>
+            <select
+              id="category"
+              name="category"
+              required
+              className="input-modern"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select a category...
+              </option>
+              {DISPUTE_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="description" className="block text-sm font-medium text-slate-700">
+              Describe the issue
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              required
+              minLength={20}
+              maxLength={2000}
+              rows={5}
+              placeholder="Please provide as much detail as possible, including any relevant photos or timestamps..."
+              className="input-modern resize-none"
+            />
+            <p className="text-xs text-slate-400">Minimum 20 characters.</p>
+          </div>
+
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+            <strong>Note:</strong> Submitting a dispute will pause any pending payments and flag this booking for review. Our support team will contact you within 24 hours.
+          </div>
+
+          <div className="flex gap-3">
+            <Link
+              href={`/bookings/${id}`}
+              className="btn-base btn-secondary flex-1 text-center"
+            >
+              Cancel
+            </Link>
+            <button type="submit" className="btn-base btn-primary flex-1">
+              Submit Dispute
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}

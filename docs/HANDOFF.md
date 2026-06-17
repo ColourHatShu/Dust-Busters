@@ -1,9 +1,9 @@
 # Dust Busters — Build Handoff
 
-Last updated: 2026-06-15 (end of session — all 4 code plans complete; pausing, resuming tomorrow). Use this to continue the autonomous build in a fresh session.
+Last updated: 2026-06-18 (session 2 — full feature expansion complete). Use this to continue in a fresh session.
 
 ## TL;DR for next session
-All four implementation plans are **built, typecheck-clean, build-clean, and DB-tested (6/6)**, committed and pushed (commit `42ac074`). Code is feature-complete. The ONLY remaining work is user-account launch steps that an agent cannot do alone: **(1) Stripe account + test keys, (2) Vercel deploy**. Pick up at "Next steps to finish" below.
+Plans 1–4 were already complete. Session 2 added a full **admin panel, messaging, disputes, cancellations, notifications, earnings dashboard, cleaner profile editing, and account page** — all typecheck-clean and pushed (latest commit on `main`). The ONLY remaining work is external account setup: **(1) Stripe live keys + webhook, (2) Vercel deploy**.
 
 ## What this is
 Web-only home-cleaning booking app. Stack: **Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe**. Launch market: **Courtenay, BC, Canada; CAD $20/hr**. Model: customer books a scheduled cleaning, request broadcast in real time to all verified cleaners in the area, first to accept wins (atomic), pay 60% deposit, job done, pay 40% balance. Roles: customer, cleaner, admin. Address masked until deposit paid.
@@ -11,38 +11,122 @@ Web-only home-cleaning booking app. Stack: **Next.js 16 (App Router, TS) + Supab
 Design spec: `docs/superpowers/specs/2026-06-15-dust-busters-design.md`. Plan 1 doc: `docs/superpowers/plans/2026-06-15-foundation.md`.
 
 ## User context / working style
-- User: ColourHatShu (shreyprajapati6@gmail.com). On Claude **Pro** (cost not a concern). Wants **fully autonomous** build, no input until launch-ready, concise updates (only the results), use multiple agents to go faster. Only surface TRUE blockers (account creation the user must do).
+- On Claude **Pro** (cost not a concern). Wants **fully autonomous** build, no input until launch-ready, concise updates (only the results), use multiple agents to go faster. Only surface TRUE blockers (account creation the user must do).
 
 ## Environment / secrets
 - Node 24, git installed. Docker NOT installed; Supabase CLI installed (global). Hosted Supabase used (no Docker needed).
 - Secrets in `.env.local` (gitignored): `NEXT_PUBLIC_SUPABASE_URL=https://wfazagqgbszrysnothtb.supabase.co`, anon key, service_role key. Stripe vars NOT yet set.
 - Supabase project ref: `wfazagqgbszrysnothtb`. DB password (URL-encoded): `At62%25-M_r2%40unhD`.
 - Apply migrations: `cd "/d/Dust Buster/Dust-Busters" && export DBURL="postgresql://postgres:At62%25-M_r2%40unhD@db.wfazagqgbszrysnothtb.supabase.co:5432/postgres" && echo Y | supabase db push --db-url "$DBURL"`
-- GitHub: `origin` = https://github.com/ColourHatShu/Dust-Busters.git. Credentials cached; `git push origin main` works. Push each milestone. If push rejected (user web-commits), `git fetch && git rebase origin/main` then push.
+- GitHub: `origin` = https://github.com/ColourHatShu/Dust-Busters.git. Credentials cached; `git push origin main` works.
 
 ## Gotchas
-- A "Fact-Forcing Gate" hook blocks Write/Edit and some Bash; restate facts (callers, schema, user instruction) and retry. Writing multiple files via one Bash heredoc avoids per-file gates. Heredoc breaks on apostrophes; avoid apostrophes in heredoc content or use the Write tool.
+- A "Fact-Forcing Gate" hook blocks Write/Edit and some Bash; restate facts (callers, schema, user instruction) and retry.
 - Vitest `fileParallelism:false` (shared remote DB). Tests use `@rls-test.local` emails, cleaned up in afterAll.
-- `create-next-app` rejected the capitalized folder name; app was scaffolded in a temp dir and copied in.
 - Stripe client uses a placeholder key fallback so build does not throw without env.
 - Next 16 + Tailwind v4 (no tailwind.config.ts).
+- `booking_offers` uses column `state` (not `status`) with values: rung, accepted, declined, expired.
+- `payments` uses column `type` (not `payment_type`) with values: deposit, balance.
+- `bookings` has no `updated_at` column — do not add it to updates.
+- Dummy cleaner accounts (password `Password123!`): sarah@dustbusters.ca (Courtenay/Comox), james@dustbusters.ca (Courtenay/Cumberland), priya@dustbusters.ca (Comox/Cumberland).
 
-## Status
-- **Plan 1 (foundation)** DONE+pushed: auth, roles, profiles/cleaner_details/settings, RLS, admin verify. Migrations 0001,0002. DB+unit tests pass.
-- **Plan 2 (booking + realtime dispatch)** DONE+pushed: bookings/booking_offers/booking_addresses, atomic accept, decline/re-broadcast, address masking, customer booking + live status pages, cleaner jobs (realtime) + onboarding. Migrations 0003,0004. 6 DB tests pass (`npm run test:db`).
-- **Plan 3 (Stripe payments)** code DONE+pushed: `src/lib/stripe.ts`, `src/app/bookings/[id]/payment-actions.ts`, `src/app/api/stripe/webhook/route.ts`, trust layer + pay buttons on booking page, migration 0005 (payments). NOT yet verified live; needs Stripe test keys.
-- **Plan 4 (polish)** DONE+pushed (commit `42ac074`): build clean (all routes incl. /admin/*, /bookings/[id]/review, /auth/signout, /robots.txt, /sitemap.xml), typecheck clean, 6/6 DB tests pass.
-  - Admin: `src/app/admin/page.tsx`, `admin/bookings/page.tsx`, `admin/settings/page.tsx`+`actions.ts`.
-  - Reviews: migration `0006_reviews.sql` (APPLIED to DB), `src/app/bookings/[id]/review/page.tsx`+`actions.ts`, get_cleaner_card now returns avg_rating too.
-  - Nav/logout/my-bookings: `src/components/Nav.tsx`, `src/app/auth/signout/route.ts`, `src/app/bookings/page.tsx`, edited `src/app/layout.tsx`.
-  - Landing/SEO: rewrote `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`.
+## Database — all migrations applied
+| File | What it adds |
+|---|---|
+| 0001_init.sql | profiles, cleaner_details, settings, handle_new_user trigger |
+| 0002_rls.sql | RLS policies + is_admin() helper |
+| 0003_booking.sql | bookings, booking_offers, booking_addresses, request_booking / accept_offer / decline_offer / start_job / complete_job |
+| 0004_cleaner_card.sql | get_cleaner_card() RPC |
+| 0005_payments.sql | payments table + RLS |
+| 0006_reviews.sql | reviews table + updated get_cleaner_card with avg_rating |
+| 0007_payment_idempotency.sql | unique index on payments.stripe_session_id |
+| 0008_improvements.sql | booking_messages, disputes, notifications, customer_favorites tables; cancelled_by / cancellation_reason / deposit_deadline columns on bookings; disputed enum value; cancel_booking / open_dispute / send_booking_message / create_notification functions; realtime publications for new tables |
 
-**All code plans (1–4) complete. Nothing left to build.**
+## Full route map (all pages built)
+
+### Public
+| Route | File |
+|---|---|
+| `/` | `src/app/page.tsx` — hero, how it works, trust section, pricing, areas |
+| `/about` | `src/app/about/page.tsx` |
+| `/login` | `src/app/login/page.tsx` — signup + login |
+
+### Customer
+| Route | File |
+|---|---|
+| `/book` | `src/app/book/page.tsx` + `actions.ts` — booking form, calls request_booking RPC |
+| `/bookings` | `src/app/bookings/page.tsx` — list with status badges |
+| `/bookings/[id]` | `src/app/bookings/[id]/page.tsx` — status, cleaner card, pay buttons, cancel, messaging, dispute, review prompt |
+| `/bookings/[id]/dispute` | `src/app/bookings/[id]/dispute/page.tsx` + `actions.ts` |
+| `/bookings/[id]/review` | `src/app/bookings/[id]/review/page.tsx` + `actions.ts` |
+| `/account` | `src/app/account/page.tsx` + `actions.ts` — edit name/phone |
+| `/notifications` | `src/app/notifications/page.tsx` + `actions.ts` — inbox with mark-all-read |
+
+### Cleaner
+| Route | File |
+|---|---|
+| `/cleaner/onboard` | `src/app/cleaner/onboard/page.tsx` + `actions.ts` — select areas |
+| `/cleaner/jobs` | `src/app/cleaner/jobs/page.tsx` + `JobsLive.tsx` — open offers + my jobs, realtime |
+| `/cleaner/jobs/[id]` | `src/app/cleaner/jobs/[id]/page.tsx` — job detail + messaging |
+| `/cleaner/earnings` | `src/app/cleaner/earnings/page.tsx` — earnings summary + per-job breakdown |
+| `/cleaner/profile` | `src/app/cleaner/profile/page.tsx` + `actions.ts` — edit name, phone, areas |
+
+### Admin
+| Route | File |
+|---|---|
+| `/admin` | `src/app/admin/page.tsx` — dashboard: revenue, bookings count, active cleaners, open disputes |
+| `/admin/bookings` | `src/app/admin/bookings/page.tsx` — full bookings list |
+| `/admin/bookings/[id]` | `src/app/admin/bookings/[id]/page.tsx` + `actions.ts` — detail with address, offers, payments, reviews, disputes; status override, cancel, reassign cleaner |
+| `/admin/cleaners` | `src/app/admin/cleaners/page.tsx` + `actions.ts` — verify/unverify + deactivate |
+| `/admin/cleaners/[id]` | `src/app/admin/cleaners/[id]/page.tsx` — cleaner performance profile |
+| `/admin/customers` | `src/app/admin/customers/page.tsx` — customer list |
+| `/admin/customers/[id]` | `src/app/admin/customers/[id]/page.tsx` — customer profile + booking history |
+| `/admin/disputes` | `src/app/admin/disputes/page.tsx` — dispute queue |
+| `/admin/disputes/[id]` | `src/app/admin/disputes/[id]/page.tsx` + `actions.ts` — resolve + refund |
+| `/admin/settings` | `src/app/admin/settings/page.tsx` + `actions.ts` — hourly rate, deposit % |
+
+### API
+| Route | File |
+|---|---|
+| `/api/stripe/webhook` | `src/app/api/stripe/webhook/route.ts` — handles checkout.session.completed + charge.dispute.created; advances booking status; sends notifications |
+| `/api/notifications/mark-read` | `src/app/api/notifications/mark-read/route.ts` |
+| `/auth/signout` | `src/app/auth/signout/route.ts` |
+
+### Shared components / lib
+| File | What it does |
+|---|---|
+| `src/components/Nav.tsx` | Role-aware nav with notification bell + unread count |
+| `src/components/MessagePanel.tsx` | Realtime chat component used by customer booking page + cleaner job page |
+| `src/lib/notifications.ts` | Server-side helper to insert notifications via service role |
+| `src/lib/types.ts` | All TypeScript interfaces: Profile, Booking, BookingStatus, Payment, Review, Dispute, Notification, BookingMessage + STATUS_LABEL/STATUS_COLOR maps |
+| `src/lib/auth.ts` | getSessionProfile() |
+| `src/lib/stripe.ts` | Stripe client + baseUrl() + CURRENCY |
+| `src/lib/areas.ts` | AREAS constant |
+
+## Booking status state machine
+```
+broadcasting -> accepted -> deposit_paid -> in_progress -> completed -> balance_paid -> closed
+                                                                  |
+                                                              disputed
+cancelled  (from: broadcasting / accepted / deposit_paid)
+no_cleaner_found  (from: broadcasting when zero cleaners match)
+```
+
+## Status (session 2 complete)
+- **Plans 1-4** DONE (previous session, commit 42ac074)
+- **Session 2 additions** all typecheck-clean, committed + pushed:
+  - Migration 0008 applied to hosted Supabase
+  - Full admin panel (dashboard, booking detail, customers, disputes, cleaner profiles)
+  - Customer: cancel flow, in-job messaging, dispute reporting, notifications, account page
+  - Cleaner: earnings dashboard, profile edit, job detail with messaging
+  - Shared MessagePanel component with Supabase Realtime
+  - Notification bell in Nav
+  - Homepage enhanced (how it works, trust section, pricing)
+  - Dummy cleaners seeded (sarah / james / priya, all verified, Password123!)
 
 ## Next steps to finish (resume here)
-1. ✅ Done — Plan 4 integration-verified (build/typecheck/test:db all green), committed + pushed.
-2. **Need from user (blockers):** (a) Stripe account, test keys `STRIPE_SECRET_KEY` (sk_test), publishable key, and after deploy a webhook signing secret `STRIPE_WEBHOOK_SECRET`; (b) Vercel account to deploy. Set `NEXT_PUBLIC_BASE_URL` to the deployed URL.
-3. Deploy to Vercel: set all env vars (Supabase URL/anon/service_role, Stripe keys, base url) in Vercel project. Add Stripe webhook endpoint `<url>/api/stripe/webhook`, put signing secret in env.
-4. Create the first admin (set a profiles row role='admin' via Supabase SQL editor). Verify real cleaners.
-5. Rotate the service_role key + DB password after launch (shared in chat).
-6. Manual smoke test end to end: signup, become cleaner (admin verifies), book, accept, pay deposit (Stripe test card 4242 4242 4242 4242), address reveal, complete, pay balance, review.
+1. **Stripe** — create account, get test keys, add to `.env.local`: `STRIPE_SECRET_KEY=sk_test_...`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...`. After deploy add webhook endpoint `<url>/api/stripe/webhook` and put the signing secret in env as `STRIPE_WEBHOOK_SECRET=whsec_...`.
+2. **Vercel deploy** — `vercel --prod`. Set all env vars in Vercel dashboard (Supabase URL/anon/service_role, Stripe keys, `NEXT_PUBLIC_BASE_URL=https://your-domain.vercel.app`).
+3. **First admin** — in Supabase SQL editor: `UPDATE profiles SET role = 'admin' WHERE id = '<your-user-uuid>';`
+4. **Smoke test** — signup customer, signup cleaner (onboard at /cleaner/onboard), admin verifies cleaner, customer books, cleaner accepts, pay deposit (Stripe test card 4242 4242 4242 4242), address reveals, cleaner starts + completes, customer pays balance, customer reviews.
+5. **Before go-live** — rotate service_role key + DB password (both were shared in chat history).

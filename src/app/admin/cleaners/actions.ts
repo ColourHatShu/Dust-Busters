@@ -4,7 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-// Service-role client (server-only) to perform admin writes.
 function serviceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,4 +37,16 @@ export async function setCleanerVerified(profileId: string, verified: boolean) {
     })
     .eq("profile_id", profileId);
   revalidatePath("/admin/cleaners");
+  revalidatePath(`/admin/cleaners/${profileId}`);
+}
+
+export async function setCleanerActive(profileId: string, active: boolean) {
+  await assertAdmin();
+  const svc = serviceClient();
+  await svc
+    .from("cleaner_details")
+    .update({ active })
+    .eq("profile_id", profileId);
+  revalidatePath("/admin/cleaners");
+  revalidatePath(`/admin/cleaners/${profileId}`);
 }

@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
 import { submitBooking } from "./actions";
+import { Calendar, Clock, MapPin, Home, Lock, CheckCircle } from "lucide-react";
 
 export default async function BookPage() {
   const { user } = await getSessionProfile();
@@ -16,43 +17,82 @@ export default async function BookPage() {
     .single();
   const rate = Number(settings?.hourly_rate ?? 20);
   const currency = settings?.currency ?? "CAD";
+  const depositPercent = Number(settings?.deposit_percent ?? 60);
 
   return (
-    <main className="mx-auto max-w-lg p-6">
-      <h1 className="mb-1 text-2xl font-bold">Book a cleaning</h1>
-      <p className="mb-6 text-sm text-gray-600">
-        {currency} ${rate}/hour. You pay {settings?.deposit_percent ?? 60}% to
-        confirm once a cleaner accepts, and the rest after the job is done.
-      </p>
+    <main className="mx-auto max-w-lg space-y-10 p-6">
+      {/* Header + pricing note */}
+      <div className="space-y-4">
+        <h1>Book a cleaning</h1>
+        <p className="text-slate-600">
+          <span className="font-semibold text-accent">
+            From {currency} ${rate}/hr
+          </span>
+          {" "}•{" "}
+          <span className="font-semibold text-accent">{depositPercent}% deposit</span>{" "}
+          to confirm
+          <br />
+          <span className="text-sm">
+            Pay {depositPercent}% upfront, the rest after the job.
+          </span>
+        </p>
+      </div>
 
-      <form action={submitBooking} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Date and time
+      {/* Booking form */}
+      <form action={submitBooking} className="card flex flex-col gap-8">
+        <label className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-slate-900">Date and time</span>
+          </div>
           <input
             type="datetime-local"
             name="scheduled_at"
             required
-            className="rounded border p-2 font-normal"
+            className="input-modern"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          How many hours?
-          <input
-            type="number"
-            name="hours"
-            min={1}
-            max={12}
-            step={1}
-            defaultValue={3}
-            required
-            className="rounded border p-2 font-normal"
-          />
+        <label className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-slate-900">How many hours?</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              name="hours"
+              min={1}
+              max={12}
+              step={1}
+              defaultValue={3}
+              required
+              className="input-modern w-24 text-center"
+            />
+            <span className="text-slate-600">hours</span>
+          </div>
+          {/* Pricing preview: shown via CSS only — no JS required */}
+          <p className="text-sm text-slate-500">
+            Estimated total:{" "}
+            <span className="font-semibold text-slate-800">
+              {currency} ${rate * 3}
+            </span>{" "}
+            for 3 hrs &mdash; adjust hours above.
+            <br />
+            Deposit due today:{" "}
+            <span className="font-semibold text-slate-800">
+              {currency} ${Math.round((rate * 3 * depositPercent) / 100)}
+            </span>{" "}
+            ({depositPercent}%)
+          </p>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Area
-          <select name="area" required className="rounded border p-2 font-normal">
+        <label className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-slate-900">Area</span>
+          </div>
+          <select name="area" required className="input-modern">
             {AREAS.map((a) => (
               <option key={a} value={a}>
                 {a}
@@ -61,25 +101,68 @@ export default async function BookPage() {
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Full address
+        <label className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-slate-900">Full address</span>
+          </div>
           <input
             type="text"
             name="full_address"
             required
             placeholder="Street, unit, city"
-            className="rounded border p-2 font-normal"
+            className="input-modern"
           />
-          <span className="text-xs font-normal text-gray-500">
-            Your exact address stays hidden from cleaners until you have paid the
-            deposit to a verified cleaner.
-          </span>
+          <div className="flex items-start gap-2 text-xs text-slate-500">
+            <Lock className="h-4 w-4 mt-0.5 flex-shrink-0 text-accent" strokeWidth={1.5} />
+            <span>Your address stays hidden from cleaners until you've paid the deposit.</span>
+          </div>
         </label>
 
-        <button className="rounded bg-blue-600 p-3 font-medium text-white">
-          Find a cleaner
-        </button>
+        <button className="btn-base btn-primary mt-6">Find a cleaner</button>
       </form>
+
+      {/* How it works */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-slate-800">How it works</h2>
+        <ol className="flex flex-col gap-4">
+          {[
+            {
+              step: 1,
+              title: "Book",
+              description:
+                "Fill in your details and we'll find you a vetted local cleaner. No account needed to browse.",
+            },
+            {
+              step: 2,
+              title: "We match a cleaner",
+              description:
+                "A cleaner accepts your job and you're notified. Pay the deposit to lock in your slot.",
+            },
+            {
+              step: 3,
+              title: "Relax",
+              description:
+                "Your cleaner arrives on time. Pay the remaining balance after you're satisfied.",
+            },
+          ].map(({ step, title, description }) => (
+            <li key={step} className="flex items-start gap-4">
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+                {step}
+              </span>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-slate-900">{title}</p>
+                <p className="text-sm text-slate-600">{description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-500" strokeWidth={2} />
+          <span>All cleaners are background-checked and rated by real customers.</span>
+        </div>
+      </section>
     </main>
   );
 }

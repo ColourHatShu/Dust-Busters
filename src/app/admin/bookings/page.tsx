@@ -1,55 +1,105 @@
 import { redirect } from "next/navigation";
-import { getSessionProfile } from "@/lib/auth";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function AdminBookingsPage() {
-  const { user, profile } = await getSessionProfile();
-  if (!user) redirect("/login");
-  if (profile?.role !== "admin") redirect("/");
+const statusColor: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  confirmed: "bg-blue-100 text-blue-800",
+  in_progress: "bg-indigo-100 text-indigo-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
 
+export default async function AdminBookingsPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (me?.role !== "admin") redirect("/");
+
   const { data: bookings } = await supabase
     .from("bookings")
     .select(
-      "id, status, area, scheduled_at, hours, total_amount, deposit_amount, balance_amount, cleaner_id, created_at"
+      `id, status, area, scheduled_at, hours, total_amount, created_at,
+       customer:profiles!bookings_customer_id_fkey(name),
+       cleaner:profiles!bookings_cleaner_id_fkey(name)`
     )
     .order("created_at", { ascending: false });
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">Bookings</h1>
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="p-2">ID</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Area</th>
-            <th className="p-2">Scheduled</th>
-            <th className="p-2">Hours</th>
-            <th className="p-2">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(bookings ?? []).map((b) => (
-            <tr key={b.id} className="border-b">
-              <td className="p-2">{String(b.id).slice(0, 8)}</td>
-              <td className="p-2">{b.status}</td>
-              <td className="p-2">{b.area || "—"}</td>
-              <td className="p-2">
-                {b.scheduled_at
-                  ? new Date(b.scheduled_at).toLocaleString()
-                  : "—"}
-              </td>
-              <td className="p-2">{b.hours}</td>
-              <td className="p-2">
-                {b.total_amount != null
-                  ? `$${Number(b.total_amount).toFixed(2)}`
-                  : "—"}
-              </td>
+    <main className="mx-auto max-w-6xl p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/admin" className="text-sm text-blue-600 hover:underline">
+          ← Admin
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+      </div>
+      <div className="card p-0 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50 text-left text-gray-500">
+              <th className="p-3 font-medium">ID</th>
+              <th className="p-3 font-medium">Customer</th>
+              <th className="p-3 font-medium">Cleaner</th>
+              <th className="p-3 font-medium">Status</th>
+              <th className="p-3 font-medium">Area</th>
+              <th className="p-3 font-medium">Scheduled</th>
+              <th className="p-3 font-medium">Total</th>
+              <th className="p-3 font-medium"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {(bookings ?? []).map((b) => {
+              const customer = Array.isArray(b.customer)
+                ? b.customer[0]
+                : b.customer;
+              const cleaner = Array.isArray(b.cleaner) ? b.cleaner[0] : b.cleaner;
+              return (
+                <tr key={b.id} className="hover:bg-gray-50">
+                  <td className="p-3 font-mono text-xs text-gray-500">
+                    {String(b.id).slice(0, 8)}
+                  </td>
+                  <td className="p-3">{customer?.name ?? "—"}</td>
+                  <td className="p-3">{cleaner?.name ?? "—"}</td>
+                  <td className="p-3">
+                    <span
+                      className={`status-badge ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="p-3">{b.area ?? "—"}</td>
+                  <td className="p-3">
+                    {b.scheduled_at
+                      ? new Date(b.scheduled_at).toLocaleString()
+                      : "—"}
+                  </td>
+                  <td className="p-3">
+                    {b.total_amount != null
+                      ? `$${Number(b.total_amount).toFixed(2)}`
+                      : "—"}
+                  </td>
+                  <td className="p-3">
+                    <Link
+                      href={`/admin/bookings/${b.id}`}
+                      className="text-blue-600 hover:underline text-xs"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }

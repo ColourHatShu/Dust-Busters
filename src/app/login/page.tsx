@@ -33,52 +33,76 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-bold">
-        {mode === "login" ? "Log in" : "Create your account"}
-      </h1>
-      <form onSubmit={submit} className="flex flex-col gap-3">
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-8 p-6">
+      <div className="space-y-3 text-center">
+        <h1>
+          {mode === "login" ? "Welcome back" : "Join us"}
+        </h1>
+        <p className="text-slate-600">
+          {mode === "login"
+            ? "Log in to book your next cleaning"
+            : "Create an account to get started"}
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="card flex flex-col gap-6">
         {mode === "signup" && (
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-slate-900">Full name</span>
+            <input
+              className="input-modern"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </label>
+        )}
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-900">Email</span>
           <input
-            className="rounded border p-2"
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            className="input-modern"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
+        </label>
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-900">Password</span>
+          <input
+            className="input-modern"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        {error && (
+          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200 shadow-elevation-sm">
+            {error}
+          </div>
         )}
-        <input
-          className="rounded border p-2"
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          className="rounded border p-2"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <button
-          className="rounded bg-blue-600 p-2 text-white disabled:opacity-50"
+          className="btn-base btn-primary mt-4"
           disabled={busy}
         >
-          {busy ? "…" : mode === "login" ? "Log in" : "Sign up"}
+          {busy ? "…" : mode === "login" ? "Log in" : "Create account"}
         </button>
       </form>
-      <button
-        className="text-sm text-blue-600 underline"
-        onClick={() => setMode(mode === "login" ? "signup" : "login")}
-      >
-        {mode === "login"
-          ? "Need an account? Sign up"
-          : "Already have an account? Log in"}
-      </button>
+
+      <div className="text-center">
+        <button
+          className="text-sm font-medium text-accent hover:text-accent-dark transition"
+          onClick={() => setMode(mode === "login" ? "signup" : "login")}
+        >
+          {mode === "login"
+            ? "Need an account? Sign up"
+            : "Already have an account? Log in"}
+        </button>
+      </div>
     </main>
   );
 }
