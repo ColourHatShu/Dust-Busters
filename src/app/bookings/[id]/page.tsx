@@ -151,8 +151,7 @@ export default async function BookingStatusPage({
 
       {(showDeposit || showBalance) && (
         <p className="mt-3 text-center text-xs text-gray-500">
-          Secured by Stripe. Free cancellation up to 2 hours before. Need help?
-          support@dustbusters.ca
+          Secured by Stripe. Need help? support@dustbusters.ca
         </p>
       )}
     </main>
