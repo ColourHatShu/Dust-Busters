@@ -34,18 +34,23 @@ export async function POST(req: NextRequest) {
     if (bookingId && type) {
       const db = serviceClient();
 
-      await db.from("payments").insert({
-        booking_id: bookingId,
-        type,
-        stripe_session_id: session.id,
-        stripe_payment_intent_id:
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : null,
-        amount: (session.amount_total ?? 0) / 100,
-        status: "paid",
-        paid_at: new Date().toISOString(),
-      });
+      // Idempotent: a replayed checkout.session.completed event hits the unique
+      // index on stripe_session_id and is ignored rather than duplicating a row.
+      await db.from("payments").upsert(
+        {
+          booking_id: bookingId,
+          type,
+          stripe_session_id: session.id,
+          stripe_payment_intent_id:
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : null,
+          amount: (session.amount_total ?? 0) / 100,
+          status: "paid",
+          paid_at: new Date().toISOString(),
+        },
+        { onConflict: "stripe_session_id", ignoreDuplicates: true }
+      );
 
       // Advance the booking only from the expected prior status (idempotent).
       if (type === "deposit") {

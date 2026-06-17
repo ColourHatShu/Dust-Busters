@@ -41,6 +41,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# also ignore dot-less env files (e.g. a misnamed `env.local`) so secrets like
+# the Supabase service_role key cannot be committed by accident
+env.local
+*.env.local
 
 # vercel
 .vercel
