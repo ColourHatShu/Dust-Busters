@@ -42,12 +42,16 @@ high-value improvements — autonomously, while the founder is away.
   payment/transfer. When an item needs one of these, log it under
   **"⛔ Needs the founder"** in `AUTONOMOUS-LOG.md` and skip it.
 - Prefer reversible, branch-isolated changes. Keep `main` untouched.
-- If a migration is required, write the `.sql` file under `supabase/migrations/`
-  and note in the log that it must be applied. **This environment usually cannot
-  apply it** (the direct DB host `db.<ref>.supabase.co` no longer resolves —
-  pooler-only — and the `supabase` CLI isn't installed). So commit the migration,
-  mark the item `[needs DB apply]`, and flag it for the founder. Pure-code items
-  that match the EXISTING schema need no DB access — prefer those.
+- If a migration is required, write the `.sql` under `supabase/migrations/` then
+  APPLY it via the Supabase **pooler** using Node + `pg` (run from the
+  **PowerShell** tool — the Bash sandbox can't resolve `*.supabase.co`; the host
+  can). Connection: host `aws-1-ca-central-1.pooler.supabase.com`, user
+  `postgres.wfazagqgbszrysnothtb`, port `5432`, `ssl:{rejectUnauthorized:false}`;
+  password in `docs/HANDOFF.md`. If `pg` is missing: `npm i pg --no-save`. Run the
+  SQL in a transaction, then VERIFY (query pg_trigger / information_schema), then
+  record it in `supabase_migrations.schema_migrations (version,name)`. If the
+  pooler says "tenant not found" on every region, the free-tier project has
+  AUTO-PAUSED (7-day idle) — log it for the founder to resume; do not retry-loop.
 
 ## Stop condition
 When every non-blocked item in `AUTONOMOUS-PLAN.md` is `[x]`, write a final

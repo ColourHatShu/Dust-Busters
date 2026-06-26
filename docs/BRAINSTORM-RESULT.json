@@ -1,0 +1,603 @@
+{
+  "summary": "Brainstorm a full feature roadmap for Dust Busters from multiple product lenses, deep-design the Uber-style live cleaner-map matching experience, then synthesize a prioritized plan",
+  "agentCount": 9,
+  "logs": [
+    "parallel[5] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output"
+  ],
+  "result": {
+    "synthesis": {
+      "executiveSummary": "I merged ~70 ideas from six lenses plus the Uber-map UX design and tech plan into one prioritized, de-duplicated roadmap, validated against the real code. Headline finding: several customer-facing promises are currently unbacked, and those are the true production blockers, not the map. Confirmed in-repo: the reviews hasReview query filters reviews.reviewer_id, a column that does not exist (0006), so it silently fails; no scheduler/cron exists anywhere, so offer_state='expired' is never set and bookings.deposit_deadline (0008) is never enforced; accept_offer has no double-booking guard (a cleaner can accept two overlapping jobs); the 15% fee plus Friday direct deposit is a display-only constant with no payout rail; the ID-verified / background-checked badge is an unaudited admin click; cancel_booking does no timing check or refund despite the 24h policy copy; open_dispute is customer-only; customer_favorites exists with full RLS but has zero references in src/; notifications are in-app only. P0 fixes these. P1 is the flagship Uber-style live cleaner map, reconciled into one buildable spec (react-leaflet plus OSM primary with stylized-SVG fallback, one fuzzing SECURITY DEFINER RPC get_booking_matching returning live counts plus fuzzed pins plus winner, seeded by cleaner_id and booking_id, no fake GPS/ETA). P2/P3 sequence the LTV, supply, ops, and growth levers. Full detail in docs/ROADMAP.md and docs/specs/uber-cleaner-map.md.",
+      "roadmap": [
+        {
+          "name": "Fix broken reviews query + finalize reviews schema",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Add reviewer_id to the reviews table (or correct the page query) so the duplicate-review check works.",
+          "why": "Confirmed bug: src/app/bookings/[id]/page.tsx line 104 filters reviews.reviewer_id, but the reviews table (0006_reviews.sql) has no such column, so hasReview silently fails and the review prompt can re-appear after a review. Also unblocks two-way reviews.",
+          "effort": "trivial",
+          "dependencies": "none"
+        },
+        {
+          "name": "Dispatch scheduler heartbeat (dispatch_tick plus cron)",
+          "tier": "P0-production-blocker",
+          "whatItIs": "One SECURITY DEFINER dispatch_tick() run every 30 to 60s (Supabase pg_cron or Vercel cron to a service-role route) that expires stale rung offers, enforces deposit_deadline, expires broadcast_expires_at to no_cleaner_found, and fires reminder/SLA hooks.",
+          "why": "No scheduler exists anywhere (grep-confirmed): offer_state='expired' is never set, deposit_deadline (0008) is never enforced so an accepted-but-unpaid booking pins a cleaner forever, and the jobs UI claims an offer window that does not exist. The shared time-source half the roadmap depends on.",
+          "effort": "medium",
+          "dependencies": "none (enables map TTL, recurring, reminders, abandoned-deposit recovery, SLA)"
+        },
+        {
+          "name": "Schedule-conflict / double-booking guard",
+          "tier": "P0-production-blocker",
+          "whatItIs": "In request_booking offer fan-out and inside accept_offer, exclude/reject cleaners whose existing active job time window overlaps the new booking plus a travel buffer; add a partial index on (cleaner_id, scheduled_at).",
+          "why": "accept_offer (0003) only checks booking status plus offer existence, so a cleaner can accept two overlapping jobs today, a guaranteed no-show. Real correctness bug at the core of matching.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "Cleaner self-serve Online/Offline toggle",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Add cleaner_details.accepting_jobs bool (distinct from admin-only active) and append 'and cd.accepting_jobs' to the dispatch WHERE clause.",
+          "why": "Today the only on/off is admin-controlled active. A cleaner who is sick/booked/on vacation cannot pause and gets spammed with offers they must decline, table-stakes gig retention, and a one-line dispatch change.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "Enforced cancellation windows + automatic Stripe refunds",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Make cancel_booking timing-aware: more than 24h before gives a full deposit refund via the existing service-role refund path; within 24h forfeit or partial; record the outcome and show the exact refund at cancel time.",
+          "why": "cancel_booking (0008) just sets status='cancelled', it never checks timing or refunds, yet the booking page renders a 24h-refund policy. Direct money plus chargeback liability at launch.",
+          "effort": "medium",
+          "dependencies": "existing Stripe refund (issueRefund) path"
+        },
+        {
+          "name": "Formalize platform commission in data + honest money copy",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Add settings.commission_percent; compute and persist platform_fee plus cleaner_payout per booking in request_booking; surface real platform revenue in admin; correct the earnings page copy until Connect ships.",
+          "why": "The marketplace records ZERO revenue: the 15% cut is a display-only constant (cleaner/earnings/page.tsx) and the page claims automated Friday direct deposit that does not exist. Precondition for all monetization and for not misleading cleaners.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Real ID verification (document upload + admin review)",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Private Supabase Storage bucket for govt ID plus selfie captured at onboarding; admin reviews docs before flipping id_verified. Recommended upgrade: Stripe Identity VerificationSession plus webhook.",
+          "why": "id_verified is an unaudited admin boolean with no document capture, while /book claims cleaners are background-checked and the booking page shows a green ID-verified badge. Shipping a false trust claim about strangers entering homes is a real liability.",
+          "effort": "medium",
+          "dependencies": "Supabase Storage (or Stripe Identity, vendor already wired)"
+        },
+        {
+          "name": "Transactional email/SMS on money + match events",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Extend the single createNotification() choke point to also send email (Resend) and SMS (Twilio; profiles.phone exists) for cleaner-found-pay-deposit, job-complete-pay-balance, leave-a-review; add channel prefs and unsubscribe.",
+          "why": "Notifications are in-app only, but the entire deposit-to-balance cash flow depends on the customer acting on prompts they only see when on-site. Out-of-app nudges directly lift conversion and cash collection, and seed all lifecycle/win-back.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Cleaner-side issue reporting (two-way disputes + SOS hook)",
+          "tier": "P0-production-blocker",
+          "whatItIs": "Generalize open_dispute so the assigned cleaner can raise issues (customer no-show, unsafe home, harassment, access denied) into the same admin queue; add a Report-a-problem action on the cleaner job page.",
+          "why": "open_dispute (0008) hard-checks customer_id = auth.uid(), so a lone cleaner in a stranger's home has no recourse or paper trail. One-sided safety reporting is a defining T&S gap for in-home services.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "Live cleaner-map matching experience (Finding your cleaner)",
+          "tier": "P1-flagship",
+          "whatItIs": "A full-bleed takeover state of /bookings/[id] while broadcasting/accepted/no_cleaner_found: a real map centered on the town, fuzzed pins for every real booking_offers row, live N-notified and M-deciding counts, a radar sweep, and a winner reveal that locks one pin and slides up the confirmed-cleaner card. Presentation layer over existing dispatch, no fake GPS or ETA. Migration 0009, one fuzzing SECURITY DEFINER RPC, about 5 components.",
+          "why": "The founder's explicit ask, and the Uber feel here is genuinely real: request_booking truly broadcasts to every verified cleaner, first-accept-wins is truly the a-driver-accepted moment, and the counts are truly true. Suspense comes from motion plus live status, not invented telemetry. Full spec in docs/specs/uber-cleaner-map.md.",
+          "effort": "medium",
+          "dependencies": "soft-depends on the P0 scheduler for the honest broadcast timeout; migration 0009 (geo/centroids/RPC)"
+        },
+        {
+          "name": "Live dispatch transparency counts (map-optional)",
+          "tier": "P1-flagship",
+          "whatItIs": "The notified/deciding/still-searching status from count(booking_offers) plus offer-state transitions, delivered through the same get_booking_matching RPC and degrading to a text-only card when the map cannot load or supply is thin.",
+          "why": "Turns the anxious black-box Finding-a-cleaner wait into transparent, reassuring live status. Ships inside the flagship but lands its value even without tiles, on data already written by request_booking.",
+          "effort": "small",
+          "dependencies": "ships with the live cleaner-map (shares the RPC)"
+        },
+        {
+          "name": "Saved Homes (address book)",
+          "tier": "P2-high-value",
+          "whatItIs": "New customer_addresses table (label, full_address, area, access notes, owner-only RLS); /book swaps the raw text field for pick-a-saved-home-or-add-new with save-on-first-use.",
+          "why": "Today /book is a raw text field plus manual area select; the address is only persisted per-booking. The single biggest repeat-friction remover and the unblocker for one-tap re-book and recurring.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "One-tap Re-book with prefill",
+          "tier": "P2-high-value",
+          "whatItIs": "Make the existing Book Again CTA carry prior area/hours/address/add-ons via query params, or a clone-and-broadcast action for a new date.",
+          "why": "BOOK_AGAIN_ALLOWED already renders the CTA but it opens an empty /book; all the data to prefill is on the booking row. The natural I-want-what-I-had-last-time path.",
+          "effort": "trivial",
+          "dependencies": "Saved Homes (optional, improves it)"
+        },
+        {
+          "name": "Wire up customer_favorites (toggle + favorites-first dispatch tier)",
+          "tier": "P2-high-value",
+          "whatItIs": "Heart toggle on the post-job cleaner card, a Favorites list on /account, and an offer-my-favorites-first exclusive window before the area broadcast. Folds favorite cleaners, continuity booking, and the ops favorite-priority tier.",
+          "why": "customer_favorites exists with full SELECT/INSERT/DELETE RLS (0008) but has ZERO references in src/, a built, stranded backend. Pure broadcast has no continuity; the cheapest retention lever.",
+          "effort": "medium",
+          "dependencies": "none (becomes a tier once ranked dispatch lands)"
+        },
+        {
+          "name": "Recurring / standing bookings + discount",
+          "tier": "P2-high-value",
+          "whatItIs": "recurring_plans (frequency, weekday, time, hours, area, saved home, optional preferred cleaner); the scheduler auto-creates and broadcasts the next occurrence; optional recurring discount.",
+          "why": "Everything today is a one-off; recurring is the single biggest LTV lever for a cleaning marketplace and reuses request_booking per occurrence.",
+          "effort": "large",
+          "dependencies": "P0 scheduler, Saved Homes, customer_favorites"
+        },
+        {
+          "name": "Add-on services / service tiers",
+          "tier": "P2-high-value",
+          "whatItIs": "services plus booking_addons catalog (deep clean, oven, fridge, windows, move-out, laundry) with price/duration; /book checkboxes; fold into request_booking total/deposit/balance; itemized payment card.",
+          "why": "Pricing is flat rate times hours today. Add-ons raise average order value and clarity, and feed per-service SEO pages. Merges Customer add-ons and Monetization service tiers.",
+          "effort": "large",
+          "dependencies": "none (synergizes with SEO pages)"
+        },
+        {
+          "name": "On my way + ETA status (no map)",
+          "tier": "P2-high-value",
+          "whatItIs": "Day-of cleaner action sets en_route plus ETA; customer sees Maria-is-on-her-way and a notification.",
+          "why": "Reuses StatusLive realtime plus notifications; delivers about 80% of the live-tracking value with zero map/GPS. Top-requested for on-site services.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "Special instructions + entry/access details",
+          "tier": "P2-high-value",
+          "whatItIs": "notes plus access_instructions on the booking, masked until deposit via the proven booking_addresses RLS pattern.",
+          "why": "The book form has no notes field; the codebase already has a masked-until-deposit pattern to copy. Avoids day-of phone tag and lockouts.",
+          "effort": "small",
+          "dependencies": "none"
+        },
+        {
+          "name": "Tipping",
+          "tier": "P2-high-value",
+          "whatItIs": "New tip payment_type plus a tip step on the review screen (10/15/20%/custom) reusing the Stripe Checkout plus webhook flow; 100% to the cleaner, shown in earnings.",
+          "why": "payment_type is an enum and the Checkout plus idempotent-webhook flow is already built and reusable; the review prompt is the natural post-job moment. A tip-able platform attracts better supply.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Receipts & booking summary (view + emailed)",
+          "tier": "P2-high-value",
+          "whatItIs": "Itemized per-booking receipt (service, hours, cleaner, deposit plus balance plus tip), printable, emailed on balance_paid.",
+          "why": "All data lives in payments plus bookings; the webhook already fires on payment completion. Additive read layer that builds trust in a new brand.",
+          "effort": "small",
+          "dependencies": "P0 email"
+        },
+        {
+          "name": "Promo codes & first-clean intro offer",
+          "tier": "P2-high-value",
+          "whatItIs": "MVP: allow_promotion_codes on Checkout. Fuller: promo_codes validated in request_booking with a launch FIRST10.",
+          "why": "No discount primitive exists, but Stripe Checkout supports promo codes natively, so the MVP is nearly free. Essential to kick-start a brand-new town.",
+          "effort": "small",
+          "dependencies": "none (fuller version pairs with wallet)"
+        },
+        {
+          "name": "Account credit / wallet ledger (enabler)",
+          "tier": "P2-high-value",
+          "whatItIs": "account_credits ledger applied as the first discount line in request_booking/checkout; admins can grant goodwill credit.",
+          "why": "Referrals, gift cards, win-back, and dispute goodwill all need somewhere to deposit value. Build the ledger once instead of three bespoke implementations.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Referral credits (give-get)",
+          "tier": "P2-high-value",
+          "whatItIs": "Per-customer code; both sides get CAD credit on the referee's first paid job; share card on /account.",
+          "why": "In a tight-knit Comox Valley launch, word-of-mouth is the cheapest CAC; the credit-apply step is a localized change in request_booking pricing math.",
+          "effort": "medium",
+          "dependencies": "wallet ledger"
+        },
+        {
+          "name": "Ranked tiered offer dispatch (replace pure broadcast)",
+          "tier": "P2-high-value",
+          "whatItIs": "Score eligible cleaners (proximity, rating, acceptance_rate, responsiveness, fairness, favorites) and release offers in waves; keep accept_offer atomic first-wins. Add dispatch_tier/offered_at to booking_offers.",
+          "why": "request_booking is a flat ring-everyone insert with no ordering, creating a thundering-herd race that punishes thoughtful cleaners. The ops centerpiece and the mechanism behind every priority perk; the map will visually expose how few cleaners actually respond.",
+          "effort": "large",
+          "dependencies": "P0 scheduler, cleaner stats, cleaner geo"
+        },
+        {
+          "name": "Cleaner performance/reliability stats",
+          "tier": "P2-high-value",
+          "whatItIs": "cleaner_stats maintained by triggers: offers received/accepted, acceptance_rate, avg_response_seconds, completed, cancellations, no_shows, avg_rating, last_assigned_at.",
+          "why": "Acceptance-rate ranking is requested but untracked, and rating is recomputed on the fly. One table feeds ranked dispatch, dashboards, auto-suspend, and fraud signals with O(1) reads.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Time-aware availability schedule",
+          "tier": "P2-high-value",
+          "whatItIs": "cleaner_availability (weekday windows) plus blackout dates; dispatch only rings cleaners whose schedule covers scheduled_at.",
+          "why": "request_booking rings every active plus verified cleaner regardless of whether they can work then, a guaranteed wall of declines and alert fatigue the read-only availability_note already hinted at.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Stripe Connect Express payouts + payout ledger",
+          "tier": "P2-high-value",
+          "whatItIs": "Onboard cleaners to Connect Express; attach application_fee_amount plus transfer_data.destination to deposit/balance Checkout so the take-rate splits at source; a real Payouts tab.",
+          "why": "The earnings page promises weekly direct deposit and a 15% fee with no money-movement behind it. Reliable, transparent payouts are the number-one reason supply stays. Stripe is already the rail, so Connect is the natural extension.",
+          "effort": "large",
+          "dependencies": "P0 commission-in-data"
+        },
+        {
+          "name": "Before/after photo proof of completion",
+          "tier": "P2-high-value",
+          "whatItIs": "Supabase Storage job-photos bucket plus gate complete_job on at least one after-photo; gallery on the booking page above Pay balance.",
+          "why": "complete_job just sets status='completed' with zero evidence, yet the balance is charged on trust. The biggest evidence gap on both sides for an in-home clean.",
+          "effort": "medium",
+          "dependencies": "Supabase Storage"
+        },
+        {
+          "name": "Customer sign-off gate + auto-confirm before balance",
+          "tier": "P2-high-value",
+          "whatItIs": "A Confirm-the-job-is-done step (tied to after-photos); balance payable only on confirm; 48h silence auto-confirms via cron; reject routes to re-clean/dispute.",
+          "why": "Today completed leads to a Pay-balance button with no acceptance step and no timeout, so an unhappy customer just stalls. A time-boxed sign-off de-risks both sides.",
+          "effort": "medium",
+          "dependencies": "P0 scheduler, before/after photos"
+        },
+        {
+          "name": "Live ops dispatch board (/admin/dispatch)",
+          "tier": "P2-high-value",
+          "whatItIs": "Realtime view of every in-flight booking (tier, counts, deposit countdown, SLA flags) plus manual force-rebroadcast / assign / extend / cancel.",
+          "why": "The admin dashboard is static counts only. Realtime plus admin override RLS already exist, so a dispatcher could steer and rescue stuck jobs from one screen.",
+          "effort": "medium",
+          "dependencies": "realtime (exists), helped by scheduler/SLA"
+        },
+        {
+          "name": "Append-only audit log",
+          "tier": "P2-high-value",
+          "whatItIs": "audit_log written by triggers plus every admin server action (verification, reassign, refund, settings, dispute) with actor and before/after JSON.",
+          "why": "There is zero audit trail for the many SECURITY DEFINER state changes and admin overrides. Backbone for dispute resolution, chargeback evidence, fraud review, and the support console.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Programmatic per-area + per-service SEO landing pages",
+          "tier": "P2-high-value",
+          "whatItIs": "/cleaning/[area] and /[service]/[area] via generateStaticParams over AREAS times services, localized copy, LocalBusiness JSON-LD (centroids known), live ratings, sitemap.",
+          "why": "For a geo-bounded local marketplace, organic local search is the highest-ROI growth channel, and App Router makes static generation trivial. Today there is one marketing page.",
+          "effort": "medium",
+          "dependencies": "add-on services (for the service axis)"
+        },
+        {
+          "name": "Report & block users",
+          "tier": "P2-high-value",
+          "whatItIs": "user_reports plus user_blocks; exclude blocked cleaners from a customer's future broadcasts in request_booking; admin review queue.",
+          "why": "No report/block primitive exists, and request_booking rings everyone with no exclusion list, so a bad/unsafe match can recur indefinitely.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Get-directions deep link + tap-to-call",
+          "tier": "P2-high-value",
+          "whatItIs": "Once deposit_paid unmasks the address, render a maps and tel link from the cleaner job page.",
+          "why": "The jobs page already reveals full_address at deposit_paid as static text. A maps URL needs zero map library, practical friction removal for cleaners driving between jobs.",
+          "effort": "trivial",
+          "dependencies": "none"
+        },
+        {
+          "name": "Off-peak / dynamic pricing",
+          "tier": "P2-high-value",
+          "whatItIs": "pricing_rules (day/time multipliers plus optional supply-based surge keyed off the active-cleaner count dispatch already queries) applied in request_booking; Save-15%-weekday-mornings on /book.",
+          "why": "Flat pricing leaves demand-shaping money on the table; cleaners fill idle weekday mornings and peak demand is captured at a premium. The dispatch query already knows area coverage.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Two-way reviews (cleaner rates customer)",
+          "tier": "P2-high-value",
+          "whatItIs": "Add reviewer_id/reviewee_id plus double-blind reveal; cleaner review form on completion.",
+          "why": "Reviews are one-way and the schema is half-built; cleaners can flag difficult/unsafe customers and build mutual accountability.",
+          "effort": "medium",
+          "dependencies": "P0 reviews schema fix"
+        },
+        {
+          "name": "Abandoned-deposit recovery + appointment reminders",
+          "tier": "P2-high-value",
+          "whatItIs": "Scheduler scans accepted-but-unpaid bookings to send reminder, incentive, then expire/re-broadcast at deposit_deadline; and scans upcoming bookings for day-before/morning-of confirmations.",
+          "why": "Accepted-but-unpaid bookings are the closest-to-converting revenue and are abandoned silently today; reminders cut lockouts. deposit_deadline already exists, just unenforced.",
+          "effort": "small",
+          "dependencies": "P0 scheduler, P0 email"
+        },
+        {
+          "name": "no_cleaner_found recovery flow",
+          "tier": "P2-high-value",
+          "whatItIs": "Instead of dead-ending: alert admin, optionally widen to adjacent towns, and offer try-another-time / notify-me / broaden-area.",
+          "why": "request_booking sets no_cleaner_found and stops, nothing notifies or retries. A failed match becomes recoverable instead of a lost customer; plugs into the map fallback.",
+          "effort": "small",
+          "dependencies": "P0 scheduler"
+        },
+        {
+          "name": "Earnings analytics, ratings dashboard & onboarding checklist",
+          "tier": "P2-high-value",
+          "whatItIs": "Inline-SVG earnings trend bars plus avg per-job; a cleaner ratings panel (avg, distribution, recent comments); and a guided onboarding completeness card gating dispatch eligibility.",
+          "why": "The data already exists (earnings computes totals; reviews are public) but the cleaner UI never visualizes trends or shows reviews, and onboarding is a single areas checkbox then a silent wait. Pure read-side supply retention, no new deps.",
+          "effort": "medium",
+          "dependencies": "none"
+        },
+        {
+          "name": "Cleaner approximate geo (opt-in base point)",
+          "tier": "P2-high-value",
+          "whatItIs": "Optional cleaner_details.approx_lat/lng (coarse, about 1km snapped, captured at onboarding), never exposed raw, always fuzzed at query time.",
+          "why": "Anchors map pins and proximity ranking near reality instead of pure centroid jitter. v1 of the map does not need it, but it improves the flagship and unblocks distance-based dispatch.",
+          "effort": "medium",
+          "dependencies": "ships in migration 0009 columns"
+        },
+        {
+          "name": "Booking progress timeline (stepper)",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Requested then Matched then Deposit then In progress then Done then Paid, derived from booking.status.",
+          "why": "STATUS_LABEL/COLOR maps already exist; a pure presentational upgrade that reduces what-now confusion with no backend work.",
+          "effort": "trivial",
+          "dependencies": "none"
+        },
+        {
+          "name": "Gift cards + lapsed-customer win-back",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Stripe Checkout gift cards that load the wallet (/gift), and a scheduler job that finds N-day-lapsed customers and sends a comeback promo plus one-tap rebook.",
+          "why": "Recipients are zero-CAC new users and reactivation is far cheaper than acquisition; both reuse the Checkout pattern, wallet, and lifecycle email.",
+          "effort": "medium",
+          "dependencies": "wallet ledger, P0 email, promo codes"
+        },
+        {
+          "name": "Satisfaction guarantee / free re-clean + guarantee page",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Within a window, a linked zero-dollar follow-up to the same cleaner before any refund, plus a Dust Busters Guarantee policy page and structured property_damage claim.",
+          "why": "The deposit screen promises work to-your-satisfaction with no mechanism behind it; turns would-be refunds/disputes into fixed cleans and sets honest coverage expectations.",
+          "effort": "medium",
+          "dependencies": "before/after photos, dispute evidence"
+        },
+        {
+          "name": "Cleaner profile photo + bio, calendar view, tax/CSV exports",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Avatar (Storage) plus bio surfaced in get_cleaner_card; a week/agenda job view with conflict highlighting; per-year cleaner income CSV plus admin bookings/payments/disputes exports with BC/GST summary.",
+          "why": "Identity helps win acceptances and feeds favoriting; the agenda data is already calendar-ready; CAD-contractor tax exports are a one-route stream off existing rollups. Professional polish, not blockers.",
+          "effort": "medium",
+          "dependencies": "Supabase Storage (photo), audit log (richer exports)"
+        },
+        {
+          "name": "Memberships & cleaner Pro subscription",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Dust Busters Plus (discounted rate, waived fee, free reschedules, dispatch head-start) and a cleaner Pro subscription for an earlier offer window plus badge.",
+          "why": "Two recurring-revenue streams that reuse the ranked-dispatch timing mechanism and Stripe subscriptions; keep boosts bounded so quality is never overridden. Defer until ranked dispatch plus Connect exist.",
+          "effort": "large",
+          "dependencies": "ranked tiered dispatch, Stripe Connect"
+        },
+        {
+          "name": "Web push for cleaners + fraud rules engine",
+          "tier": "P3-nice-to-have",
+          "whatItIs": "Service worker plus VAPID push so offers reach cleaners with the app closed; and a rule-based risk scorer (same-person book/cancel, off-platform leakage, accept-then-decline blocking, no-show streaks) into an admin risk queue.",
+          "why": "First-accept-wins makes an unseen offer lost income (P0 SMS covers most of this sooner), and a two-sided deposit marketplace has clear off-platform-leakage incentives none of which are detected today. Heavier, post-scale bets.",
+          "effort": "large",
+          "dependencies": "P0 email/SMS (push), audit log plus cleaner stats (fraud)"
+        }
+      ],
+      "recommendedNow": [
+        "P0.1 Fix the reviews reviewer_id bug (trivial) - restores a broken correctness check and unblocks two-way reviews",
+        "P0.3 Schedule-conflict / double-booking guard in accept_offer and request_booking (small) - stops a guaranteed-no-show bug",
+        "P0.4 Cleaner self-serve Online/Offline toggle (small) - one-line dispatch filter, supply table-stakes",
+        "P0.2 Dispatch scheduler heartbeat (medium) - offer expiry plus deposit_deadline enforcement plus broadcast TTL; also powers the map's honest timeout",
+        "P0.5 Enforced cancellation windows plus automatic Stripe refunds (medium) - removes chargeback/legal exposure on a policy the UI already promises",
+        "P0.6 Commission-in-data plus honest payout/fee copy (medium) - make the marketplace actually record revenue and stop the false Friday-direct-deposit claim",
+        "P0.8 Transactional email on money/match events (medium) - cash collection depends on off-site deposit/balance nudges",
+        "P0.7 Real ID verification: document upload plus admin review (medium) - make the ID-verified/background-checked claim true",
+        "P0.9 Cleaner-side issue reporting (small) - lone-worker safety; generalize open_dispute",
+        "P1 Live cleaner-map matching plus transparency counts (medium) - the flagship; migration 0009 plus about 5 components per docs/specs/uber-cleaner-map.md",
+        "Fast follows that amplify the map and are nearly free: Saved Homes (small), One-tap Re-book (trivial), Get-directions deep link (trivial), no_cleaner_found recovery (small)"
+      ],
+      "mapVerdict": "Build it now, but ship the honest broadcast-theatre version, not faked GPS. Scope: a full-bleed takeover state of the existing /bookings/[id] page (no route changes) shown while status is broadcasting/accepted/no_cleaner_found. It is a pure presentation layer over the dispatch engine you already shipped, every pin is a real booking_offers row, every count is real, the winner is a real accept_offer. Library: react-leaflet 5 plus leaflet 1.9 plus OSM raster tiles as the primary interactive basemap (zero cost, no key, React-19-ready, isolated behind dynamic with ssr false), with a stylized static SVG basemap as the reduced-motion/tile-failure/thin-supply fallback, both consuming the identical center-and-pins contract. Privacy: one SECURITY DEFINER RPC, get_booking_matching, is the ONLY data path (customers cannot read booking_offers under RLS, and must never be granted it). It returns town centroid, fuzzed pins with opaque tokens, the notified/deciding counts, an expiry timestamp, and a safe winner card, never a cleaner_id, real coordinate, or address. Fuzz pins deterministically seeded by cleaner_id concatenated with booking_id (stable within a search, uncorrelated across bookings, so cleaners cannot be triangulated); because positions are synthesized there is no real location to recover. Realtime: reuse the StatusLive postgres_changes pattern for the load-bearing winner/terminal transition (push, instant) plus an approximately 4-second poll of the RPC for the live deciding decrement (v1; pg_notify in v2). Honesty contract is non-negotiable: no moving pins, no fake ETA (show the scheduled slot), no phantom cleaners, no SLA countdown (count up). Migration 0009 adds centroids table, broadcast_expires_at, settings.broadcast_ttl_mins, fuzz_pin, get_booking_matching, expiry via the P0 scheduler. I reconciled the UX design and tech plan into one buildable spec at docs/specs/uber-cleaner-map.md: I took the tech plan's concrete leaflet plus OSM and divIcon path and SSR risk patterns, the UX design's richer counts plus winner RPC and (cleaner_id, booking_id) fuzz seed, and merged both edge-case tables. Effort is medium (roughly 3 to 5 days) and best sequenced right after the P0 scheduler so its timeout is truthful."
+    },
+    "docsWritten": [
+      "docs/ROADMAP.md",
+      "docs/specs/uber-cleaner-map.md"
+    ]
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Ideate"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Synthesize"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "map-design",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a41cc7311dcd39bb1",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184267,
+      "queuedAt": 1782470184265,
+      "attempt": 1,
+      "lastToolName": "Bash",
+      "lastToolSummary": "cd \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\" && echo …",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470497021,
+      "tokens": 52360,
+      "toolCalls": 10,
+      "durationMs": 312754,
+      "resultPreview": "I have everything I need. I've grounded the design in the actual schema (`bookings`, `booking_offers`, `booking_addresses`, `cleaner_details`, the `request_booking`/`accept_offer`/`decline_offer`/`get_cleaner_card` RPCs), the realtime pattern (`StatusLive`/`JobsLive` → `router.refresh()`), the RLS (customers cannot read `booking_offers`), the design tokens (emerald `--color-accent: #059669`, `.car…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "map-tech",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "aeec51363e3b9d5d7",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184268,
+      "queuedAt": 1782470184266,
+      "attempt": 1,
+      "lastToolName": "Read",
+      "lastToolSummary": "C:\\Users\\HP\\Desktop\\Dust Busters\\Dust-Busters\\supabase\\migr…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470448505,
+      "tokens": 53884,
+      "toolCalls": 24,
+      "durationMs": 264237,
+      "resultPreview": "I now have full grounding in the codebase. Here is the implementation-ready plan.\n\n---\n\n# Uber-style Live Cleaner Map — Technical Implementation Plan\n\nGrounded in the actual repo: Next.js **16.2.9** / React **19.2.4** (App Router, TS), `@supabase/ssr` **0.12** + `supabase-js` **2.108**, Tailwind **v4** (`@tailwindcss/postcss`), `lucide-react` **1.20**, migrations through `0008_*`, design tokens `-…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "lens-customer",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a139c91a2b34bd10c",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184324,
+      "queuedAt": 1782470184295,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Customer Experience — booking, discovery, convenience. Grou…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470416740,
+      "tokens": 65042,
+      "toolCalls": 25,
+      "durationMs": 232416,
+      "resultPreview": "{\"lens\":\"Customer Experience — booking, discovery, convenience. Grounded in the real Dust Busters code: one-off broadcast bookings via the request_booking RPC (scheduled_at, hours, area, free-text full_address only), Stripe Checkout deposit+balance, Supabase Realtime status refresh (StatusLive.tsx), a notifications table + createNotification() helper, and an already-migrated-but-completely-unused …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "lens-cleaner",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a642c5b6449d62f41",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184325,
+      "queuedAt": 1782470184296,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "CLEANER / SUPPLY SIDE — attracting & retaining cleaners (av…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470375120,
+      "tokens": 56487,
+      "toolCalls": 22,
+      "durationMs": 190795,
+      "resultPreview": "{\"lens\":\"CLEANER / SUPPLY SIDE — attracting & retaining cleaners (availability, payouts, onboarding/verification, earnings analytics, dispatch fairness, reputation)\",\"ideas\":[{\"name\":\"Self-serve Online/Offline toggle\",\"description\":\"A prominent 'Accepting jobs / Paused' switch on the cleaner dashboard. Add cleaner_details.accepting_jobs boolean (distinct from admin-controlled `active` used for sus…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "lens-trust",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a48195f2f050024fc",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184326,
+      "queuedAt": 1782470184296,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Trust & Safety",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470411101,
+      "tokens": 61884,
+      "toolCalls": 25,
+      "durationMs": 226775,
+      "resultPreview": "{\"lens\":\"Trust & Safety\",\"ideas\":[{\"name\":\"Before/After photo proof of completion\",\"description\":\"Add a Supabase Storage bucket (job-photos) and a job_photos table (booking_id, cleaner_id, kind 'before'|'after', storage_path). Gate complete_job() in src/app/cleaner/actions.ts so a cleaner must upload >=1 'after' photo before status flips to 'completed'. Render the gallery on the customer booking p…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "lens-growth",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a6f764bff84407c8f",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470184327,
+      "queuedAt": 1782470184296,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Monetization & Growth",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470438016,
+      "tokens": 49258,
+      "toolCalls": 11,
+      "durationMs": 253689,
+      "resultPreview": "{\"lens\":\"Monetization & Growth\",\"ideas\":[{\"name\":\"Formalize the platform take-rate in data + payment flow\",\"description\":\"Today the 15% cut exists only as a display-only constant (PLATFORM_FEE_RATE in src/app/cleaner/earnings/page.tsx) — it is never stored or collected. Add commission_percent to the settings table, compute platform_fee and cleaner_payout inside the request_booking() SQL function a…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "lens-ops",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a5019b5d713766871",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470375123,
+      "queuedAt": 1782470184296,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Operations & Matching — turning the pure-broadcast dispatch…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470580031,
+      "tokens": 59547,
+      "toolCalls": 22,
+      "durationMs": 204908,
+      "resultPreview": "{\"lens\":\"Operations & Matching — turning the pure-broadcast dispatcher into a ranked, time-driven matching engine, and giving ops the tooling (live board, coverage/capacity, SLA, fraud, audit, analytics, exports, support console) to run the marketplace at scale.\",\"ideas\":[{\"name\":\"Ranked tiered offer dispatch (replace pure broadcast)\",\"description\":\"Rewrite request_booking so that instead of inser…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "lens-platform",
+      "phaseIndex": 1,
+      "phaseTitle": "Ideate",
+      "agentId": "a053eee5acfd85f9b",
+      "model": "claude-opus-4-8",
+      "state": "error",
+      "startedAt": 1782470411103,
+      "queuedAt": 1782470184296,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "PLATFORM and TECH cross-cutting production-quality features…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782470964777,
+      "error": "agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output",
+      "tokens": 88162,
+      "toolCalls": 19,
+      "durationMs": 553673
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "synthesize",
+      "phaseIndex": 2,
+      "phaseTitle": "Synthesize",
+      "agentId": "afa442234b0038c4e",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470964819,
+      "queuedAt": 1782470964784,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "I merged ~70 ideas from six lenses plus the Uber-map UX des…",
+      "promptPreview": "App: \"Dust Busters\" — a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking MARKETPLACE.\nLaunch market: Courtenay, BC, Canada (Comox Valley: Courtenay, Comox, Cumberland). Price CAD $20/hr.\nCurrent model: customer books a SCHEDULED cleaning; the request is broadcast in realtime to all verified cleaners serving that area; first cleaner to accept WINS (…",
+      "lastProgressAt": 1782471853890,
+      "tokens": 167713,
+      "toolCalls": 23,
+      "durationMs": 889071,
+      "resultPreview": "{\"executiveSummary\":\"I merged ~70 ideas from six lenses plus the Uber-map UX design and tech plan into one prioritized, de-duplicated roadmap, validated against the real code. Headline finding: several customer-facing promises are currently unbacked, and those are the true production blockers, not the map. Confirmed in-repo: the reviews hasReview query filters reviews.reviewer_id, a column that do…"
+    }
+  ],
+  "totalTokens": 654337,
+  "totalToolCalls": 181
+}

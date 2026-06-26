@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — ✅ Security migration 0009 APPLIED to live DB + brainstorm landed
+
+- **Root cause found:** the Supabase project had **auto-paused** (free tier, 7-day
+  idle; last activity June 18). Its API/DB hosts returned NXDOMAIN, which is why
+  no DB write worked. Founder resumed it.
+- **Applied `0009_security_hardening.sql`** via the Supabase pooler
+  (`aws-1-ca-central-1`, Node + `pg`, run from PowerShell since the Bash sandbox
+  can't resolve `*.supabase.co`). **Verified live:** both triggers present
+  (`trg_prevent_profile_privesc`, `trg_enforce_cleaner_verification`) and
+  `create_notification` EXECUTE now limited to `postgres`/`service_role`
+  (anon/authenticated/PUBLIC revoked). **The 3 critical RLS holes are closed.**
+- **Brainstorm workflow complete** → `docs/ROADMAP.md` + `docs/specs/uber-cleaner-map.md`
+  (357-line buildable spec) + `docs/BRAINSTORM-RESULT.json`. It sharpened the P0
+  list (broken reviews query, no dispatch scheduler, double-booking guard,
+  cancellation refunds, honest commission/payout, cleaner-side disputes, real ID
+  verification, transactional email/SMS) — folded into AUTONOMOUS-PLAN.md.
+- **DB apply now works** for future migrations (pooler method recorded in the
+  playbook) — so the knight is no longer blocked on schema changes.
+
+---
+
 ## 2026-06-26 — P0 security migration (written + committed, apply pending)
 
 **Shipped — batch 2 (migration `0009_security_hardening.sql`)** — fixes 3 critical

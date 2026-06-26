@@ -13,16 +13,29 @@ payment_type); `bookings` has NO `updated_at`.
 
 ---
 
-> **⚠️ DB-apply note:** this environment can't reach the Supabase DB (direct host
-> `db.<ref>.supabase.co` no longer resolves — pooler-only now — and the `supabase`
-> CLI isn't installed here). So migration FILES can be written/committed but NOT
-> applied automatically. Flag any migration item `[needs DB apply]` and tell the
-> founder to run `supabase db push` or paste the SQL into the Supabase SQL editor.
+> **✅ DB-apply method (WORKS):** apply migrations via the Supabase **pooler**
+> from the host using Node + `pg` (run from the **PowerShell** tool — the Bash
+> sandbox can't resolve `*.supabase.co`). Pooler host: `aws-1-ca-central-1.pooler.supabase.com`,
+> user `postgres.wfazagqgbszrysnothtb`, port `5432`, `ssl:{rejectUnauthorized:false}`;
+> DB password is in `docs/HANDOFF.md`. The free-tier project AUTO-PAUSES after 7
+> days idle — if hosts stop resolving, the founder must resume it in the dashboard.
 
 ## P0 — Critical (security + money-path correctness) — DO FIRST
-- [x] **RLS privilege escalation**: `profiles` UPDATE lacked `WITH CHECK` → any user could set `role='admin'`. Fixed via BEFORE UPDATE trigger in `0009_security_hardening.sql`. `[needs DB apply]`
-- [x] **Cleaner self-verification**: `cleaner_details` let a cleaner set `id_verified=true`. Fixed via trigger forcing admin-only verification in `0009`. `[needs DB apply]`
-- [x] **`create_notification` RPC** callable by any user against any recipient (spoofing). Revoked from anon/authenticated/PUBLIC, granted to service_role only, in `0009`. `[needs DB apply]`
+- [x] **RLS privilege escalation**: `profiles` UPDATE lacked `WITH CHECK` → any user could set `role='admin'`. Fixed via BEFORE UPDATE trigger in `0009_security_hardening.sql`. ✅ **APPLIED + verified live (2026-06-26)**.
+- [x] **Cleaner self-verification**: `cleaner_details` let a cleaner set `id_verified=true`. Fixed via trigger forcing admin-only verification in `0009`. ✅ **APPLIED + verified live**.
+- [x] **`create_notification` RPC** callable by any user against any recipient (spoofing). Revoked from anon/authenticated/PUBLIC, granted to service_role only, in `0009`. ✅ **APPLIED + verified live**.
+
+## P0 — Critical (from brainstorm roadmap — code + DB) — DO NEXT
+> Map migration is now **0010** (0009 was used for security). See docs/ROADMAP.md + docs/specs/uber-cleaner-map.md.
+- [ ] **Broken reviews query**: `bookings/[id]/page.tsx:104` filters `reviews.reviewer_id` (no such column in 0006) → duplicate-review check silently fails. Fix query to the real column (or add column via migration). (trivial, code)
+- [ ] **Double-booking guard**: `accept_offer` (0003) has no overlap check → a cleaner can accept two overlapping jobs. Add time-window guard + index. (small, migration `0011`)
+- [ ] **Cancellation refund + windows**: `cancel_booking` just sets status; no timing check, no Stripe refund despite 24h policy copy. Make it timing-aware + refund via existing service-role path. (medium, code+migration)
+- [ ] **Cleaner Online/Offline toggle**: add `cleaner_details.accepting_jobs` + AND it into dispatch WHERE. (small, migration+code)
+- [ ] **Honest money/commission**: 15% fee + "Friday direct deposit" is display-only with no payout rail. Add `settings.commission_percent`, persist platform_fee/cleaner_payout per booking, fix earnings copy until Connect ships. (medium)
+- [ ] **Cleaner-side issue reporting**: `open_dispute` is customer-only → lone cleaner has no recourse. Generalize to assigned cleaner + admin queue. (small)
+- [ ] **Dispatch scheduler heartbeat**: no cron anywhere → offer `expired` never set, `deposit_deadline` never enforced. Add `dispatch_tick()` + schedule (pg_cron or Vercel cron → service-role route). (medium) `[partly founder: cron setup]`
+- [blocked] **Real ID verification** (doc upload + admin review, or Stripe Identity) — needs Supabase Storage / Stripe Identity setup. Founder decision; log rationale.
+- [ ] **Transactional email/SMS** on money+match events (Resend/Twilio) — `[blocked: needs founder API keys]`; build the channel abstraction now, wire keys later.
 - [ ] **Admin refund writes nonexistent columns + fires Stripe refund before a guaranteed-to-fail DB insert** → refund money leaves but is never recorded. Fix column/enum names + order (DB first or transactional). (`admin/disputes/[id]/actions.ts:75-85`)
 - [ ] **Stripe chargeback webhook** inserts into `disputes` with nonexistent columns + omits NOT NULL fields → chargebacks silently lost. Reconcile to real `disputes` schema. (`api/stripe/webhook/route.ts:161-169` vs `0008:54-64`)
 - [blocked] **`STRIPE_WEBHOOK_SECRET` empty** → all webhooks 400, bookings never advance after payment. FOUNDER must add the signing secret after deploy. (env)
