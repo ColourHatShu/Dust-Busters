@@ -61,10 +61,13 @@ type Message = {
 
 export default async function BookingStatusPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ cancelled?: string }>;
 }) {
   const { id } = await params;
+  const { cancelled } = await searchParams;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
 
@@ -133,6 +136,24 @@ export default async function BookingStatusPage({
   return (
     <main className="mx-auto max-w-lg space-y-6 p-6">
       <StatusLive bookingId={booking.id} />
+
+      {cancelled === "refunded" && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          Booking cancelled. Your deposit has been refunded to your original
+          payment method (allow a few business days to appear).
+        </div>
+      )}
+      {cancelled === "forfeit" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Booking cancelled. As this was within 24 hours of the appointment, the
+          deposit was non-refundable per our cancellation policy.
+        </div>
+      )}
+      {cancelled === "1" && (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          Booking cancelled.
+        </div>
+      )}
 
       {/* Status header */}
       <div className="space-y-3">

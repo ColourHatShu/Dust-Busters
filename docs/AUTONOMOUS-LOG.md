@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: cancellation windows + automatic refunds
+
+- **Item:** P0 "Cancellation refund + windows". `cancel_booking` only flipped
+  status — no timing check, no refund — despite the 24h policy copy. Rewrote the
+  `cancelBooking` server action: if the booking is `deposit_paid` and the
+  appointment is ≥24h away, it looks up the deposit payment, issues a Stripe
+  refund, records a `type='refund'` payment row (reusing the 0013 path), and marks
+  the original deposit `refunded`; within 24h the deposit is forfeit. Also
+  notifies the assigned cleaner and redirects with a refund-outcome banner
+  (refunded / forfeit / cancelled) on the booking page.
+- Code-only (no migration). Uses the service role for the payment writes.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** honest commission/payout model, OR cleaner-side issue reporting.
+
+---
+
 ## 2026-06-26 — Knight iteration: repair the refund / dispute-resolution path
 
 - **Item:** the admin refund + dispute-resolution path was broken end-to-end
