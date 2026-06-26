@@ -5,6 +5,55 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — 📊 Milestone summary (8 knight items shipped)
+
+**Shipped + applied live, all verified (tsc + build + tests), on `dustbusters-autonomous`:**
+1. `0009` security — closed 3 critical RLS holes (privilege escalation, cleaner
+   self-verify, notification spoofing).
+2. Reviews existence-check fixed (nonexistent `reviewer_id`).
+3. `0011` double-booking guard in `accept_offer` (+ index).
+4. `0012` cleaner Online/Offline availability toggle.
+5. `0013` repaired the admin refund/dispute path (disputes were unresolvable;
+   refunds never recorded).
+6. Cancellation 24h window + automatic Stripe deposit refunds.
+7. `0014` cleaner-side issue reporting (open_dispute now allows the cleaner).
+8. `0015` honest commission model — configurable `commission_percent`, real
+   `platform_fee`/`cleaner_payout` per booking, truthful payout copy + settings
+   validation.
+
+**P0 status:** the security + money-path + safety + matching-correctness P0s are
+DONE. Remaining P0s are **founder-gated** (not automatable):
+- Dispatch scheduler heartbeat — needs pg_cron enabled or a Vercel cron hitting a
+  service-role route (deploy-dependent).
+- Real ID verification — needs Supabase Storage bucket / Stripe Identity setup.
+- Transactional email/SMS — needs Resend/Twilio API keys.
+
+**Next:** start P2 (route-level loading.tsx, OG/social metadata, search/filter on
+admin lists, receipts, star-rating review UI, `.env.example` + real README), and
+keep ideating per the loop.
+
+⛔ **Still needs the founder:** apply nothing (migrations auto-applied) — but for
+launch: Stripe live keys + `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_BASE_URL`, Vercel
+deploy, rotate the service-role key + DB password, and the 3 founder-gated P0s above.
+
+---
+
+## 2026-06-26 — Knight iteration: honest commission / payout model
+
+- **Item:** P0 "Honest money/commission". The 15% fee + "Friday direct deposit"
+  was a display-only constant with no payout rail or stored commission. Migration
+  `0015` adds `settings.commission_percent` (configurable), stores
+  `platform_fee`/`cleaner_payout` on each booking (computed in `request_booking`,
+  existing rows backfilled), earnings page now reads the real stored take-home and
+  replaces the false Friday-payout promise with honest "payouts not yet automated"
+  copy, and admin settings exposes commission % with proper validation (also fixes
+  the no-validation P1 bug — no more silent coerce-to-0).
+- **DB:** 0015 applied via pooler, verified (commission_percent=15, columns added,
+  all bookings backfilled).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+
+---
+
 ## 2026-06-26 — Knight iteration: cleaner-side issue reporting
 
 - **Item:** P0 "Cleaner-side issue reporting". `open_dispute` hard-rejected anyone

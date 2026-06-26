@@ -10,8 +10,6 @@ import {
   Info,
 } from "lucide-react";
 
-const PLATFORM_FEE_RATE = 0.15; // 15% platform cut
-
 const STATUS_LABEL: Record<string, string> = {
   completed: "Completed",
   balance_paid: "Paid",
@@ -58,15 +56,34 @@ export default async function CleanerEarningsPage() {
 
   const supabase = await createClient();
 
+  // Current commission rate (configurable in admin settings); used as a fallback
+  // for any legacy booking without a stored split.
+  const { data: settings } = await supabase
+    .from("settings")
+    .select("commission_percent")
+    .eq("id", 1)
+    .single();
+  const commissionPct = Number(settings?.commission_percent ?? 15);
+  const feeRate = commissionPct / 100;
+
   // Completed / paid / closed jobs for this cleaner
   const { data: jobs } = await supabase
     .from("bookings")
-    .select("id, status, scheduled_at, hours, area, total_amount, balance_amount")
+    .select(
+      "id, status, scheduled_at, hours, area, total_amount, balance_amount, platform_fee, cleaner_payout"
+    )
     .eq("cleaner_id", user.id)
     .in("status", ["completed", "balance_paid", "closed"])
     .order("scheduled_at", { ascending: false });
 
   const allJobs = jobs ?? [];
+
+  // Per-job take-home: the stored cleaner_payout (locked at booking time), with a
+  // fallback compute for legacy rows.
+  const payoutOf = (j: { cleaner_payout: number | null; total_amount: number }) =>
+    j.cleaner_payout != null
+      ? Number(j.cleaner_payout)
+      : Number(j.total_amount) * (1 - feeRate);
 
   // Gross = sum of total_amount on paid/closed jobs (money actually received)
   const paidJobs = allJobs.filter((j) =>
@@ -78,8 +95,7 @@ export default async function CleanerEarningsPage() {
     (sum, j) => sum + Number(j.total_amount),
     0
   );
-  const platformFee = grossEarned * PLATFORM_FEE_RATE;
-  const netEarnings = grossEarned - platformFee;
+  const netEarnings = paidJobs.reduce((sum, j) => sum + payoutOf(j), 0);
 
   const pendingBalance = pendingJobs.reduce(
     (sum, j) => sum + Number(j.balance_amount ?? 0),
@@ -113,7 +129,7 @@ export default async function CleanerEarningsPage() {
           icon={TrendingUp}
           label="Net earnings"
           value={`$${netEarnings.toFixed(2)}`}
-          sub={`after ${(PLATFORM_FEE_RATE * 100).toFixed(0)}% platform fee`}
+          sub={`after ${commissionPct.toFixed(0)}% platform fee`}
           accent
         />
         <StatCard
@@ -129,9 +145,10 @@ export default async function CleanerEarningsPage() {
         <Info className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
         <span>
           Dust Busters retains a{" "}
-          <strong>{(PLATFORM_FEE_RATE * 100).toFixed(0)}% platform fee</strong>{" "}
-          on each completed job. Payouts are processed weekly every{" "}
-          <strong>Friday</strong> via direct deposit.
+          <strong>{commissionPct.toFixed(0)}% platform fee</strong> on each job;
+          your take-home is shown above. Automated payouts aren&apos;t live yet —
+          the team arranges your payment after each completed job, and direct
+          deposit is coming soon.
         </span>
       </div>
 
@@ -211,7 +228,7 @@ export default async function CleanerEarningsPage() {
               <tbody className="divide-y divide-slate-100">
                 {allJobs.map((j) => {
                   const gross = Number(j.total_amount);
-                  const net = gross * (1 - PLATFORM_FEE_RATE);
+                  const net = payoutOf(j);
                   return (
                     <tr key={j.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-700">

@@ -31,12 +31,30 @@ export async function updateSettings(formData: FormData) {
   await assertAdmin();
   const hourlyRate = Number(formData.get("hourly_rate"));
   const depositPercent = Number(formData.get("deposit_percent"));
+  const commissionPercent = Number(formData.get("commission_percent"));
+
+  // Validate financially-critical values — never silently coerce a blank to 0.
+  if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) {
+    throw new Error("Hourly rate must be a positive number.");
+  }
+  if (!Number.isFinite(depositPercent) || depositPercent < 0 || depositPercent > 100) {
+    throw new Error("Deposit percent must be between 0 and 100.");
+  }
+  if (
+    !Number.isFinite(commissionPercent) ||
+    commissionPercent < 0 ||
+    commissionPercent > 100
+  ) {
+    throw new Error("Commission percent must be between 0 and 100.");
+  }
+
   const svc = serviceClient();
   await svc
     .from("settings")
     .update({
       hourly_rate: hourlyRate,
       deposit_percent: depositPercent,
+      commission_percent: commissionPercent,
     })
     .eq("id", 1);
   revalidatePath("/admin/settings");

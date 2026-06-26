@@ -31,7 +31,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] **Double-booking guard**: `accept_offer` now rejects accepts that overlap a cleaner's existing committed job (±1h buffer) via `tstzrange &&`; added partial index `bookings_cleaner_sched_active_idx`. Migration `0011` ✅ **APPLIED + verified live**; `acceptJob` surfaces a friendly conflict notice instead of crashing.
 - [x] **Cancellation refund + windows**: `cancelBooking` now checks the 24h window — if a deposit was paid and the appointment is ≥24h away, it issues a Stripe refund, records it (reusing the 0013 refund path), and marks the deposit `refunded`; within 24h the deposit is forfeit. Notifies the assigned cleaner; shows a refund-outcome banner on the booking page. Code-only (no migration). ✅
 - [x] **Cleaner Online/Offline toggle**: added `cleaner_details.accepting_jobs` (default true) + gated `request_booking` dispatch on it (migration `0012`, APPLIED + verified live); `setAvailability` action + online/offline toggle on the cleaner jobs page. ✅
-- [ ] **Honest money/commission**: 15% fee + "Friday direct deposit" is display-only with no payout rail. Add `settings.commission_percent`, persist platform_fee/cleaner_payout per booking, fix earnings copy until Connect ships. (medium)
+- [x] **Honest money/commission**: migration `0015` adds configurable `settings.commission_percent` and stores `platform_fee`/`cleaner_payout` per booking (computed in `request_booking`, existing rows backfilled). Earnings page now shows the real stored take-home and replaces the false "Friday direct deposit" promise with honest copy. Admin settings exposes commission % (with validation). APPLIED + verified live. ✅
 - [x] **Cleaner-side issue reporting**: `open_dispute` (migration `0014`) now authorises the assigned cleaner (or admin), not just the customer. Added a "Report a problem" form on the cleaner job page → flows into the same admin dispute queue. APPLIED + verified live. ✅
 - [ ] **Dispatch scheduler heartbeat**: no cron anywhere → offer `expired` never set, `deposit_deadline` never enforced. Add `dispatch_tick()` + schedule (pg_cron or Vercel cron → service-role route). (medium) `[partly founder: cron setup]`
 - [blocked] **Real ID verification** (doc upload + admin review, or Stripe Identity) — needs Supabase Storage / Stripe Identity setup. Founder decision; log rationale.
@@ -65,7 +65,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Pay-deposit/balance + all server-action forms have no pending/disabled state (double-click risk). Add `useFormStatus` pending buttons. (`bookings/[id]/page.tsx:238-263`)
 - [ ] Accept/Decline/Start/Complete buttons have no pending/disabled state. (`cleaner/jobs/page.tsx`)
 - [ ] No confirmation on destructive admin actions (cancel/refund/deactivate/override/reassign). (`admin/bookings/[id]/page.tsx`)
-- [ ] Settings: no validation on financially-critical values; blanks coerce to 0. Validate rate/deposit. (`admin/settings/actions.ts:30-43`)
+- [x] Settings: now validates hourly rate (>0), deposit % and commission % (0–100) and rejects blanks instead of coercing to 0. ✅ (done with the commission cluster)
 - [ ] Add nav link to cleaner profile page. (`Nav.tsx`)
 
 ### Resilience / security hardening
