@@ -28,7 +28,7 @@ payment_type); `bookings` has NO `updated_at`.
 ## P0 — Critical (from brainstorm roadmap — code + DB) — DO NEXT
 > Map migration is now **0010** (0009 was used for security). See docs/ROADMAP.md + docs/specs/uber-cleaner-map.md.
 - [x] **Broken reviews query**: `bookings/[id]/page.tsx:104` filtered `reviews.reviewer_id` (no such column) → fixed to check by unique `booking_id` only. ✅ tsc+build+test green (commit on branch).
-- [ ] **Double-booking guard**: `accept_offer` (0003) has no overlap check → a cleaner can accept two overlapping jobs. Add time-window guard + index. (small, migration `0011`)
+- [x] **Double-booking guard**: `accept_offer` now rejects accepts that overlap a cleaner's existing committed job (±1h buffer) via `tstzrange &&`; added partial index `bookings_cleaner_sched_active_idx`. Migration `0011` ✅ **APPLIED + verified live**; `acceptJob` surfaces a friendly conflict notice instead of crashing.
 - [ ] **Cancellation refund + windows**: `cancel_booking` just sets status; no timing check, no Stripe refund despite 24h policy copy. Make it timing-aware + refund via existing service-role path. (medium, code+migration)
 - [ ] **Cleaner Online/Offline toggle**: add `cleaner_details.accepting_jobs` + AND it into dispatch WHERE. (small, migration+code)
 - [ ] **Honest money/commission**: 15% fee + "Friday direct deposit" is display-only with no payout rail. Add `settings.commission_percent`, persist platform_fee/cleaner_payout per booking, fix earnings copy until Connect ships. (medium)

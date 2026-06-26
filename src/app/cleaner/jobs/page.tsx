@@ -37,7 +37,12 @@ const DEPOSIT_PAID_AND_LATER = new Set([
   "closed",
 ]);
 
-export default async function CleanerJobsPage() {
+export default async function CleanerJobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
+  const { notice } = await searchParams;
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
@@ -109,6 +114,13 @@ export default async function CleanerJobsPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-10 p-6">
       <JobsLive cleanerId={user.id} />
+
+      {notice === "conflict" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          That job overlaps with another job you&apos;ve already accepted. Finish or
+          free up that time slot before taking this one.
+        </div>
+      )}
 
       {/* Open Offers */}
       <section>

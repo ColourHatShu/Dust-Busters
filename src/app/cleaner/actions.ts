@@ -2,13 +2,21 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function acceptJob(bookingId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("accept_offer", {
     p_booking_id: bookingId,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    // Double-booking guard (0011) raises this when the cleaner already holds an
+    // overlapping job — surface it as a friendly notice instead of a crash.
+    if (error.message.includes("SCHEDULE_CONFLICT")) {
+      redirect("/cleaner/jobs?notice=conflict");
+    }
+    throw new Error(error.message);
+  }
   revalidatePath("/cleaner/jobs");
   return data === true;
 }

@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: double-booking guard in accept_offer
+
+- **Item:** P0 "Double-booking guard". `accept_offer` only checked booking status
+  + offer existence, so a cleaner could accept two overlapping jobs (guaranteed
+  no-show). Migration `0011` rewrites `accept_offer` to reject an accept when the
+  cleaner already holds a committed job (`accepted/deposit_paid/in_progress`)
+  whose window — expanded by a 1-hour travel buffer — overlaps this booking
+  (`tstzrange && tstzrange`); raises `SCHEDULE_CONFLICT`. Added partial index
+  `bookings_cleaner_sched_active_idx`. `acceptJob` now catches that and redirects
+  to `/cleaner/jobs?notice=conflict` (friendly amber banner) instead of throwing.
+- **DB:** applied via the pooler (aws-1-ca-central-1) and verified live —
+  `pg_get_functiondef` contains the guard, index exists.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** cancellation windows + automatic Stripe refunds (P0).
+
+> Note: between knight firings, the founder requested a futuristic animated
+> homepage redesign — shipped live (commit `3538506`): animated aurora/dust-mote
+> hero, cursor spotlight, gradient headline, scroll reveals, CountUp stats.
+
+---
+
 ## 2026-06-26 — Knight iteration: fix broken reviews existence-check
 
 - **Item:** P0 "Broken reviews query". `bookings/[id]/page.tsx` checked for an
