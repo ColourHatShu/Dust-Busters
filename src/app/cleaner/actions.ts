@@ -21,6 +21,20 @@ export async function acceptJob(bookingId: string) {
   return data === true;
 }
 
+export async function setAvailability(accepting: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase
+    .from("cleaner_details")
+    .update({ accepting_jobs: accepting })
+    .eq("profile_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/cleaner/jobs");
+}
+
 export async function declineJob(bookingId: string) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("decline_offer", {

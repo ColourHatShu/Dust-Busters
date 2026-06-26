@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { acceptJob, declineJob, startJob, completeJob } from "../actions";
+import {
+  acceptJob,
+  declineJob,
+  startJob,
+  completeJob,
+  setAvailability,
+} from "../actions";
 import JobsLive from "./JobsLive";
 import Link from "next/link";
 import {
@@ -48,6 +54,14 @@ export default async function CleanerJobsPage({
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
 
   const supabase = await createClient();
+
+  // Current availability (cleaner-controlled online/offline)
+  const { data: cd } = await supabase
+    .from("cleaner_details")
+    .select("accepting_jobs")
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const accepting = cd?.accepting_jobs ?? true;
 
   // Open offers ringing right now
   const { data: offers } = await supabase
@@ -114,6 +128,47 @@ export default async function CleanerJobsPage({
   return (
     <main className="mx-auto max-w-2xl space-y-10 p-6">
       <JobsLive cleanerId={user.id} />
+
+      {/* Availability toggle (online / offline) */}
+      <div
+        className={`flex items-center justify-between rounded-xl border p-4 ${
+          accepting
+            ? "border-emerald-200 bg-emerald-50"
+            : "border-slate-200 bg-slate-50"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={`relative flex h-2.5 w-2.5 rounded-full ${
+              accepting ? "bg-emerald-500" : "bg-slate-400"
+            }`}
+          >
+            {accepting && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            )}
+          </span>
+          <div>
+            <p className="font-medium text-slate-900">
+              {accepting ? "Online" : "Offline"}
+            </p>
+            <p className="text-xs text-slate-500">
+              {accepting
+                ? "Receiving new job requests"
+                : "Paused — not receiving new requests"}
+            </p>
+          </div>
+        </div>
+        <form
+          action={async () => {
+            "use server";
+            await setAvailability(!accepting);
+          }}
+        >
+          <button className="btn-base btn-secondary text-sm">
+            {accepting ? "Go offline" : "Go online"}
+          </button>
+        </form>
+      </div>
 
       {notice === "conflict" && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">

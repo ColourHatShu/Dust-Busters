@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: cleaner Online/Offline toggle
+
+- **Item:** P0 "Cleaner Online/Offline toggle". The only on/off was the
+  admin-controlled `active` flag, so a cleaner who's sick / fully booked / on
+  vacation kept getting offers to decline. Migration `0012` adds
+  `cleaner_details.accepting_jobs` (default true) and gates the `request_booking`
+  dispatch fan-out on it (`and cd.accepting_jobs`). Added `setAvailability` server
+  action + an Online/Offline toggle (pulsing status dot) at the top of the cleaner
+  jobs page. RLS already lets a cleaner update their own row, and the 0009 trigger
+  only locks `id_verified`, so the toggle is safe.
+- **DB:** applied via pooler (aws-1-ca-central-1), verified — column present,
+  dispatch gated on `accepting_jobs`.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** cancellation windows + automatic Stripe refunds (cluster with the
+  admin refund-column fix, since both touch the refund path).
+
+> Between firings the founder requested a full-page dark/futuristic landing
+> redesign — shipped live (commit `fec894d`, 6 new animated section components).
+
+---
+
 ## 2026-06-26 — Knight iteration: double-booking guard in accept_offer
 
 - **Item:** P0 "Double-booking guard". `accept_offer` only checked booking status
