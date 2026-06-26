@@ -53,7 +53,34 @@ high-value improvements — autonomously, while the founder is away.
   pooler says "tenant not found" on every region, the free-tier project has
   AUTO-PAUSED (7-day idle) — log it for the founder to resume; do not retry-loop.
 
-## Stop condition
-When every non-blocked item in `AUTONOMOUS-PLAN.md` is `[x]`, write a final
-**"✅ Production-complete summary"** to `AUTONOMOUS-LOG.md` listing what shipped
-and the remaining founder-only blockers, then stop scheduling further work.
+## Continuous improvement loop (NEVER idle-stop)
+The founder wants this to run as an **infinite loop** — keep thinking up new
+features/improvements and shipping them. So there is no "done":
+
+1. **Normal cycle:** implement the highest-priority unchecked `[ ]` item from
+   `AUTONOMOUS-PLAN.md` (verify → commit → push → log), as above.
+2. **When the backlog runs low** (fewer than ~3 unchecked, non-blocked `[ ]`
+   items left), run an **ideation pass** BEFORE picking the next item:
+   - Think broadly across lenses (customer value, cleaner/supply, trust & safety,
+     monetization/growth, ops/matching, performance, a11y, polish). Look at the
+     real code + `docs/ROADMAP.md` + `docs/AUDIT-FINDINGS.json` for gaps.
+     Occasionally a deeper sweep is fine (e.g. spawn an Explore/brainstorm agent).
+   - Append the new ideas to **`docs/IDEAS.md`** (the founder reads this) — each
+     with: what it is, user value, effort, and a 1-line rationale. This is the
+     "keep telling us new features" output. De-duplicate against IDEAS.md history
+     and already-`[x]` items so you don't repeat or oscillate.
+   - Promote the best 3–6 into the `AUTONOMOUS-PLAN.md` backlog (right tier), then
+     continue the normal cycle.
+3. **Quality bar (avoid runaway churn):** only propose/ship changes with real user
+   or operator value. No bikeshedding, no endless cosmetic refactors, no
+   reverting good work. If you can't justify an item's value in one sentence, drop
+   it. Each shipped item must still pass the full verify gate.
+4. Keep going indefinitely, one verified+committed item at a time. There is no
+   final stop — but DO write a periodic **"📊 Milestone summary"** to
+   `AUTONOMOUS-LOG.md` every ~8 shipped items (what shipped, what's queued,
+   founder-only blockers) so the founder can skim progress.
+
+> Cron note: the recurring job auto-expires after 7 days. If a firing notices the
+> job is near expiry (or gone), it may re-arm it via CronCreate with this same
+> prompt to keep the loop alive. Session-only: the loop runs only while a Claude
+> session is open on this machine.
