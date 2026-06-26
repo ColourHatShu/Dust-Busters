@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: cleaner-side issue reporting
+
+- **Item:** P0 "Cleaner-side issue reporting". `open_dispute` hard-rejected anyone
+  but the customer, so a lone cleaner in a stranger's home couldn't report a
+  no-show, unsafe conditions, or harassment. Migration `0014` generalises the
+  authorisation to the customer OR the assigned cleaner OR an admin (records
+  `raised_by`). Added a collapsible "Report a problem" form (category + details)
+  on the cleaner job detail page → `reportProblem` action → same admin dispute
+  queue, with a confirmation banner.
+- **DB:** 0014 applied via pooler, verified (open_dispute now allows the cleaner).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** honest commission/payout model (last fully-doable P0; the rest are
+  founder-gated: dispatch cron, ID verification, email/SMS keys). Milestone
+  summary due next iteration (~8 shipped).
+
+---
+
 ## 2026-06-26 — Knight iteration: cancellation windows + automatic refunds
 
 - **Item:** P0 "Cancellation refund + windows". `cancel_booking` only flipped

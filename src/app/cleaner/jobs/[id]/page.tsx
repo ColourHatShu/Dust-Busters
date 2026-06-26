@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { startJob, completeJob } from "../../actions";
+import { reportProblem } from "./report-actions";
 import MessagePanel from "@/components/MessagePanel";
 import Link from "next/link";
 import {
@@ -15,6 +16,7 @@ import {
   PlayCircle,
   CheckCircle,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -43,12 +45,18 @@ const DEPOSIT_PAID_AND_LATER = new Set([
   "closed",
 ]);
 
+// Statuses in which a dispute can be raised (matches open_dispute).
+const DISPUTABLE = new Set(["deposit_paid", "in_progress", "completed"]);
+
 export default async function CleanerJobDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ reported?: string }>;
 }) {
   const { id } = await params;
+  const { reported } = await searchParams;
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
@@ -234,6 +242,53 @@ export default async function CleanerJobDetailPage({
             </form>
           )}
         </div>
+      )}
+
+      {/* Report a problem (cleaner-side dispute) */}
+      {reported === "1" && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          Thanks — your report was submitted. Our team will review it and follow up.
+        </div>
+      )}
+      {DISPUTABLE.has(booking.status) && (
+        <details className="card group">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-700">
+            <AlertTriangle
+              className="h-4 w-4 text-amber-500"
+              strokeWidth={1.5}
+            />
+            Report a problem with this job
+          </summary>
+          <form
+            action={reportProblem.bind(null, id)}
+            className="mt-4 flex flex-col gap-3"
+          >
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-slate-700">Issue</span>
+              <select name="category" className="input-modern" required>
+                <option value="no_show">Customer no-show / no access</option>
+                <option value="other">Unsafe or inappropriate conditions</option>
+                <option value="payment_issue">Payment issue</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-slate-700">
+                What happened?
+              </span>
+              <textarea
+                name="description"
+                required
+                rows={4}
+                className="input-modern"
+                placeholder="Describe the problem. For emergencies, contact local authorities first."
+              />
+            </label>
+            <button className="btn-base btn-secondary self-start text-sm">
+              Submit report
+            </button>
+          </form>
+        </details>
       )}
 
       {/* Messaging */}
