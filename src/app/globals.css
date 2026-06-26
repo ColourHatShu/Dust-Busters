@@ -377,7 +377,7 @@ p {
     rgba(15, 23, 42, 0.55) 0%,
     transparent 16%,
     transparent 66%,
-    #f8fafc 100%
+    #0b1220 100%
   );
 }
 
@@ -456,4 +456,1106 @@ p {
   .anim-rise { animation: none !important; opacity: 1 !important; }
   .reveal { transition: none !important; opacity: 1 !important; transform: none !important; }
   .title-gradient { background-position: 0 center; }
+}
+
+
+/* ###################### LANDING SECTIONS (generated) ###################### */
+
+/* ===== section: how-it-works (HowItWorks) ===== */
+/* ===========================================================================
+   How it works — dark, futuristic animated step flow (namespace: .hiw-)
+   =========================================================================== */
+.hiw-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% -10%, #0f172a 0%, #0b1220 48%, #070b14 100%);
+  color: #e2e8f0;
+}
+
+/* Ambient aurora glows (blend with the hero) */
+.hiw-aurora {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+.hiw-aurora-a {
+  width: 34rem; height: 34rem; top: -10rem; left: -8rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+  animation: hiwDrift 24s ease-in-out infinite;
+}
+.hiw-aurora-b {
+  width: 32rem; height: 32rem; bottom: -12rem; right: -8rem;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 65%);
+  animation: hiwDrift 30s ease-in-out infinite reverse;
+}
+@keyframes hiwDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3rem, 2rem) scale(1.12); }
+}
+
+/* Faint grid floor, masked toward the centre */
+.hiw-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 233, 213, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 233, 213, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 80%);
+  mask: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 80%);
+}
+
+/* Flow grid + columns */
+.hiw-flow { position: relative; z-index: 1; }
+.hiw-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Connecting beam rail (desktop) — sits behind the nodes */
+.hiw-rail { display: none; }
+@media (min-width: 640px) {
+  .hiw-rail {
+    display: block;
+    position: absolute;
+    top: 2.25rem;
+    left: 16.66%;
+    right: 16.66%;
+    height: 2px;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    overflow: hidden;
+    z-index: 0;
+    background: linear-gradient(90deg,
+      rgba(16, 185, 129, 0.15),
+      rgba(45, 212, 191, 0.4),
+      rgba(14, 165, 233, 0.15));
+  }
+  .hiw-beam {
+    position: absolute;
+    top: 0;
+    left: -34%;
+    height: 100%;
+    width: 34%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, transparent, #6ee7b7 35%, #5eead4 50%, #38bdf8 65%, transparent);
+    box-shadow: 0 0 14px rgba(94, 234, 212, 0.8);
+    animation: hiwBeam 4.2s ease-in-out infinite;
+  }
+}
+@keyframes hiwBeam {
+  0% { left: -34%; }
+  100% { left: 100%; }
+}
+
+/* Glowing numbered node */
+.hiw-node {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(16, 185, 129, 0.35), transparent 60%),
+    rgba(11, 18, 32, 0.92);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.06), 0 10px 30px -8px rgba(2, 44, 34, 0.7);
+}
+.hiw-node-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 212, 191, 0.5);
+  animation: hiwPulse 3s ease-in-out infinite;
+}
+.hiw-node-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, #6ee7b7, #5eead4 50%, #38bdf8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes hiwPulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 0; }
+}
+
+/* Glass step card */
+.hiw-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 1.75rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hiw-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(45, 212, 191, 0.45);
+  box-shadow: 0 28px 60px -24px rgba(2, 44, 34, 0.85), 0 0 0 1px rgba(45, 212, 191, 0.18);
+}
+.hiw-card-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  background: radial-gradient(420px circle at 50% 0%, rgba(16, 185, 129, 0.16), transparent 70%);
+  transition: opacity 0.35s ease;
+}
+.hiw-card:hover .hiw-card-sheen { opacity: 1; }
+
+/* Icon chip */
+.hiw-icon {
+  display: inline-flex;
+  height: 3rem;
+  width: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: #5eead4;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.12));
+  border: 1px solid rgba(94, 234, 212, 0.25);
+}
+
+/* Accent tags */
+.hiw-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(94, 234, 212, 0.2);
+}
+
+/* Real-time match indicator (step 2) */
+.hiw-live { display: inline-flex; align-items: center; gap: 0.5rem; }
+.hiw-live-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  animation: hiwLive 1.8s ease-out infinite;
+}
+.hiw-live-label { font-size: 0.8rem; font-weight: 500; color: #6ee7b7; }
+@keyframes hiwLive {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 9px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+/* Deposit / balance split (step 3) */
+.hiw-split { display: flex; flex-direction: column; gap: 0.4rem; }
+.hiw-split-bar { display: flex; height: 0.5rem; width: 100%; gap: 3px; }
+.hiw-split-deposit {
+  flex: 0 0 60%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #10b981, #2dd4bf);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.45);
+}
+.hiw-split-balance { flex: 1 1 40%; border-radius: 9999px; background: rgba(148, 163, 184, 0.22); }
+.hiw-split-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+/* Forward-flow arrow between steps (desktop) — outside the clipped card */
+.hiw-arrow { display: none; }
+@media (min-width: 640px) {
+  .hiw-arrow {
+    display: block;
+    position: absolute;
+    top: 2.25rem;
+    right: -0.7rem;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 1.4rem;
+    height: 1.4rem;
+    color: #5eead4;
+    animation: hiwNudge 2.4s ease-in-out infinite;
+  }
+}
+@keyframes hiwNudge {
+  0%, 100% { transform: translateY(-50%) translateX(0); opacity: 0.55; }
+  50% { transform: translateY(-50%) translateX(4px); opacity: 1; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hiw-aurora,
+  .hiw-beam,
+  .hiw-node-ring,
+  .hiw-live-dot,
+  .hiw-arrow { animation: none !important; }
+}
+
+/* ===== section: why-trust (WhyTrust) ===== */
+/* ===========================================================================
+   Why Dust Busters — trust pillars (dark, futuristic glass grid)
+   namespace: .trust-  /  keyframes: trustGlowA, trustGlowB, trustBorderSpin
+   =========================================================================== */
+@property --trust-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.trust-section {
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(120% 110% at 50% 0%, #0d1a30 0%, #0b1220 48%, #070b14 100%);
+  color: #e2e8f0;
+}
+
+/* Subtle masked grid floor (matches the hero grid vocabulary) */
+.trust-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 233, 213, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 233, 213, 0.05) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask: radial-gradient(ellipse 78% 70% at 50% 38%, #000 28%, transparent 80%);
+  mask: radial-gradient(ellipse 78% 70% at 50% 38%, #000 28%, transparent 80%);
+}
+
+/* Aurora-style glow blobs */
+.trust-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+.trust-glow-a {
+  width: 34rem; height: 34rem; top: -12rem; left: -10rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+  animation: trustGlowA 24s ease-in-out infinite;
+}
+.trust-glow-b {
+  width: 30rem; height: 30rem; right: -8rem; bottom: -14rem;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 65%);
+  animation: trustGlowB 29s ease-in-out infinite;
+}
+@keyframes trustGlowA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3rem, 2rem) scale(1.12); }
+}
+@keyframes trustGlowB {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-2.5rem, -2rem) scale(0.92); }
+}
+
+/* Glass feature card with pointer-driven tilt */
+.trust-card {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  padding: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(148, 233, 213, 0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transform:
+    perspective(900px)
+    rotateX(var(--trust-rx, 0deg))
+    rotateY(var(--trust-ry, 0deg))
+    translateY(var(--trust-lift, 0px));
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+.trust-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 26px 60px -22px rgba(16, 185, 129, 0.4);
+}
+
+/* Animated conic border ring, revealed on hover */
+.trust-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--trust-angle),
+    transparent 0deg,
+    rgba(16, 185, 129, 0.9) 60deg,
+    rgba(45, 212, 191, 0.95) 120deg,
+    rgba(14, 165, 233, 0.7) 170deg,
+    transparent 210deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.trust-card:hover::before {
+  opacity: 1;
+  animation: trustBorderSpin 4.5s linear infinite;
+}
+@keyframes trustBorderSpin {
+  to { --trust-angle: 360deg; }
+}
+
+/* Inner cursor-follow glow (mirrors the hero spotlight) */
+.trust-card-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    220px circle at var(--trust-mx, 50%) var(--trust-my, 0%),
+    rgba(45, 212, 191, 0.16),
+    transparent 68%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.trust-card:hover .trust-card-spot { opacity: 1; }
+
+/* Glowing gradient icon tile */
+.trust-icon {
+  position: relative;
+  display: inline-flex;
+  height: 3.25rem;
+  width: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+  box-shadow:
+    0 10px 26px -10px rgba(16, 185, 129, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.trust-icon::after {
+  content: "";
+  position: absolute;
+  inset: -32%;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.55) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.trust-card:hover .trust-icon::after { opacity: 1; }
+
+/* Per-pillar icon hues (all within the established palette) */
+.trust-card--1 .trust-icon { background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%); }
+.trust-card--2 .trust-icon { background: linear-gradient(135deg, #2dd4bf 0%, #10b981 100%); }
+.trust-card--3 .trust-icon { background: linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 100%); }
+.trust-card--4 .trust-icon { background: linear-gradient(135deg, #6ee7b7 0%, #0ea5e9 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-glow-a, .trust-glow-b { animation: none !important; }
+  .trust-card {
+    transform: none !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+  }
+  .trust-card:hover::before { animation: none !important; }
+}
+
+/* ===== section: pricing (Pricing) ===== */
+/* ===========================================================================
+   Pricing — futuristic dark glass card w/ animated conic border + 60/40 split
+   Namespaced: .price-
+   =========================================================================== */
+
+/* Section shell — dark, blends with the hero; subtle emerald wash on top */
+.price-section {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(16, 185, 129, 0.06), transparent 60%),
+    linear-gradient(180deg, #070b14 0%, #0b1220 50%, #070b14 100%);
+  color: #e2e8f0;
+}
+
+/* Masked grid floor echoing the hero */
+.price-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 233, 213, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 233, 213, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask: radial-gradient(ellipse 72% 62% at 50% 50%, #000 28%, transparent 78%);
+  mask: radial-gradient(ellipse 72% 62% at 50% 50%, #000 28%, transparent 78%);
+}
+
+/* Aurora glow blobs (reuse hero drift keyframes for cohesion) */
+.price-aura {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+.price-aura-1 {
+  width: 30rem; height: 30rem; top: -8rem; left: -7rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+  animation: auroraDrift1 20s ease-in-out infinite;
+}
+.price-aura-2 {
+  width: 28rem; height: 28rem; bottom: -10rem; right: -7rem;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 65%);
+  animation: auroraDrift3 26s ease-in-out infinite;
+}
+
+/* Animated conic glowing border frame */
+.price-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 1.5px;
+  box-shadow:
+    0 34px 90px -30px rgba(16, 185, 129, 0.45),
+    0 0 60px -22px rgba(14, 165, 233, 0.4);
+}
+.price-frame::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 180%;
+  height: 180%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    rgba(16, 185, 129, 0) 0deg,
+    #10b981 55deg,
+    #2dd4bf 110deg,
+    #5eead4 150deg,
+    rgba(94, 234, 212, 0) 210deg,
+    rgba(14, 165, 233, 0) 300deg,
+    #0ea5e9 338deg,
+    rgba(16, 185, 129, 0) 360deg
+  );
+  animation: price-spin 6s linear infinite;
+}
+@keyframes price-spin {
+  to { transform: translate(-50%, -50%) rotate(1turn); }
+}
+
+/* Glass inner card sits above the conic, leaving only the 1.5px ring glowing */
+.price-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 26.5px;
+  background:
+    radial-gradient(130% 140% at 50% -10%, rgba(16, 185, 129, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(13, 21, 38, 0.92) 0%, rgba(7, 11, 20, 0.95) 100%);
+  border: 1px solid rgba(94, 234, 212, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+/* Big gradient price — soft emerald drop glow */
+.price-amount {
+  filter: drop-shadow(0 6px 26px rgba(16, 185, 129, 0.4));
+}
+
+/* Legend dots */
+.price-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+}
+.price-dot-deposit {
+  background: linear-gradient(135deg, #10b981, #2dd4bf);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+}
+.price-dot-balance {
+  background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.7);
+}
+
+/* 60 / 40 split bar */
+.price-split {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  height: 16px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+.price-seg {
+  position: relative;
+  min-width: 0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.price-seg-deposit {
+  flex: 60 1 0%;
+  background: linear-gradient(90deg, #059669 0%, #10b981 55%, #2dd4bf 100%);
+  box-shadow: 0 0 18px -2px rgba(16, 185, 129, 0.65);
+}
+.price-seg-balance {
+  flex: 40 1 0%;
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.4) 0%, rgba(14, 165, 233, 0.55) 100%);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  box-shadow: 0 0 16px -4px rgba(14, 165, 233, 0.5);
+}
+/* travelling sheen showing the flow of payment */
+.price-seg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 18%, rgba(255, 255, 255, 0.5) 50%, transparent 82%);
+  transform: translateX(-120%);
+  animation: price-sheen 3.4s ease-in-out infinite;
+}
+.price-seg-balance::after {
+  animation-delay: 0.55s;
+  opacity: 0.6;
+}
+@keyframes price-sheen {
+  0% { transform: translateX(-120%); }
+  60%, 100% { transform: translateX(230%); }
+}
+
+/* Honest detail bullets */
+.price-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+.price-bullet:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+  transform: translateX(2px);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .price-frame::before,
+  .price-seg::after,
+  .price-aura-1,
+  .price-aura-2 {
+    animation: none !important;
+  }
+}
+
+/* ===== section: service-areas (ServiceAreas) ===== */
+/* ===========================================================================
+   Service areas — futuristic map teaser (namespace: .area-)
+   Dark abstract "map" with 3 glowing pulsing town nodes, faint routes, and a
+   radar sweep around the valley hub. Pure CSS/SVG, SSR-safe, no JS.
+   =========================================================================== */
+
+.area-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 0%, #0d1626 0%, #0a1120 46%, #070b14 100%);
+  color: #e2e8f0;
+}
+
+/* Ambient aurora glows (reuse hero palette, sized for this section) */
+.area-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+.area-glow--a {
+  width: 32rem; height: 32rem; top: -10rem; left: -6rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+  animation: areaDrift 24s ease-in-out infinite;
+}
+.area-glow--b {
+  width: 30rem; height: 30rem; bottom: -12rem; right: -8rem;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 65%);
+  animation: areaDrift 30s ease-in-out infinite reverse;
+}
+@keyframes areaDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(2.5rem, 1.5rem) scale(1.12); }
+}
+
+/* Faint grid texture */
+.area-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 233, 213, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 233, 213, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask: radial-gradient(ellipse 90% 80% at 50% 50%, #000 30%, transparent 80%);
+  mask: radial-gradient(ellipse 90% 80% at 50% 50%, #000 30%, transparent 80%);
+}
+
+/* Glassy map panel */
+.area-panel {
+  position: relative;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  background: linear-gradient(180deg, rgba(13, 22, 38, 0.72) 0%, rgba(7, 11, 20, 0.72) 100%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 30px 80px -40px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.area-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 50% -10%, rgba(45, 212, 191, 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+.area-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 320px;
+}
+
+/* Radar range rings + rotating sweep (centered on hub via inline left/top) */
+.area-rings {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  pointer-events: none;
+  background: repeating-radial-gradient(circle, rgba(94, 234, 212, 0.10) 0 1px, transparent 1px 13%);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 72%);
+  mask: radial-gradient(circle, #000 30%, transparent 72%);
+}
+.area-radar-wrap {
+  position: absolute;
+  width: 116%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.55;
+}
+.area-radar {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(45, 212, 191, 0) 0deg,
+    rgba(45, 212, 191, 0) 295deg,
+    rgba(45, 212, 191, 0.28) 350deg,
+    rgba(110, 231, 183, 0) 360deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 0%, #000 30%, transparent 70%);
+  mask: radial-gradient(circle, #000 0%, #000 30%, transparent 70%);
+  animation: areaSweep 7s linear infinite;
+}
+@keyframes areaSweep { to { transform: rotate(360deg); } }
+
+/* Connecting routes (SVG fills the map; viewBox 0–100 matches pin %) */
+.area-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.area-line {
+  stroke: rgba(94, 234, 212, 0.18);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+.area-flow {
+  stroke: rgba(45, 212, 191, 0.9);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 6;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 3px rgba(45, 212, 191, 0.7));
+  animation: areaFlow 2.2s linear infinite;
+}
+@keyframes areaFlow { to { stroke-dashoffset: -12; } }
+
+/* Town nodes — .area-pin is a 0-size anchor at the coordinate */
+.area-pin { position: absolute; width: 0; height: 0; }
+.area-ping,
+.area-dot,
+.area-label { position: absolute; left: 0; top: 0; }
+
+.area-ping {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -1.25rem 0 0 -1.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 212, 191, 0.55);
+  opacity: 0;
+  transform: scale(0.4);
+  animation: areaPing 3s ease-out infinite;
+}
+@keyframes areaPing {
+  0% { transform: scale(0.4); opacity: 0.7; }
+  80% { opacity: 0; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.area-dot {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -1.25rem 0 0 -1.25rem;
+  border-radius: 9999px;
+  color: #06281f;
+  background: radial-gradient(circle at 30% 30%, #6ee7b7, #10b981 60%, #0d9488);
+  border: 1px solid rgba(167, 243, 208, 0.6);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12), 0 0 22px rgba(16, 185, 129, 0.6);
+  animation: areaGlow 3.2s ease-in-out infinite;
+  z-index: 2;
+}
+.area-dot--hub {
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.14), 0 0 30px rgba(45, 212, 191, 0.75);
+}
+@keyframes areaGlow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12), 0 0 18px rgba(16, 185, 129, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.18), 0 0 30px rgba(45, 212, 191, 0.8); }
+}
+
+.area-label {
+  margin-top: 1.6rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px rgba(2, 6, 23, 0.9);
+  z-index: 3;
+}
+.area-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e2e8f0;
+}
+.area-tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: #5eead4;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .area-glow,
+  .area-radar,
+  .area-flow,
+  .area-dot,
+  .area-ping { animation: none !important; }
+  .area-ping { opacity: 0 !important; }
+}
+
+/* ===== section: assurance (Assurance) ===== */
+/* ===========================================================================
+   Assurance band — slim honest-guarantees strip (dark glass + animated sheen)
+   Namespaced .assure-  · sits between trust and pricing on the dark page
+   =========================================================================== */
+
+/* Soft glow behind the band so it ties into the hero's aurora world */
+.assure-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 17rem;
+  width: 50rem;
+  max-width: 92%;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.14), rgba(14, 165, 233, 0.08) 45%, transparent 72%);
+  filter: blur(46px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* The dark glass band shell */
+.assure-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.74) 0%, rgba(7, 11, 20, 0.74) 100%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 24px 60px -28px rgba(2, 44, 34, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Animated gradient sheen sweeping across the band */
+.assure-sheen {
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 38%,
+    rgba(94, 234, 212, 0.12) 47%,
+    rgba(110, 231, 183, 0.20) 50%,
+    rgba(14, 165, 233, 0.12) 53%,
+    transparent 62%,
+    transparent 100%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  mix-blend-mode: screen;
+  animation: assureSheen 8s ease-in-out infinite;
+}
+@keyframes assureSheen {
+  0% { background-position: 150% 0; }
+  100% { background-position: -150% 0; }
+}
+
+/* Small glowing icon tile */
+.assure-icon {
+  position: relative;
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: #6ee7b7;
+  background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, 0.24), rgba(15, 23, 42, 0.45) 70%);
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  box-shadow:
+    0 0 16px -6px rgba(16, 185, 129, 0.5),
+    inset 0 0 12px -6px rgba(94, 234, 212, 0.6);
+  animation: assureGlow 4.2s ease-in-out infinite;
+}
+@keyframes assureGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 16px -6px rgba(16, 185, 129, 0.45),
+      inset 0 0 12px -6px rgba(94, 234, 212, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 26px -4px rgba(45, 212, 191, 0.7),
+      inset 0 0 14px -5px rgba(94, 234, 212, 0.7);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .assure-sheen, .assure-icon { animation: none !important; }
+  .assure-sheen { background-position: 50% 0; }
+}
+
+/* ===== section: final-cta (FinalCta) ===== */
+/* ===========================================================================
+   Final CTA — dark, aurora-lit booking band (namespace: .cta-)
+   =========================================================================== */
+
+/* Self-contained dark shell so the band glows even in isolation */
+.cta-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(125% 140% at 50% 118%, #0f2a24 0%, #0b1220 44%, #070b14 100%);
+  color: #e2e8f0;
+}
+
+/* Aurora glow blobs (own keyframes to avoid colliding with the hero's) */
+.cta-aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.cta-aurora-1 {
+  width: 40rem; height: 40rem; bottom: -18rem; left: -8rem;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+  animation: ctaDrift1 21s ease-in-out infinite;
+}
+.cta-aurora-2 {
+  width: 34rem; height: 34rem; top: -14rem; right: -6rem;
+  background: radial-gradient(circle, #2dd4bf 0%, transparent 65%);
+  animation: ctaDrift2 26s ease-in-out infinite;
+}
+.cta-aurora-3 {
+  width: 30rem; height: 30rem; top: 16%; left: 42%;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 62%);
+  animation: ctaDrift3 30s ease-in-out infinite;
+}
+@keyframes ctaDrift1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3rem, -2rem) scale(1.15); }
+}
+@keyframes ctaDrift2 {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-3rem, 2rem) scale(0.92); }
+}
+@keyframes ctaDrift3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-2rem, -2rem) scale(1.2); }
+}
+
+/* Faint tech grid, masked to a soft center ellipse */
+.cta-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 233, 213, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 233, 213, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask: radial-gradient(ellipse 78% 72% at 50% 50%, #000 28%, transparent 82%);
+  mask: radial-gradient(ellipse 78% 72% at 50% 50%, #000 28%, transparent 82%);
+}
+
+/* Soft glow halo behind the headline */
+.cta-halo {
+  position: absolute;
+  width: 38rem;
+  height: 16rem;
+  top: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.20), transparent 70%);
+  filter: blur(22px);
+}
+
+/* Floating dust motes */
+.cta-mote {
+  position: absolute;
+  border-radius: 9999px;
+  background: #5eead4;
+  box-shadow: 0 0 8px rgba(94, 234, 212, 0.8);
+  animation: ctaMote var(--cta-dur, 13s) ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes ctaMote {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(var(--cta-drift, 18px), -26px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Top + bottom fades so the band blends into neighbouring sections */
+.cta-edge {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 11, 20, 0.7) 0%,
+    transparent 14%,
+    transparent 86%,
+    rgba(7, 11, 20, 0.7) 100%
+  );
+}
+
+/* Inner glass panel with a glowing gradient ring */
+.cta-panel {
+  position: relative;
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 30px 80px -30px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.cta-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    120deg,
+    rgba(16, 185, 129, 0.55),
+    rgba(14, 165, 233, 0) 42%,
+    rgba(94, 234, 212, 0.55)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Headline sits above the decorative glow */
+.cta-title {
+  position: relative;
+  z-index: 1;
+}
+
+/* Gate the new heavy animation under reduced-motion (globals already handle
+   .anim-rise / .title-gradient / .reveal) */
+@media (prefers-reduced-motion: reduce) {
+  .cta-aurora,
+  .cta-mote {
+    animation: none !important;
+  }
 }
