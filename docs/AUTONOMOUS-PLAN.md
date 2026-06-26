@@ -13,10 +13,16 @@ payment_type); `bookings` has NO `updated_at`.
 
 ---
 
+> **⚠️ DB-apply note:** this environment can't reach the Supabase DB (direct host
+> `db.<ref>.supabase.co` no longer resolves — pooler-only now — and the `supabase`
+> CLI isn't installed here). So migration FILES can be written/committed but NOT
+> applied automatically. Flag any migration item `[needs DB apply]` and tell the
+> founder to run `supabase db push` or paste the SQL into the Supabase SQL editor.
+
 ## P0 — Critical (security + money-path correctness) — DO FIRST
-- [ ] **RLS privilege escalation**: `profiles` UPDATE policy lacks `WITH CHECK` → any user can set `role='admin'`. Add a migration with `WITH CHECK` that forbids changing `role`/`id`. (`0002_rls.sql:20-21`)
-- [ ] **Cleaner self-verification**: `cleaner_details` INSERT/UPDATE policies let a cleaner set `id_verified=true`. Restrict so only admins can flip verification. (`0002_rls.sql:26-29`)
-- [ ] **`create_notification` RPC** is SECURITY DEFINER and callable by any user against any recipient (spoofing). Lock it down (revoke from anon/authenticated, or assert caller). (`0008_improvements.sql:246-261`)
+- [x] **RLS privilege escalation**: `profiles` UPDATE lacked `WITH CHECK` → any user could set `role='admin'`. Fixed via BEFORE UPDATE trigger in `0009_security_hardening.sql`. `[needs DB apply]`
+- [x] **Cleaner self-verification**: `cleaner_details` let a cleaner set `id_verified=true`. Fixed via trigger forcing admin-only verification in `0009`. `[needs DB apply]`
+- [x] **`create_notification` RPC** callable by any user against any recipient (spoofing). Revoked from anon/authenticated/PUBLIC, granted to service_role only, in `0009`. `[needs DB apply]`
 - [ ] **Admin refund writes nonexistent columns + fires Stripe refund before a guaranteed-to-fail DB insert** → refund money leaves but is never recorded. Fix column/enum names + order (DB first or transactional). (`admin/disputes/[id]/actions.ts:75-85`)
 - [ ] **Stripe chargeback webhook** inserts into `disputes` with nonexistent columns + omits NOT NULL fields → chargebacks silently lost. Reconcile to real `disputes` schema. (`api/stripe/webhook/route.ts:161-169` vs `0008:54-64`)
 - [blocked] **`STRIPE_WEBHOOK_SECRET` empty** → all webhooks 400, bookings never advance after payment. FOUNDER must add the signing secret after deploy. (env)

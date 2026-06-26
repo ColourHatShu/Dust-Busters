@@ -43,8 +43,11 @@ high-value improvements — autonomously, while the founder is away.
   **"⛔ Needs the founder"** in `AUTONOMOUS-LOG.md` and skip it.
 - Prefer reversible, branch-isolated changes. Keep `main` untouched.
 - If a migration is required, write the `.sql` file under `supabase/migrations/`
-  and note in the log that it must be applied (`supabase db push`); apply it only
-  if it is additive and safe.
+  and note in the log that it must be applied. **This environment usually cannot
+  apply it** (the direct DB host `db.<ref>.supabase.co` no longer resolves —
+  pooler-only — and the `supabase` CLI isn't installed). So commit the migration,
+  mark the item `[needs DB apply]`, and flag it for the founder. Pure-code items
+  that match the EXISTING schema need no DB access — prefer those.
 
 ## Stop condition
 When every non-blocked item in `AUTONOMOUS-PLAN.md` is `[x]`, write a final

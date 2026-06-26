@@ -5,6 +5,31 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — P0 security migration (written + committed, apply pending)
+
+**Shipped — batch 2 (migration `0009_security_hardening.sql`)** — fixes 3 critical
+holes the audit found in the RLS layer:
+- **Privilege escalation**: `profiles` UPDATE had no `WITH CHECK`, so any signed-in
+  user could `UPDATE profiles SET role='admin'` on their own row via the API.
+  Fixed with a `BEFORE UPDATE` trigger that blocks non-admins from changing
+  `role`/`id`.
+- **Cleaner self-verification**: cleaner_details policies let a cleaner set
+  `id_verified=true` themselves. Trigger now forces verification to be
+  admin-only (false on self-insert, unchanged on self-update).
+- **Notification spoofing**: the `create_notification` SECURITY DEFINER RPC was
+  callable by any user against any recipient. Revoked from PUBLIC/anon/
+  authenticated; granted to `service_role` only (the app inserts via service role,
+  so nothing legitimate breaks).
+
+**⚠️ NOT YET LIVE:** I could not apply this migration from this environment —
+Supabase's direct DB host (`db.<ref>.supabase.co`) no longer resolves (pooler-only
+now) and the `supabase` CLI isn't installed here. The migration is reviewed and
+committed. **Founder action:** run `supabase db push` (or paste
+`supabase/migrations/0009_security_hardening.sql` into the Supabase SQL editor).
+Until applied, the privilege-escalation hole remains open in the live DB.
+
+---
+
 ## 2026-06-26 — Session start: analysis + first fixes
 
 **Set up**

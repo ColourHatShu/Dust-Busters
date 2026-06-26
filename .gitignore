@@ -52,3 +52,6 @@ env.local
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# autonomous knight runtime lock
+docs/.knight-lock
