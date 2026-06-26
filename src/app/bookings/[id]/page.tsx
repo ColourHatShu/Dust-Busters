@@ -97,11 +97,13 @@ export default async function BookingStatusPage({
   // Check if a review already exists
   let hasReview = false;
   if (REVIEW_ALLOWED.includes(booking.status)) {
+    // reviews are 1:1 with a booking (booking_id is unique), and this booking
+    // was already loaded for the current user — so booking_id alone is the
+    // correct existence check. (There is no reviewer_id column on reviews.)
     const { count } = await supabase
       .from("reviews")
       .select("id", { count: "exact", head: true })
-      .eq("booking_id", id)
-      .eq("reviewer_id", user.id);
+      .eq("booking_id", id);
     hasReview = (count ?? 0) > 0;
   }
 

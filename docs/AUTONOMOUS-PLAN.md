@@ -27,7 +27,7 @@ payment_type); `bookings` has NO `updated_at`.
 
 ## P0 — Critical (from brainstorm roadmap — code + DB) — DO NEXT
 > Map migration is now **0010** (0009 was used for security). See docs/ROADMAP.md + docs/specs/uber-cleaner-map.md.
-- [ ] **Broken reviews query**: `bookings/[id]/page.tsx:104` filters `reviews.reviewer_id` (no such column in 0006) → duplicate-review check silently fails. Fix query to the real column (or add column via migration). (trivial, code)
+- [x] **Broken reviews query**: `bookings/[id]/page.tsx:104` filtered `reviews.reviewer_id` (no such column) → fixed to check by unique `booking_id` only. ✅ tsc+build+test green (commit on branch).
 - [ ] **Double-booking guard**: `accept_offer` (0003) has no overlap check → a cleaner can accept two overlapping jobs. Add time-window guard + index. (small, migration `0011`)
 - [ ] **Cancellation refund + windows**: `cancel_booking` just sets status; no timing check, no Stripe refund despite 24h policy copy. Make it timing-aware + refund via existing service-role path. (medium, code+migration)
 - [ ] **Cleaner Online/Offline toggle**: add `cleaner_details.accepting_jobs` + AND it into dispatch WHERE. (small, migration+code)

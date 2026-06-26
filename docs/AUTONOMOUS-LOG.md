@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: fix broken reviews existence-check
+
+- **Item:** P0 "Broken reviews query". `bookings/[id]/page.tsx` checked for an
+  existing review with `.eq("reviewer_id", user.id)`, but the `reviews` table
+  (0006) has no `reviewer_id` column — the query errored and `hasReview` silently
+  stayed false, so the "Leave a review" prompt could reappear after a review and a
+  resubmit would hit the unique `booking_id` constraint. Fixed to check by the
+  unique `booking_id` alone (correct, since reviews are 1:1 with a booking and the
+  booking was already loaded for this user). The insert action was already correct.
+- **Verify:** `tsc --noEmit` clean · `npm test` 3/3 pass · `next build` 25/25. ✅
+- **Next up:** double-booking guard in `accept_offer` (migration 0011).
+
+---
+
 ## 2026-06-26 — ✅ Security migration 0009 APPLIED to live DB + brainstorm landed
 
 - **Root cause found:** the Supabase project had **auto-paused** (free tier, 7-day
