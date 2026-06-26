@@ -61,10 +61,10 @@ export default async function AdminDisputeDetailPage({
   // Payments for this booking (for refund selection)
   const { data: payments } = await supabase
     .from("payments")
-    .select("id, payment_type, amount, status, stripe_payment_intent_id")
+    .select("id, type, amount, status, stripe_payment_intent_id")
     .eq("booking_id", dispute.booking_id)
     .eq("status", "paid")
-    .neq("payment_type", "refund");
+    .neq("type", "refund");
 
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-6">
@@ -205,10 +205,10 @@ export default async function AdminDisputeDetailPage({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Payment to Refund
               </label>
-              <select name="payment_id" className="input-modern w-full" onChange={() => {}}>
+              <select name="payment_id" className="input-modern w-full">
                 {(payments ?? []).map((p) => (
                   <option key={p.id} value={p.id} data-intent={p.stripe_payment_intent_id ?? "none"}>
-                    {p.payment_type} — ${Number(p.amount).toFixed(2)} ({p.status})
+                    {p.type} — ${Number(p.amount).toFixed(2)} ({p.status})
                   </option>
                 ))}
               </select>

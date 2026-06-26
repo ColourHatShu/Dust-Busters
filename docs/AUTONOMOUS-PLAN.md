@@ -42,8 +42,9 @@ payment_type); `bookings` has NO `updated_at`.
 
 ## P1 — High: correctness, feedback, validation, resilience
 ### Schema-mismatch bugs (fix code to match real columns)
-- [ ] Admin dispute `updateDisputeStatus` sets nonexistent `updated_at` → disputes can't be resolved at all. (`admin/disputes/[id]/actions.ts:45`)
-- [ ] Admin dispute page queries `payments.payment_type` → refund panel always empty. Use `payments.type`. (`admin/disputes/[id]/page.tsx:62-67,211`)
+- [x] Admin dispute `updateDisputeStatus` set nonexistent `updated_at` → removed; admins can resolve disputes again. ✅
+- [x] Admin dispute page queried `payments.payment_type` → fixed to `type` (select/neq/render); removed a no-op `onChange` that would crash the server-rendered select. ✅
+- [x] **Admin `issueRefund` (critical)**: wrote nonexistent `payment_type`/`notes`/`updated_at` + invalid enum `'refund'` → Stripe refunded but DB write always failed. Migration `0013` adds `'refund'` to `payment_type`, `'refunded'` to `payment_status`, and a `notes` column; `issueRefund` now records the refund correctly, marks the original payment `refunded`, and surfaces DB errors. ✅ APPLIED + verified live. **Unblocks the cancellation-refund item.**
 - [ ] Cleaner acceptance rate reads non-existent `offers` table / `status` col → use `booking_offers.state`. (`admin/cleaners/page.tsx:36-38`)
 - [ ] Cleaner profile reviews query selects non-existent `created_by` → reviews + Avg Rating blank. (`admin/cleaners/[id]/page.tsx:60`)
 - [ ] Duplicate-review check queries nonexistent `reviews.reviewer_id` → prompt never clears, resubmit errors. (`bookings/[id]/page.tsx:99-106`)

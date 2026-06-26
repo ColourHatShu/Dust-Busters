@@ -5,6 +5,30 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-26 — Knight iteration: repair the refund / dispute-resolution path
+
+- **Item:** the admin refund + dispute-resolution path was broken end-to-end
+  (prerequisite for the cancellation-refund P0):
+  - `updateDisputeStatus` wrote `disputes.updated_at` (no such column) → every
+    update failed → **admins literally could not resolve disputes**. Removed it.
+  - `issueRefund` inserted `payment_type`/`notes`/`updated_at` (nonexistent) +
+    enum `'refund'` (not in payment_type) → the Stripe refund fired but the DB
+    record always failed (money out, unrecorded). Migration `0013` adds `'refund'`
+    to `payment_type`, `'refunded'` to `payment_status`, and a `notes` column;
+    `issueRefund` now records correctly with `type`, marks the original payment
+    `refunded`, and throws a clear error if the DB write fails.
+  - Dispute page queried `payments.payment_type` (nonexistent) → refund panel
+    always empty. Fixed to `type`; also removed a no-op `onChange` that would
+    crash the server-rendered `<select>`.
+- **DB:** 0013 applied via pooler with per-statement autocommit (ALTER TYPE ADD
+  VALUE can't be used in the same txn). Verified: payment_type = balance/deposit/
+  refund, payment_status = failed/paid/pending/refunded, payments.notes present.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** cancellation windows + automatic Stripe refunds — now unblocked
+  (reuses this corrected refund recording).
+
+---
+
 ## 2026-06-26 — Knight iteration: cleaner Online/Offline toggle
 
 - **Item:** P0 "Cleaner Online/Offline toggle". The only on/off was the

@@ -34,6 +34,8 @@ export async function updateDisputeStatus(formData: FormData) {
   const resolution = formData.get("resolution") as string;
 
   const svc = serviceClient();
+  // NOTE: disputes has no `updated_at` column — including it made every update
+  // fail, so admins couldn't resolve disputes at all.
   await svc
     .from("disputes")
     .update({
@@ -42,7 +44,6 @@ export async function updateDisputeStatus(formData: FormData) {
       resolved_at: ["resolved", "closed"].includes(status)
         ? new Date().toISOString()
         : null,
-      updated_at: new Date().toISOString(),
     })
     .eq("id", disputeId);
 
@@ -71,18 +72,24 @@ export async function issueRefund(formData: FormData) {
   }
 
   const svc = serviceClient();
-  // Record refund as a payment row
-  await svc.from("payments").insert({
+  // Record the refund as its own payment row. Correct columns: `type` (not
+  // payment_type), `notes`; no `updated_at`. Requires the 'refund' payment_type
+  // value added in migration 0013.
+  const { error: insertErr } = await svc.from("payments").insert({
     booking_id: bookingId,
-    payment_type: "refund",
+    type: "refund",
     amount: -Math.abs(amount),
     status: "paid",
     paid_at: new Date().toISOString(),
     stripe_payment_intent_id: stripeRefundId,
     notes: reason,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   });
+  if (insertErr) throw new Error(`Refund recorded in Stripe but DB write failed: ${insertErr.message}`);
+
+  // Mark the original payment as refunded so the dispute/booking views are clear.
+  if (paymentId) {
+    await svc.from("payments").update({ status: "refunded" }).eq("id", paymentId);
+  }
 
   revalidatePath(`/admin/disputes/${disputeId}`);
   revalidatePath(`/admin/bookings/${bookingId}`);
