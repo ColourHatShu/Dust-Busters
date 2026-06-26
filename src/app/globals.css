@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+}
+
+/* Tailwind v4: color tokens MUST live in @theme to emit utilities
+   (text-accent, bg-accent, hover:text-accent-light, etc.). Declaring them
+   in plain :root silently produced no classes. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
   --color-primary: #0f172a;
   --color-primary-light: #1e293b;
   --color-accent: #059669;
@@ -10,20 +21,6 @@
   --color-accent-dark: #047857;
   --color-neutral: #475569;
   --color-neutral-light: #94a3b8;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-  }
 }
 
 body {
@@ -71,9 +68,19 @@ p {
   font-size: 0.875rem;
 }
 
-/* Premium text gradient — Navy to Teal */
+/* Premium text gradient — Navy to Teal (for light backgrounds) */
 .text-gradient {
   background: linear-gradient(135deg, #0f172a 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Light-on-dark variant — for the navbar logo and pricing price, where the
+   navy start of .text-gradient would otherwise be near-invisible (#0f172a on
+   #1e293b ≈ 1.1:1 contrast). */
+.text-gradient-on-dark {
+  background: linear-gradient(135deg, #e2e8f0 0%, #34d399 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -127,11 +134,9 @@ p {
   transform: translateY(0);
 }
 
-.btn-primary:focus {
-  outline: none;
-  ring: 2px;
-  ring-color: #059669;
-  ring-offset: 2px;
+.btn-primary:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
 }
 
 .btn-primary:disabled {
@@ -152,11 +157,9 @@ p {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.btn-secondary:focus {
-  outline: none;
-  ring: 2px;
-  ring-color: #64748b;
-  ring-offset: 2px;
+.btn-secondary:focus-visible {
+  outline: 2px solid #64748b;
+  outline-offset: 2px;
 }
 
 /* Input styling */
@@ -181,19 +184,6 @@ p {
 
 .input-modern::placeholder {
   color: #cbd5e1;
-}
-
-/* Dark mode input */
-@media (prefers-color-scheme: dark) {
-  .input-modern {
-    background-color: #1e293b;
-    border-color: #475569;
-    color: white;
-  }
-
-  .input-modern::placeholder {
-    color: #64748b;
-  }
 }
 
 /* Premium card system — solid backgrounds with shadows */
@@ -278,28 +268,10 @@ p {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0f172a;
-    color: #f1f5f9;
-  }
-
-  .card {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #f1f5f9;
-  }
-
-  h1, h2, h3 {
-    color: #f1f5f9;
-  }
-
-  p {
-    color: #cbd5e1;
-  }
-
-  .text-muted {
-    color: #94a3b8;
-  }
+/* Locked to a single polished light theme — no prefers-color-scheme
+   override, because pages are authored light-first (slate text on white).
+   Honoring the OS dark preference here produced unreadable mixed light/dark
+   patches across pages. Light-only is the intended, production-safe theme. */
+:root {
+  color-scheme: light;
 }

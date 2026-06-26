@@ -1,0 +1,1659 @@
+{
+  "summary": "Exhaustive production-readiness audit of the Dust Busters app across UX, features, security, bugs, a11y, data, and config",
+  "agentCount": 9,
+  "logs": [],
+  "result": [
+    {
+      "dimension": "UX/UI quality of PUBLIC + AUTH pages",
+      "summary": "The public/auth surface is visually coherent and well-structured (clear hero, how-it-works, trust grid, pricing, service-area, footer CTA), and the prior dark-mode/Nav/Footer fixes hold up. However there is a class of real, demonstrable defects rooted in the Tailwind v4 theme setup: the `--color-accent*` variables were left in `:root` instead of `@theme`, so every `text-accent*` / `bg-accent` utility used in the Nav and login page generates NO CSS (verified against compiled output). This silently breaks the notification badge background, all desktop nav hover/active states, and the login mode-toggle affordance. Separately, the button `:focus` rules set `outline:none` then try to add a ring via invalid CSS (`ring:`/`ring-color:` are not real properties), leaving every primary/secondary CTA with no visible keyboard focus (WCAG 2.4.7 fail). The navy→teal `text-gradient` is reused on dark (#1e293b) surfaces (navbar logo, pricing \"$20\"), where the navy half is essentially invisible. There are also content/trust gaps (hardcoded \"50+ cleans\", no Terms/Privacy links, no OG/social metadata), a broken signup happy-path (redirects as if logged in even when email confirmation is pending), and standard form-UX omissions on login (no show-password, no forgot-password, no autocomplete). Dead CSS remains after the theme refactor.",
+      "findings": [
+        {
+          "title": "Accent color utilities never generated — notification badge, nav hover/active, and login toggle are all silently broken",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/globals.css:7-15 (vars in :root, not @theme); NavClient.tsx:27,50,53; login/page.tsx:98",
+          "problem": "In Tailwind v4 only `--color-*` tokens declared inside `@theme` generate utilities. Here `--color-accent`, `--color-accent-light`, `--color-accent-dark` live in plain `:root`, while `@theme inline` only registers background/foreground/fonts. I confirmed against the compiled CSS that NO `.text-accent`, `.text-accent-light`, `.text-accent-dark`, or `.bg-accent` rules exist. Consequences: (1) the unread notification badge `bg-accent text-white` (NavClient.tsx:27) has no background — the colored circle disappears, leaving a stray white digit on the dark navbar; (2) desktop nav links `hover:text-accent-light` and the active-page `text-accent-light` (NavClient.tsx:50-53) produce no color change at all — no hover feedback, no active indication; (3) the login signup/login toggle `text-accent hover:text-accent-dark` (login/page.tsx:98) renders as default dark inherited text, so it does not read as a clickable link.",
+          "fix": "Move the accent variables into the theme namespace so utilities are emitted, e.g. add to the `@theme inline` block: `--color-accent: #059669; --color-accent-light: #10b981; --color-accent-dark: #047857;` (and drop the duplicates from `:root`). Then re-verify `bg-accent`/`text-accent-light` appear in built CSS. Alternatively replace the classes with concrete `emerald-*` utilities (e.g. `bg-emerald-600`, `hover:text-emerald-400`).",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "All primary/secondary CTAs have no visible keyboard focus indicator (WCAG 2.4.7 fail)",
+          "severity": "high",
+          "category": "a11y",
+          "file": "src/app/globals.css:123-128, 148-153",
+          "problem": "`.btn-primary:focus` and `.btn-secondary:focus` set `outline: none;` and then attempt to draw a focus ring with `ring: 2px; ring-color: #059669; ring-offset: 2px;`. `ring`, `ring-color`, and `ring-offset` are Tailwind utility names, NOT real CSS properties, so browsers ignore them. Net effect: the default outline is removed and nothing replaces it. Every hero/pricing CTA, the 'How it works' button, and the login submit button become invisible to keyboard focus — a Focus Visible failure affecting all main calls-to-action site-wide.",
+          "fix": "Replace the invalid declarations with a real focus indicator, e.g. `.btn-primary:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }` and likewise for `.btn-secondary` (use a slate/neutral color). Use `:focus-visible` so the ring only shows for keyboard users.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Navy→teal text-gradient reused on dark surfaces makes the navbar logo and pricing '$20' half-invisible",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/app/globals.css:68-73; used in NavClient.tsx:34 and page.tsx:167",
+          "problem": "`.text-gradient` is `linear-gradient(135deg, #0f172a 0%, #059669 100%)` — designed for white backgrounds. It is reused on the dark navbar (`#1e293b`) for the 'Dust Busters' logo and on the dark pricing card for the '$20' price. The navy start color (#0f172a, slate-900) on #1e293b yields roughly 1.1:1 contrast, so the left portion of the brand wordmark and the '$2' of the price are effectively invisible. The brand name being unreadable in the nav is a notable polish/trust problem.",
+          "fix": "Add a light-on-dark variant gradient (e.g. `.text-gradient-on-dark { background: linear-gradient(135deg, #e2e8f0 0%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }`) and use it for the navbar logo and the pricing price; or render the logo/price in a solid `text-emerald-400`/white on dark sections.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Signup redirects to home as if logged in even when email confirmation is pending",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/login/page.tsx:21-33",
+          "problem": "On signup the code only checks `error`; when Supabase email confirmation is enabled, `signUp` returns no error but `data.session === null` (user must confirm via email first). The code unconditionally calls `router.push('/')` + `router.refresh()`, so the user is bounced to the homepage with no session and no message. They get no 'check your email' guidance and will appear logged-out with no explanation — a confusing dead-end for every new signup.",
+          "fix": "Capture `data` from the signUp call and branch: if `mode === 'signup' && !data.session`, show a success state like 'Check your email to confirm your account' instead of redirecting. Only push to '/' when a session actually exists.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Login form missing show-password toggle, forgot-password link, and autocomplete attributes",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/login/page.tsx:52-82",
+          "problem": "The auth form has no show/hide password toggle (users cannot verify what they typed), no 'Forgot password?' affordance (no recovery path at all in the UI), and none of the inputs set autocomplete hints. Without `autoComplete=\"email\"`, `\"current-password\"`/`\"new-password\"`, and `\"name\"`, browser/password-manager autofill and save prompts work poorly, increasing login friction and abandonment.",
+          "fix": "Add a button to toggle the password input `type` between `password`/`text` (with an Eye/EyeOff icon and aria-label). Add a 'Forgot password?' link that calls `supabase.auth.resetPasswordForEmail`. Add `autoComplete=\"email\"` to email, `autoComplete={mode==='signup' ? 'new-password' : 'current-password'}` to password, and `autoComplete=\"name\"` to the name field.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Hardcoded '50+ cleans completed' trust stat is unverifiable/placeholder",
+          "severity": "medium",
+          "category": "data",
+          "file": "src/app/page.tsx:38-39",
+          "problem": "The hero displays a static '50+ cleans completed' figure. For a launching marketplace this is an unverifiable/likely-fabricated number that will go stale and erodes trust if challenged. The adjacent '100% ID-verified cleaners' is a policy claim (defensible) but the count is a concrete metric presented as fact.",
+          "fix": "Either drive it from a real DB count (e.g. completed/closed bookings) rendered server-side, or replace the numeric claim with a non-fabricated trust signal (e.g. 'Locally owned in the Comox Valley', 'Pay only after the job is done'). If kept, ensure it is genuinely accurate.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "About page uses off-brand blue links and gray text, breaking visual consistency",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/about/page.tsx:15,21,27,35,38",
+          "problem": "The About page styles body copy as `text-gray-600` and links as `text-blue-600 hover:underline`, whereas the entire rest of the site uses the slate-600 + emerald accent palette. The blue links clash with the emerald brand, and the two CTAs ('Back to home', 'Book a cleaning') are plain text links rather than buttons, so the primary 'Book a cleaning' action has weak affordance. The page is also bare text with no card/visual structure.",
+          "fix": "Switch body text to `text-slate-600` and links to the emerald accent; render 'Book a cleaning' as `btn-base btn-primary` and 'Back to home' as a secondary link, matching the landing page. Consider wrapping content in a `card` for consistency.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Missing Open Graph / Twitter / metadataBase — poor link previews when shared",
+          "severity": "medium",
+          "category": "config",
+          "file": "src/app/layout.tsx:17-21",
+          "problem": "Root metadata defines only `title` and `description`. There is no `metadataBase`, no `openGraph` block, no `twitter` card, and no OG image. When the landing page is shared via SMS/social/Slack (a primary acquisition channel for a local service), the preview will be a bare URL with no image or rich title — weak first impression and missed marketing value. Next.js will also warn about resolving OG image URLs without `metadataBase`.",
+          "fix": "Add `metadataBase: new URL('https://<prod-domain>')`, an `openGraph` object (title, description, url, siteName, locale, type:'website', and an image), and a `twitter` card (summary_large_image). Add an `app/opengraph-image.(png|tsx)` so shares render a branded card.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "No Terms of Service / Privacy Policy links anywhere — legal & trust gap for a payments marketplace",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/components/Footer.tsx:7-23",
+          "problem": "The footer (the only site-wide links area) lists Home/About/Book/email but no Privacy Policy or Terms of Service. For a platform that collects accounts, addresses, and processes Stripe card payments, the absence of Privacy/Terms links is both a trust signal gap and a likely compliance/Stripe-onboarding requirement. There is also no acceptance of terms at signup.",
+          "fix": "Add `/privacy` and `/terms` pages and link them in the footer; add a 'By creating an account you agree to our Terms' line on the signup form.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "Dead CSS left over after theme refactor (unused utility classes)",
+          "severity": "low",
+          "category": "config",
+          "file": "src/app/globals.css:62-65 (.text-muted), 88-90 (.shadow-elevation-xl), 194-198 (.card-dark), 234-247 (.status-badge-primary/-success/-accent)",
+          "problem": "Confirmed via codebase grep: `.text-muted`, `.shadow-elevation-xl`, `.card-dark`, and the `.status-badge-primary/-success/-accent` modifiers are referenced in zero .tsx files (status badges supply colors inline like `bg-green-100` instead). These are dead rules carried over from earlier theming, adding maintenance noise and CSS weight.",
+          "fix": "Remove the unused class definitions, or actually adopt them (e.g. use `.status-badge-success` in place of the repeated inline `bg-green-100 text-green-800`) to consolidate the badge color logic in one place.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Anchor jump to #how-it-works hides the heading under the sticky navbar; no smooth scrolling",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/page.tsx:30,55-58; src/app/globals.css:200-209",
+          "problem": "The hero 'How it works' link targets `#how-it-works`, but the navbar is `position: sticky; top:0; z-50` and the target section has no `scroll-margin-top`, so the section heading lands beneath the navbar after the jump. There is also no `scroll-behavior: smooth`, so it hard-jumps.",
+          "fix": "Add `scroll-mt-24` to the `#how-it-works` section (and any other in-page anchor targets) and set `html { scroll-behavior: smooth; }` in globals.css.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Pricing card checklist text fails AA contrast on the dark panel",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/page.tsx:170-182; src/app/globals.css:211-223",
+          "problem": "The pricing checklist items use `text-slate-400` (#94a3b8) on the `.pricing-section` background (#1e293b). That is roughly 3.8:1 — below the WCAG AA 4.5:1 threshold for this small body text — making the key 'what you pay' details hard to read.",
+          "fix": "Use `text-slate-300` (#cbd5e1) for the checklist item text to clear AA on the dark background; keep the emerald check icons.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Login page min-h-screen ignores nav/footer, pushing the form off-center and the footer below the fold",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/login/page.tsx:36",
+          "problem": "The login `<main>` uses `min-h-screen` (100vh) while the layout already stacks a sticky nav above it and a footer below within a flex column. Total height becomes nav + 100vh + footer, so the page always scrolls and the vertically-centered card sits below true viewport center (offset by the nav). Minor but looks slightly off on the most-visited auth page.",
+          "fix": "Since the layout body is `min-h-full flex flex-col` with `flex-1` content, use `flex-1` centering (`flex flex-col justify-center`) instead of `min-h-screen`, or `min-h-[calc(100vh-<navheight>)]`, so the card centers within the available space without overflow.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "No skip-to-content link for keyboard/screen-reader users",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/layout.tsx:33-37",
+          "problem": "Every page begins with the navbar and its links; there is no skip link, so keyboard and screen-reader users must tab through the full nav on every page before reaching content. There is also no landmark `id` on the main content wrapper.",
+          "fix": "Add a visually-hidden-until-focused 'Skip to main content' anchor as the first child of `<body>` targeting an `id=\"main\"` on the content `<div>` (or wrap children in `<main id=\"main\">`).",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "Hero is text-only with no imagery; busy-state button uses a bare ellipsis",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/page.tsx:13-52; src/app/login/page.tsx:88-93",
+          "problem": "The landing hero has no product/lifestyle image or illustration, leaving a large amount of empty space and a sparse first impression for a consumer service. Separately, the login submit button's loading state replaces all text with a single '…' character (no spinner, label disappears), which reads as broken rather than 'working'.",
+          "fix": "Add a hero image/illustration (e.g. a clean home or a cleaner) next to the copy on desktop. For the button, keep the label and add a spinner (e.g. 'Logging in…' with a small animated icon) instead of replacing the text with an ellipsis.",
+          "isImprovement": true,
+          "effort": "medium"
+        }
+      ]
+    },
+    {
+      "dimension": "UX/UI + flow quality of CUSTOMER pages (book, bookings list/detail/dispute/review, StatusLive/MessagePanel/actions, account, notifications)",
+      "summary": "The customer flow is visually polished and consistent (cards, accent system, good status badges, sensible empty states, gated address/messaging/review by status). However there are several material defects. The headline bug is on /book: the \"Estimated total\" and \"Deposit due today\" are hardcoded to 3 hours and never recalculate when the hours input changes, despite a misleading comment claiming a CSS-only preview — customers are quoted the wrong price. The date picker allows booking in the past (no min, no server check). Almost every action is a server-action form with no pending/disabled state, so the Pay-deposit/Pay-balance buttons can be double-clicked into multiple Stripe Checkout sessions, and there is no loading or success feedback on profile save, cancel, dispute, or review. Scheduled times are formatted server-side, so customers can see the wrong local time. The /review route has no status or duplicate-review guard and uses off-brand styling, and post-payment success (?paid=1) is set but never surfaced. Messaging lacks optimistic send. These are concrete, mostly small-effort fixes.",
+      "findings": [
+        {
+          "title": "Live price estimate on /book is hardcoded to 3 hours and never updates with the hours input",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/book/page.tsx:74-87",
+          "problem": "The 'Estimated total' renders `{currency} ${rate * 3}` and literally reads 'for 3 hrs', and 'Deposit due today' is `Math.round((rate * 3 * depositPercent) / 100)`. The comment says 'Pricing preview: shown via CSS only — no JS required', but there is no CSS/JS that reads the hours field, and the page is an async Server Component with no client island. Changing the hours number input (default 3, range 1-12) does nothing — a customer who picks 6 hours still sees the 3-hour price and 3-hour deposit, then is surprised by the real total on the booking detail page. This is the single most damaging UX bug in the flow.",
+          "fix": "Extract the hours input + price preview into a small 'use client' component that holds hours in state and renders total = rate * hours and deposit = round(total * depositPercent / 100) reactively. Pass rate/currency/depositPercent as props. Remove the misleading 'CSS only' comment.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Booking date/time allows past dates — no min on input and no server-side validation",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/book/page.tsx:48-53 (and src/app/book/actions.ts:13-23)",
+          "problem": "The datetime-local input has `required` but no `min`, so a customer can select a date/time in the past. submitBooking() in actions.ts also performs no validation — it passes `new Date(scheduledLocal).toISOString()` straight into the request_booking RPC. A booking scheduled for yesterday can be created (it depends entirely on whether the DB function happens to reject it, and even then the user gets a raw thrown error, not inline guidance).",
+          "fix": "Add a `min` attribute set to the current local datetime on the input (client-computed), and in submitBooking reject scheduled times that are in the past (or less than a minimum lead time) with a friendly, surfaced error instead of throwing a raw Error.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Pay-deposit / Pay-balance (and all server-action forms) have no pending/disabled state — double-click risk and no feedback",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/page.tsx:238-263",
+          "problem": "The deposit and balance buttons submit server actions that create a Stripe Checkout session and redirect. There is no useFormStatus/disabled-while-pending, so on a slow network the customer sees no spinner and can click 'Pay $X deposit securely' multiple times, creating multiple Stripe Checkout sessions before the redirect fires. The same missing pending state affects 'Find a cleaner' (book/page.tsx:122), 'Confirm Cancellation', 'Submit Dispute', 'Submit review', and account 'Save changes' — every server-action form lacks loading feedback.",
+          "fix": "Wrap each submit button in a small 'use client' SubmitButton that uses useFormStatus() to disable and show a spinner/label while pending. Prioritize the payment buttons to prevent duplicate Checkout sessions.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Profile 'Save changes' (and cancel/dispute/review) give no success confirmation",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/account/actions.ts:29 (and src/app/account/page.tsx:118)",
+          "problem": "updateProfile() just calls revalidatePath('/account') and returns — the page re-renders with the same values, so the customer clicks 'Save changes' and sees nothing happen, with no 'Profile updated' confirmation. The same silent pattern applies to cancelBooking, openDispute, and submitReview, which redirect back to the booking with no explicit 'Cancelled' / 'Dispute submitted' / 'Review posted' acknowledgement. Users are left unsure whether the action worked.",
+          "fix": "Surface success feedback: e.g. redirect with a `?saved=1` / `?cancelled=1` flag that renders a dismissible success banner/toast, or return a useFormState status message rendered inline. At minimum add a confirmation toast after profile save.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Post-payment success is never surfaced — Stripe returns ?paid=1 but the booking page ignores it",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/payment-actions.ts:50",
+          "problem": "Checkout success_url is `/bookings/{id}?paid=1`, but the booking detail page never reads the `paid` search param. After paying, the customer lands back with no 'Payment received — your cleaner is confirmed!' message. Worse, because the booking only advances when the Stripe webhook fires, if there's any webhook lag the page may still show status 'accepted' with the 'Pay deposit' button visible right after the customer just paid — a confusing, scary state suggesting they need to pay again.",
+          "fix": "Read the `paid` param in the page and render a success banner. While status hasn't advanced yet, show a 'Confirming your payment…' state (e.g. poll via the existing StatusLive subscription / brief 'Payment processing' notice) instead of re-showing the Pay button.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Scheduled date/time formatted on the server — customers can see the wrong local time",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/bookings/[id]/page.tsx:153 (and bookings/page.tsx:55-69)",
+          "problem": "formatDate/formatTime and `new Date(booking.scheduled_at).toLocaleString()` run inside async Server Components, so they format using the server's timezone (UTC on most hosts), not the customer's. For a Courtenay BC customer, a 9:00 AM booking can display as 5:00 PM (or a different date). For a booking app where the appointment time is the most important field, showing the wrong time is a serious correctness/trust issue.",
+          "fix": "Render scheduled date/time in a small client component (so toLocaleString uses the browser timezone), or format explicitly with timeZone: 'America/Vancouver'. Apply to both the list rows and the detail 'When' field.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "/review route has no status or duplicate-review guard",
+          "severity": "medium",
+          "category": "data",
+          "file": "src/app/bookings/[id]/review/page.tsx:16-22 (and review/actions.ts:6-14)",
+          "problem": "The review page only verifies ownership (`booking.customer_id !== user.id`); it does NOT check that status is in REVIEW_ALLOWED (completed/balance_paid) nor that a review already exists. The detail page hides the review prompt once hasReview is true, but a customer can navigate directly to /bookings/{id}/review at any status (even 'broadcasting') and submit. submitReview() also performs no validation and inserts blindly, so duplicate or premature reviews are possible.",
+          "fix": "In review/page.tsx, redirect back to the booking if status is not reviewable or if a review by this reviewer already exists. Mirror the same checks server-side in submitReview() before inserting.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Review form is off-brand and minimal — plain inputs, blue button, no star UI, no back link",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/review/page.tsx:24-68",
+          "problem": "Unlike every other customer page (which uses input-modern, btn-base btn-primary, the accent system, and a back link), the review page uses raw `rounded border p-2` fields and a `bg-blue-600` button. Rating is a plain dropdown rather than a star selector, the comment textarea has no maxLength, and there's no 'Back to booking' link. It feels like an unfinished page dropped into a polished app.",
+          "fix": "Restyle with input-modern / btn-base btn-primary and the accent palette, add a back link and a star-rating control, and add maxLength to the comment to match the rest of the flow.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "Server-action errors surface as the Next.js error page, not friendly inline messages",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/book/actions.ts:25 (also cancel/dispute/review/payment/account actions)",
+          "problem": "Every server action does `throw new Error(error.message)` on failure (submitBooking, cancelBooking, openDispute, submitReview, payDeposit/payBalance, updateProfile). With no error.tsx boundary in these routes (none exists), a failed booking/payment dumps a raw error screen or generic 'something went wrong', losing the customer's form input and giving no actionable guidance — particularly bad on the booking and payment steps.",
+          "fix": "Add route-level error.tsx boundaries with a friendly retry UI, and/or convert the key forms (book, pay) to useFormState so validation/RPC errors render inline above the form without losing input.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "MessagePanel has no optimistic send — sender's own message only appears after a realtime round-trip",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/MessagePanel.tsx:85-98",
+          "problem": "handleSend awaits sendMessage then clears the input, but does not append the message locally; it only appears when the INSERT realtime event arrives (which then does a second profiles fetch). The dedupe comment ('Avoid duplicates (optimistic adds)') implies optimistic UI that isn't actually implemented. On a slow connection the message vanishes from the box and reappears seconds later; if Realtime is unavailable, the sender never sees their own sent message at all.",
+          "fix": "Optimistically append the message with a temporary id immediately after a successful send, then reconcile/dedupe when the realtime row arrives (the id-based dedupe is already present).",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "MessagePanel scrolls the page to the chat on initial load",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/MessagePanel.tsx:34-36",
+          "problem": "The scroll-to-bottom effect runs on mount (messages dependency fires on first render), so bottomRef.scrollIntoView() can yank the whole booking detail page down to the message panel as soon as it loads, scrolling past the status, cleaner card, and payment buttons.",
+          "fix": "Skip the scroll on the first render (e.g. a hasMounted ref) or constrain scrolling to the panel's own container so it doesn't move the page viewport.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Notifications are not marked read on click; only bulk 'Mark all read' exists",
+          "severity": "low",
+          "category": "feature",
+          "file": "src/app/notifications/page.tsx:129-137",
+          "problem": "Clicking 'View booking' navigates away but leaves the notification flagged unread (read_at stays null), so the unread badge/highlight persists until the user remembers to press 'Mark all read'. There is no per-item mark-as-read affordance, which is the standard expectation for a notifications list.",
+          "fix": "Mark a notification read when its 'View booking' link is clicked (server action updating that row), and/or render each item as a clickable element that marks itself read on open.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "No route-level loading skeletons for customer pages",
+          "severity": "low",
+          "category": "perf",
+          "file": "src/app/book, src/app/bookings, src/app/account, src/app/notifications (no loading.tsx present)",
+          "problem": "These pages are async Server Components that await Supabase queries (settings, bookings, profile, notifications, cleaner card, messages). With no loading.tsx in any route, navigation shows nothing until the data resolves, which on a cold/slow connection looks like a frozen tap — especially on the booking detail page that runs several sequential queries.",
+          "fix": "Add loading.tsx files with simple card/skeleton placeholders for /book, /bookings, /bookings/[id], /account, and /notifications.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "List/detail queries ignore the error case — a transient DB failure shows a misleading empty state",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/bookings/page.tsx:83-88",
+          "problem": "`const { data } = await supabase.from('bookings').select(...)` discards the error and treats `data ?? []` as the source of truth. If the query errors (network/RLS/transient), the customer sees the 'No bookings yet — your bookings will appear here' empty state as if they have none, which is misleading and could prompt a needless re-booking. Same pattern in the booking detail and notifications pages.",
+          "fix": "Capture `error` from the destructure and render a distinct error/retry state when error is present, separate from the genuine empty state.",
+          "isImprovement": false,
+          "effort": "small"
+        }
+      ]
+    },
+    {
+      "dimension": "UX/UI + flow quality of CLEANER pages (src/app/cleaner)",
+      "summary": "The cleaner area is visually polished and consistent (cards, teal accent, lucide icons) on the jobs, earnings, profile and job-detail pages, with good empty states and a working messaging panel. However the core real-time and feedback loop that the whole marketplace depends on is incomplete: JobsLive only subscribes to booking_offers and ignores bookings, so the cleaner's \"My jobs\" list and stale open-offer cards do NOT refresh when a deposit is paid or when a competing cleaner wins — even though the DB already publishes the bookings table for exactly this. The accept-offer action returns a won/lost boolean that the UI throws away, so a cleaner who loses the race gets no explanation, and none of the Accept/Decline/Start/Complete buttons have any pending/disabled state (double-submittable, no spinner) on the most time-critical screen in the product. start_job/complete_job swallow errors and fail silently. There are no error.tsx or loading.tsx boundaries anywhere, the onboarding page is visually off-brand and lets a cleaner join with zero areas, there is no nav link to the profile page, the earnings table clips on mobile, all dates render in the server timezone, and payouts are promised (\"every Friday via direct deposit\") with no payout/bank setup anywhere. Below are concrete, prioritized fixes.",
+      "findings": [
+        {
+          "title": "Live job feed ignores bookings table — deposit-paid and lost-race states never refresh",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/cleaner/jobs/JobsLive.tsx:12-24",
+          "problem": "JobsLive subscribes only to postgres_changes on booking_offers filtered by cleaner_id. It does NOT subscribe to the bookings table, even though migration 0003_booking.sql:240 explicitly adds bookings to supabase_realtime and RLS lets the assigned cleaner read it. Consequences: (1) When the customer pays the deposit (booking.status: accepted -> deposit_paid), the cleaner's 'My jobs' card does not update, so the 'Start job' button never appears until a manual reload. (2) When a competing cleaner wins an open offer, this cleaner's offer row stays 'rung' (only the winner's offer row changes), so no booking_offers event fires for the loser and the stale offer card lingers on screen indefinitely. The whole 'first to accept wins, then pay deposit, then start' flow silently stalls for the cleaner.",
+          "fix": "Add a second .on('postgres_changes', { event:'*', schema:'public', table:'bookings', filter:`cleaner_id=eq.${cleanerId}` }, () => router.refresh()) to the same channel. Because a lost-race leaves the loser's booking_id with no cleaner_id match, also broaden the refresh: subscribe to bookings UPDATEs more loosely (or re-fetch open offers) so disappeared/awarded broadcasts clear. Simplest robust fix: keep the booking_offers subscription AND add a bookings subscription, and on either event call router.refresh().",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Accept-offer race result (won/lost) is discarded — loser gets no feedback",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/app/cleaner/jobs/page.tsx:155-165",
+          "problem": "acceptJob (actions.ts:6-14) returns a boolean: true if this cleaner won, false if the job was already taken. The inline server-action form does `await acceptJob(b.id)` and throws the return value away. When a cleaner taps Accept a fraction too late, accept_offer returns false (booking no longer 'broadcasting'), the card simply vanishes on the next refresh, and the cleaner is given no message — they don't know whether they won, lost, or hit an error. On the single most competitive screen in the app there is zero race feedback.",
+          "fix": "Convert the offer card actions into a small client component using useTransition that calls acceptJob and inspects the boolean: on true show a success toast / route into the job, on false show 'Another cleaner grabbed this one first' and let the list refresh. Surface the result instead of discarding it.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Accept/Decline/Start/Complete buttons have no pending or disabled state",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/app/cleaner/jobs/page.tsx:161-175",
+          "problem": "All four action buttons (Accept, Decline on offers; Start job, Mark complete on jobs; plus the detail-page variants at jobs/[id]/page.tsx:216-234) are plain <button> inside inline server-action <form>s with no useFormStatus/useTransition. There is no spinner, no disabled-on-submit, and no protection against double-clicks. On a slow connection the cleaner taps Accept, sees nothing happen, and taps again. For a race-to-accept primary action, the absence of immediate optimistic/pending feedback is a serious UX defect.",
+          "fix": "Wrap each submit button in a client component that uses useFormStatus() to set disabled + show a spinner/'Accepting…' label while pending (e.g. a <SubmitButton> shared component). This also prevents the double-submit race.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "start_job and complete_job swallow errors and fail silently",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/cleaner/actions.ts:25-35",
+          "problem": "Unlike acceptJob/declineJob which check `error`, startJob and completeJob call `await supabase.rpc(...)` and ignore the returned error entirely. The underlying SQL (0003_booking.sql:222-234) is guarded by `status = 'deposit_paid'`/`'in_progress'` AND cleaner_id = auth.uid(); if the guard doesn't match (stale UI, wrong status, RLS), the UPDATE affects 0 rows and returns NO error. The action then revalidates and the page re-renders unchanged — the cleaner taps 'Start job', literally nothing happens, and there is no error, no toast, no explanation. This is a silent dead-end on a state-transition button.",
+          "fix": "Capture and surface the result: change start_job/complete_job to RETURN the updated row (or a boolean) so the action can detect 0-row no-ops, check `error` and throw/return a status, and show the user a message when the transition is rejected. At minimum check `error` like the other actions do.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No nav link to the cleaner profile page",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/components/Nav.tsx:26-29",
+          "problem": "For role === 'cleaner' the nav only adds 'Job requests' (/cleaner/jobs) and 'Earnings' (/cleaner/earnings). There is no link to /cleaner/profile, which is the only place a cleaner can edit their name, phone, and the service areas that determine which jobs they are even offered. A verified cleaner who wants to add a service area or fix their phone number has no in-app path to that page — they must know/guess the URL.",
+          "fix": "Add `links.push({ href: '/cleaner/profile', label: 'Profile' })` inside the `profile?.role === 'cleaner'` block in Nav.tsx (and/or expose it via the account/avatar menu).",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "No error or loading boundaries for any cleaner route",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/cleaner/ (no error.tsx / loading.tsx)",
+          "problem": "There are no error.tsx or loading.tsx files anywhere under src/app (confirmed via glob). The cleaner actions throw raw Error on failure (actions.ts:11,21; profile/actions.ts:32,40), which bubbles to the root and renders Next's generic error screen with a DB error string. Server-component pages (jobs, earnings, profile, job detail) also block on Supabase queries with no skeleton, so navigation shows a blank/janky pause on slow networks.",
+          "fix": "Add src/app/cleaner/error.tsx (a friendly 'Something went wrong, try again' boundary with a reset button) and loading.tsx skeletons for /cleaner/jobs, /cleaner/earnings, /cleaner/profile and /cleaner/jobs/[id].",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Onboarding lets a cleaner join with zero service areas (no validation)",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/cleaner/onboard/actions.ts:13-22",
+          "problem": "becomeCleaner reads `formData.getAll('areas')` with no minimum check and upserts cleaner_details with active:true even when the array is empty. Since request_booking (0003_booking.sql:130-133) only rings cleaners where `p_area = any(areas_served)`, a cleaner who submits with nothing checked becomes 'active' but is structurally invisible to every booking — they will wait forever for jobs that can never reach them, with no warning. The onboard page (onboard/page.tsx:20-25) also pre-checks nothing.",
+          "fix": "Validate `areas.length > 0` in becomeCleaner and return/redirect with an error if empty; mirror with a `required`-style check and inline message on the form. Optionally pre-select the cleaner's home area.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Onboarding page is off-brand and visually inconsistent with the rest of the cleaner area",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/cleaner/onboard/page.tsx:10-31",
+          "problem": "Every other cleaner page uses the design system (card, btn-base/btn-primary, input-modern, teal accent, lucide icons, slate text, has-[:checked] styled area chips — see profile/page.tsx:148-162). The onboarding page — a cleaner's very first impression — uses raw bg-blue-600 button, text-gray-600, and bare unstyled checkboxes with no card, no icons, no teal. It looks like a different, half-finished product and the area pickers don't match the polished selectable cards used on the profile page.",
+          "fix": "Rebuild the onboard form with the same card + btn-primary + styled area-chip labels used in profile/page.tsx so the first-run experience matches the brand, and reuse the same checkbox label markup for consistency.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Earnings recent-jobs table clips horizontally on mobile",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/cleaner/earnings/page.tsx:190-246",
+          "problem": "The 5-column recent-jobs <table> is wrapped in `card overflow-hidden p-0`. With overflow-hidden (not overflow-x-auto), on a ~360px phone the Date/Area/Hours/Gross/Status columns exceed the viewport and the right side (Status badges, net amounts) is simply cut off and unreachable — the cleaner cannot scroll to see whether a job is Paid/Closed.",
+          "fix": "Change the wrapper to allow horizontal scroll (e.g. `card p-0 overflow-x-auto` or wrap the table in a `div className='overflow-x-auto'`), or switch to a stacked card list layout below the `sm` breakpoint.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "All dates render in the server timezone, not the cleaner's local time",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/cleaner/jobs/page.tsx:144,216",
+          "problem": "These are async server components, so `new Date(b.scheduled_at).toLocaleString()` (jobs/page.tsx:144 & 216, jobs/[id]/page.tsx:139, earnings/page.tsx:164,218) executes on the server and formats using the SERVER's timezone (typically UTC), not the cleaner's. For a scheduling/dispatch product in Courtenay BC (Pacific), a job scheduled for 9:00 AM local can display as 4:00/5:00 PM, which is dangerous — a cleaner could show up at the wrong time. There is also no explicit timezone label.",
+          "fix": "Format dates in a client component (or with an explicit `timeZone: 'America/Vancouver'` option, or pass the ISO string to a small client <LocalTime> component) so scheduled_at renders in the user's local zone, and show the zone abbreviation.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Payouts are promised with no payout/bank-account setup anywhere",
+          "severity": "medium",
+          "category": "feature",
+          "file": "src/app/cleaner/earnings/page.tsx:128-136",
+          "problem": "The earnings page states 'Payouts are processed weekly every Friday via direct deposit' and shows Net earnings after a hardcoded 15% fee (PLATFORM_FEE_RATE, earnings/page.tsx:13). But there is no Stripe Connect / bank-account / payout-method setup in onboarding, profile, or earnings. A cleaner is told money will be direct-deposited with no way to provide a deposit destination, and the 15% figure is a front-end constant unconnected to any real payout record — risking trust and disputes if the real cut differs.",
+          "fix": "Either add a payout-method setup flow (Stripe Connect onboarding link in profile/earnings) and drive the fee/net from real payout records, or soften the copy until payouts are implemented. Don't promise direct deposit with no way to configure it.",
+          "isImprovement": false,
+          "effort": "large"
+        },
+        {
+          "title": "Earnings understates money in flight — deposits on completed jobs are invisible",
+          "severity": "medium",
+          "category": "data",
+          "file": "src/app/cleaner/earnings/page.tsx:72-87",
+          "problem": "grossEarned only sums total_amount for jobs in ['balance_paid','closed']. For a job in 'completed' status the customer has already paid the 60% deposit, yet that deposit appears nowhere: it's excluded from Gross earned, and 'Pending balance' only sums balance_amount (the 40%). So a cleaner who has finished several jobs awaiting final payment sees neither the deposit they've effectively earned nor an accurate 'in flight' total — the dashboard understates their real position.",
+          "fix": "Either show a separate 'Deposits received (jobs in progress/awaiting balance)' figure, or make 'Pending' reflect the full outstanding amount and clearly separate already-collected deposit vs outstanding balance. Define and label exactly what each number represents.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Profile save gives no success confirmation",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/cleaner/profile/page.tsx:181-184",
+          "problem": "updateCleanerProfile (profile/actions.ts:42) calls revalidatePath but returns nothing, and the page renders no success state. After tapping 'Save changes' the form just re-renders identically — the cleaner has no confirmation that their name/phone/areas were saved. There is also no client-side guard against deselecting every area, which (like onboarding) silently removes the cleaner from all job broadcasts.",
+          "fix": "Return a status from the action (useActionState/useFormState) and render a 'Profile updated' toast/banner; add a min-one-area validation before saving and warn that removing all areas stops job offers.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Onboard page does not guard against an existing cleaner re-submitting (resets areas)",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/cleaner/onboard/page.tsx:6-9",
+          "problem": "CleanerOnboardPage only checks for a logged-in user, not whether they are already a cleaner. A cleaner who navigates back to /cleaner/onboard sees the empty-checkbox join form again; submitting it upserts cleaner_details with whatever is checked (defaults to none), wiping their existing areas_served and re-asserting active:true. The form shows none of their current areas pre-checked, inviting accidental data loss.",
+          "fix": "If profile?.role === 'cleaner', redirect to /cleaner/profile (the proper edit surface) instead of showing the join form; reserve onboard for non-cleaners.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Decline is destructive with no confirmation",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/cleaner/jobs/page.tsx:166-175",
+          "problem": "Tapping Decline immediately fires decline_offer, permanently setting the offer to 'declined' (0003_booking.sql:200-202) so this cleaner can no longer accept that job. A single mis-tap on a small mobile button list (Accept and Decline are adjacent) loses the job with no undo and no confirmation prompt.",
+          "fix": "Add a lightweight confirm step (confirm dialog or a two-tap 'Are you sure?' inline state) before declining, given it is irreversible for that cleaner.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "'Message customer' and 'View details' link to the identical destination",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/cleaner/jobs/page.tsx:267-280",
+          "problem": "Both the 'Message customer' button and the 'View details' link point to /cleaner/jobs/${b.id}. They look like two different actions but go to the same page, and 'Message customer' lands at the top of the detail page rather than the messages panel (which is at the very bottom, after detail/customer/address cards). The label over-promises a direct jump to chat.",
+          "fix": "Either drop one link, or make 'Message customer' deep-link to the messages section (add an id='messages' to the MessagePanel wrapper and link to /cleaner/jobs/${b.id}#messages) so it scrolls straight to the conversation.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Offer cards lack a countdown / expiry indicator despite an 'offer window'",
+          "severity": "low",
+          "category": "feature",
+          "file": "src/app/cleaner/jobs/page.tsx:116-118",
+          "problem": "Copy tells cleaners to 'Accept within the offer window!' and the schema has an 'expired' offer_state, but the offer card shows no timer, no time-remaining, and no created_at. The cleaner has no idea how urgent an offer is or when it will lapse, undermining the race dynamic the product is built around.",
+          "fix": "Show a live countdown or 'rang Xm ago' using booking_offers.created_at (and an expiry policy), e.g. a client component ticking the remaining time, so cleaners feel and respect the urgency.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "Offer card shows gross only — cleaner can't see their actual take-home",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/cleaner/jobs/page.tsx:147-152",
+          "problem": "The open-offer card prominently shows ${total_amount} labelled 'gross', but the earnings page tells the cleaner they net 85% after a 15% platform fee. At the decision moment (accept or not), the number that matters — what they'll actually earn — is not shown, forcing mental math and creating a mismatch between the offer screen and the earnings screen.",
+          "fix": "Add a secondary 'you earn ~$X' (total_amount * (1 - PLATFORM_FEE_RATE)) line on the offer card and on the job-detail 'Your gross' row, using the same fee constant as earnings/page.tsx so the figures reconcile.",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "Availability note is read-only with a 'contact support' dead-end",
+          "severity": "low",
+          "category": "feature",
+          "file": "src/app/cleaner/profile/page.tsx:166-179",
+          "problem": "availability_note is fetched and displayed but only when non-empty, and the only way to change it is 'Contact support to update your availability note.' A cleaner cannot set or edit their own availability from the profile editor that otherwise lets them edit name, phone and areas — an odd, friction-heavy gap that also hides the field entirely for cleaners who have never set one.",
+          "fix": "Replace the read-only block with an editable <textarea name='availability_note'> persisted by updateCleanerProfile, so cleaners self-serve their availability instead of emailing support.",
+          "isImprovement": true,
+          "effort": "small"
+        }
+      ]
+    },
+    {
+      "dimension": "UX/UI + completeness of ADMIN pages (src/app/admin)",
+      "summary": "The admin area is visually coherent and reasonably responsive (every list uses overflow-x-auto, detail pages reflow to one column on mobile), but it is riddled with schema-mismatch bugs that silently break core metrics and the refund flow, plus several completeness gaps. The most serious: the dispute Issue-Refund path queries/writes columns that do not exist (payment_type, notes, updated_at) against a payments table whose real column is `type` (enum deposit|balance, no 'refund' value) — so the refund UI never renders and, if it did, the Stripe refund is created BEFORE a DB insert that is guaranteed to fail, leaking money with no record. Cleaner acceptance-rate and cleaner-profile reviews both query a non-existent `offers` table and a non-existent `reviews.created_by` column, so those metrics are permanently blank. The dashboard's status color map and \"pending\" stat use statuses that don't exist in the enum, and \"Active Cleaners\" selects a non-existent column. No destructive action (cancel, refund, deactivate, status override, reassign) has any confirmation step. There is no pagination on any list, no empty states on the bookings/customers/cleaners tables, no loading states, and the settings form has zero validation on financially-critical values (deposit_percent, hourly_rate).",
+      "findings": [
+        {
+          "title": "Issue Refund writes non-existent payment columns; Stripe refund fires before a guaranteed-to-fail DB insert",
+          "severity": "critical",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/actions.ts:75-85",
+          "problem": "issueRefund() inserts into payments with payment_type:'refund', notes:reason, updated_at:... but the payments table (0005_payments.sql) has column `type` (enum payment_type = deposit|balance, NO 'refund' value), no `notes` column, no `updated_at` column, and `type` is NOT NULL and is omitted. The insert therefore always errors. Worse, stripe.refunds.create() runs FIRST (line 65), so on the (always-failing) insert the customer is refunded in Stripe with no DB record and the admin sees a thrown error — money moves, ledger does not.",
+          "fix": "Add a 'refund' value to the payment_type enum (or store refunds with type='deposit'/'balance' plus a signed amount and a separate refunds table). Use the real column name `type`, drop `notes`/`updated_at` (or add them via migration), and supply the required `type`. Wrap the Stripe call + DB insert so the DB row is recorded transactionally/with compensation: insert a pending refund row first, call Stripe, then mark paid; on Stripe or DB failure, surface the error and reconcile rather than leaving an orphaned Stripe refund.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Refund payment list query uses wrong column name, so the refund form never renders",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/page.tsx:62-67",
+          "problem": "The query selects `payment_type` and filters .neq('payment_type','refund'), but the column is `type`. The query errors / returns null, so payments is empty and the page always shows 'No paid payments available to refund.' — the entire refund UI is dead even before the action bug above is reached. (The booking-detail page already uses the correct `type`, confirming the mismatch.)",
+          "fix": "Select `type` and filter with .eq('type', ...) / appropriate logic instead of `payment_type`. Render the deposit/balance payments and label with p.type.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Cleaner acceptance rate reads a non-existent `offers` table / `status` column",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/cleaners/page.tsx:36-38",
+          "problem": "Both the cleaners list (from('offers').select('cleaner_id, status')) and the cleaner detail page (cleaners/[id]/page.tsx:65-68, from('offers').select('id, status')) query a table named `offers` that does not exist — the real table is `booking_offers` with column `state` (enum rung|accepted|declined|expired), not `status`. The query errors, statsMap offer counts stay 0, and 'Accept Rate' is permanently '—' on the list and 0% on the profile.",
+          "fix": "Query .from('booking_offers').select('cleaner_id, state') and count o.state === 'accepted' against total. Apply the same fix in cleaners/[id]/page.tsx.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Cleaner profile reviews query selects non-existent `created_by` column, blanking reviews and Avg Rating",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/cleaners/[id]/page.tsx:60",
+          "problem": "The reviews select includes `created_by`, but the reviews table (0006_reviews.sql) has only id, booking_id, rating, comment, created_at. The query errors -> reviews is empty -> the Reviews section always shows 'No reviews yet.' and 'Avg Rating' is always '—'. Line 261 also renders `by {r.created_by}`. (The booking-detail page comment explicitly notes 'no created_by column exists', confirming this.)",
+          "fix": "Remove `created_by` from the select and from the render. If a reviewer name is wanted, join the customer via booking_id -> bookings.customer_id -> profiles.name.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Dashboard 'Active Cleaners' selects a non-existent column, likely forcing the count to 0",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/admin/page.tsx:38-41",
+          "problem": "The metric runs from('cleaner_details').select('id', { count:'exact', head:true }).eq('active',true), but cleaner_details has no `id` column — its primary key is `profile_id` (0001_init.sql). PostgREST errors on the unknown column, count comes back null, and the dashboard shows 0 active cleaners regardless of reality.",
+          "fix": "Select an existing column, e.g. .select('profile_id', { count:'exact', head:true }).eq('active', true). Consider also requiring id_verified to match the 'available for dispatch' label.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Dashboard/list status color map and 'pending' stat use statuses that don't exist in the enum",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/page.tsx:58-64,97",
+          "problem": "The statusColor maps on the dashboard, bookings list (bookings/page.tsx:5-11), customer detail (customers/[id]/page.tsx:5-11) and cleaner detail (cleaners/[id]/page.tsx:6-12) only cover pending/confirmed/in_progress/completed/cancelled. The real booking_status enum is broadcasting, accepted, deposit_paid, in_progress, completed, disputed, balance_paid, closed, cancelled, no_cleaner_found. So most real statuses fall through to gray, and the dashboard's '{statusCounts.pending} pending' card is ALWAYS 0 because no 'pending' status exists. The booking-detail page has the correct full map — the rest are stale copies.",
+          "fix": "Extract the correct full status->color map (as in bookings/[id]/page.tsx) into a shared module and import it everywhere. Replace the dashboard 'pending' subtext with a real status such as broadcasting/accepted.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Revenue/'jobs done'/'total spent' metrics only count status='completed', ignoring balance_paid and closed",
+          "severity": "medium",
+          "category": "data",
+          "file": "src/app/admin/customers/[id]/page.tsx:49-51",
+          "problem": "Per the status machine, a finished+fully-paid job advances completed -> balance_paid -> closed. But customer 'Total Spent' (customers/page.tsx:34 and customers/[id]/page.tsx:50), cleaner 'Jobs Done' (cleaners/page.tsx:61, cleaners/[id]/page.tsx:72), and the dashboard 'completed' subtext (page.tsx:98) all filter status==='completed' only. As soon as a job is closed out, it stops counting — systematically under-reporting revenue and completed jobs.",
+          "fix": "Treat completed, balance_paid and closed as 'finished/paid' for these aggregates, e.g. const DONE = ['completed','balance_paid','closed']; filter with DONE.includes(b.status). Prefer summing actual paid payments for revenue rather than total_amount on bookings.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No confirmation on any destructive admin action (cancel, refund, deactivate, status override, reassign)",
+          "severity": "high",
+          "category": "ux",
+          "file": "src/app/admin/bookings/[id]/page.tsx:327-356",
+          "problem": "Cancel Booking, Override Status and Reassign Cleaner (booking detail), Issue Refund (disputes/[id]/page.tsx), and Verify/Unverify/Activate/Deactivate (cleaners/page.tsx:167-192, cleaners/[id]/page.tsx:139-164) are plain server-action <form>s with no confirmation dialog. A single misclick cancels a live job, refunds real money, or deactivates a cleaner — irreversibly and with no undo. These run against production via the service-role client.",
+          "fix": "Wrap the submit buttons in a small client component that calls window.confirm() (or a modal) before submitting, especially for cancel/refund/deactivate. For refund, also show the amount and customer name in the confirm text.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Reassign Cleaner only swaps cleaner_id — leaves status/offers/notifications inconsistent and is shown for any status",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/admin/bookings/[id]/actions.ts:52-60",
+          "problem": "reassignCleaner() updates only bookings.cleaner_id. It does not advance/normalize status (a booking in broadcasting/no_cleaner_found stays in that status with a cleaner attached), does not create or update booking_offers, and does not notify the newly-assigned cleaner — who effectively gets a job assigned without an offer they accepted. The form (page.tsx:340-356) is also rendered for terminal statuses like closed/cancelled. The eligible-cleaner query (.neq('id', booking.cleaner_id ?? '')) also passes '' to a uuid neq when cleaner_id is null.",
+          "fix": "On reassign, set status to a sane value (e.g. accepted/deposit_paid as appropriate), write a booking_offers row in 'accepted' state for the new cleaner, and insert a notification. Hide the reassign form for terminal statuses, add a confirmation, and guard the null cleaner_id case.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "No pagination on any admin list; dashboard aggregates whole tables in JS",
+          "severity": "medium",
+          "category": "perf",
+          "file": "src/app/admin/bookings/page.tsx:27-34",
+          "problem": "Bookings, customers (customers/page.tsx:19-28), cleaners (cleaners/page.tsx:20-38 fetches ALL bookings + ALL reviews + ALL offers and aggregates in JS), and disputes all fetch entire tables with no .range()/limit. The dashboard (page.tsx:19-35) pulls every booking's status and every paid payment to sum in JS. At marketplace scale this is unbounded payload, slow TTFB, and an unusable wall of rows.",
+          "fix": "Add server-side pagination (.range() with page query param + count) to each list, and move dashboard totals into Postgres aggregates/RPC (count(*), sum(amount)) instead of fetching all rows.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Bookings, customers and cleaners list tables have no empty state",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/admin/bookings/page.tsx:58-101",
+          "problem": "When there are no rows, these tables render only the header with an empty body — no 'No bookings yet' message (customers/page.tsx:59-83 and cleaners/page.tsx:112-198 have the same gap). The dashboard recent-bookings table and the disputes list both DO have empty-state rows, so the omission is inconsistent and looks broken on a fresh install.",
+          "fix": "Add a colSpan empty-state row mirroring the dashboard pattern (e.g. 'No bookings yet' / 'No customers yet' / 'No cleaners yet').",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Settings has no validation on financially-critical values and silently coerces blanks to 0",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/settings/actions.ts:30-43",
+          "problem": "deposit_percent is an int percent (default 60 per 0001_init.sql) and hourly_rate is numeric, but the form inputs (settings/page.tsx:26-49) carry step='0.01', no min/max, and no required, and updateSettings does Number(formData.get(...)) with no range check. An empty field yields Number('')=0, silently zeroing the hourly rate or deposit; entering 0.6 (treating it as a fraction) round-trips badly into an int column; negative or >100 values flow straight into the create_booking deposit math (0003_booking.sql:115). The update also targets .eq('id',1) only (no upsert) so if the row is missing it silently does nothing, and there is no success feedback.",
+          "fix": "Validate server-side: hourly_rate > 0, deposit_percent an integer 1-100; reject NaN/blank with a returned error. Set input min/max/required and label deposit_percent clearly as a whole-number percent. Use upsert on id=1 and return a saved/error state to show a confirmation toast.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Refund form sends the wrong payment intent and max — hidden fields hard-coded to payments[0]",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/page.tsx:208-235",
+          "problem": "The payment <select> uses onChange={() => {}} (a no-op), while the hidden stripe_payment_intent_id (line 216-220) and the amount input's max (line 231) are hard-coded to payments[0]. If both a deposit and balance payment exist, selecting the balance still refunds against the deposit's intent and validates against the deposit amount. issueRefund also never uses the submitted payment_id to look up the real payment — it trusts the hidden intent — so the wrong charge can be refunded. (Currently masked by the column-name bug that hides the form entirely.)",
+          "fix": "Make this a small client component that updates the hidden intent and max when the selection changes, or in issueRefund look up the payment by payment_id server-side and derive the intent and a clamp on amount from that row.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No search/filter on bookings, customers, or cleaners lists",
+          "severity": "medium",
+          "category": "feature",
+          "file": "src/app/admin/bookings/page.tsx:36-104",
+          "problem": "Only the disputes page offers a status filter. Admins cannot search bookings by customer/cleaner/area/status, search customers by name/phone, or filter cleaners by verified/active — they must scroll the entire (unpaginated) table. This is a core operational gap for day-to-day admin work.",
+          "fix": "Add searchParams-driven filters: a status filter + free-text search (ilike on customer/cleaner name, area) on bookings; name/phone search on customers; verified/active toggles on cleaners. Combine with the pagination fix.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "No loading states for admin routes",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/admin/cleaners/page.tsx:20-38",
+          "problem": "There is no loading.tsx anywhere under src/app/admin. Heavy server pages — especially the cleaners list, which fetches and aggregates all bookings, reviews and offers — render nothing until the full query set resolves, so the admin sees a frozen/blank screen with no feedback on slow connections.",
+          "fix": "Add loading.tsx skeletons (or Suspense boundaries) for the admin index and each list/detail route showing a table/card skeleton.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "List pages display raw status strings instead of humanized labels",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/admin/bookings/page.tsx:75",
+          "problem": "The bookings list (line 75), customer detail (customers/[id]/page.tsx:120) and cleaner detail (cleaners/[id]/page.tsx:224 offers / booking rows) render b.status verbatim, e.g. 'no_cleaner_found' and 'balance_paid', while detail pages humanize via .replace(/_/g,' '). Inconsistent, unpolished labels.",
+          "fix": "Apply the same .replace(/_/g,' ') (or a shared formatStatus helper) consistently across all status badges.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "updateBookingStatus accepts arbitrary status and skips cancellation side-effects",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/admin/bookings/[id]/actions.ts:29-37",
+          "problem": "The override action writes whatever new_status string the form posts with no server-side whitelist against BOOKING_STATUSES, and applies no side-effects — e.g. setting status to 'cancelled' here skips the cancelled_by/cancellation_reason that adminCancelBooking sets, leaving an unattributed cancellation. The DB enum is the only guard.",
+          "fix": "Validate new_status against the known status list server-side, and either disallow 'cancelled' via this path or apply the same metadata adminCancelBooking sets.",
+          "isImprovement": false,
+          "effort": "trivial"
+        }
+      ]
+    },
+    {
+      "dimension": "FUNCTIONAL completeness and flow correctness",
+      "summary": "The happy path (broadcast -> accept -> deposit -> start -> complete -> balance) is wired correctly with atomic accept locking and an idempotent Stripe webhook for the two checkout.session.completed cases. However, the state machine has significant unfinished edges and several outright-broken admin/dispute/refund/review code paths caused by a systemic schema mismatch (code references columns that do not exist in the migrations: payments.payment_type, disputes.payment_id/reason/amount/updated_at, reviews.reviewer_id, plus a 'refund' enum value that was never added). Three production-critical mechanisms that the UI advertises are not actually implemented anywhere: deposit auto-expiry (deposit_deadline is a dead column, no cron), offer expiry (offer_state 'expired' is never set), and the balance_paid->closed transition (no trigger). Notification coverage only exists for deposit_paid and balance_paid; the two most action-critical transitions for the customer (cleaner accepted -> pay deposit, job completed -> pay balance) produce NO persistent notification and rely solely on a realtime page refresh. Cancellations never trigger a refund despite a stated refund policy, and there is no cleaner payout system, no password reset/email verification, and no receipts. Marketplace essentials are materially incomplete.",
+      "findings": [
+        {
+          "title": "Stripe chargeback webhook inserts into disputes with nonexistent columns and omits NOT NULL fields — chargebacks are silently lost",
+          "severity": "critical",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:161-169",
+          "problem": "On charge.dispute.created the handler does db.from('disputes').insert({ booking_id, payment_id, stripe_dispute_id, reason, amount, status, created_at }). The disputes table (0008_improvements.sql:54-64) has none of payment_id/stripe_dispute_id/reason/amount and requires NOT NULL raised_by, category, description which are not provided. The insert throws every time. It is caught by the try/catch that returns 200, so the chargeback is never recorded — yet the booking IS flipped to 'disputed' just above (line 154-158), leaving an orphan 'disputed' booking with no dispute row and no admin record. Stripe will not retry (200 returned).",
+          "fix": "Either add the missing columns to a disputes migration (payment_id uuid, stripe_dispute_id text, reason text, amount numeric, and make raised_by/category/description nullable for system-raised disputes) or insert with the existing schema: provide category (e.g. 'payment_issue'), description (the Stripe reason), and a system sentinel for raised_by, and store Stripe metadata in those existing columns. Check the insert error and do not swallow it before the dispute row exists.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Admin issueRefund writes to payments columns that do not exist and an invalid enum value; refund is never recorded",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/actions.ts:75-85",
+          "problem": "issueRefund does svc.from('payments').insert({ payment_type: 'refund', notes, updated_at, ... }). The payments table (0005_payments.sql) column is 'type' (enum payment_type with only 'deposit'|'balance'), and there is no 'notes' or 'updated_at' column. So the insert fails, and the error is never checked — meaning the Stripe refund (stripe.refunds.create) may actually move money but the DB has no record and the booking status is never updated to reflect a refund/cancellation. Additionally the hidden stripe_payment_intent_id and amount max are bound to payments[0] regardless of which payment the admin selects (page.tsx:216-220,231), so a multi-payment booking can refund the wrong intent/amount.",
+          "fix": "Add a 'refund' value to the payment_type enum (or a dedicated refunds table), insert using the real column name 'type', drop notes/updated_at (or add them via migration), and check the returned error. Bind the intent/amount to the selected payment (needs client JS or per-option hidden fields). Also update booking status appropriately after a full refund.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Admin updateDisputeStatus sets a nonexistent updated_at column — admins cannot resolve disputes at all",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/actions.ts:38-47",
+          "problem": "The update includes updated_at: new Date().toISOString(), but the disputes table (0008_improvements.sql:54-64) has no updated_at column. The whole UPDATE fails, so admins cannot change a dispute's status or save a resolution. The entire admin dispute workflow is broken.",
+          "fix": "Remove updated_at from the update object, or add `updated_at timestamptz` to the disputes table via migration (with a trigger or explicit set). Also check the returned error so failures surface instead of silently no-op'ing.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Admin dispute page queries payments.payment_type — refund form never renders",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/page.tsx:62-67",
+          "problem": "The payments query selects 'payment_type' and filters .neq('payment_type','refund'), but the column is 'type'. The query errors, payments is null, so the page always shows 'No paid payments available to refund.' and the refund form is never displayed — compounding the broken issueRefund action.",
+          "fix": "Select/filter on the real column name 'type' (and adjust the displayed p.payment_type to p.type at line 211). Align all payment references across the codebase to the actual schema column.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "deposit_deadline is never set and unpaid 'accepted' bookings never auto-expire",
+          "severity": "high",
+          "category": "bug",
+          "file": "supabase/migrations/0003_booking.sql:145 (accept_offer); supabase/migrations/0008_improvements.sql:7",
+          "problem": "deposit_deadline was added as a column (0008) and typed in types.ts:90, but no code path ever sets it (grep finds zero writers) and there is no cron/scheduled job to expire it. When a cleaner accepts but the customer never pays the deposit, the booking is stuck in 'accepted' forever, blocking that cleaner's slot, and it is never re-broadcast or marked no_cleaner_found. The prompt's auto-expiry requirement is unimplemented.",
+          "fix": "In accept_offer set deposit_deadline = now() + interval '30 minutes' (or settings-driven). Add a scheduled function (pg_cron or an authenticated Vercel cron route using the service role) that, for status='accepted' AND deposit_deadline < now(), either re-broadcasts (cleaner_id=null, status='broadcasting', re-ring offers) or sets no_cleaner_found, and notifies the customer/cleaner.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Offer expiry (offer_state='expired') is never set by any code; advertised offer window is not enforced",
+          "severity": "medium",
+          "category": "bug",
+          "file": "supabase/migrations/0003_booking.sql:10,145; src/app/cleaner/jobs/page.tsx:118",
+          "problem": "The offer_state enum includes 'expired' but nothing ever transitions an offer to it. When one cleaner accepts, the other cleaners' offers stay in state='rung' indefinitely (accept_offer only updates the winner's offer). The cleaner UI hides them by joining on bookings.status='broadcasting', but the offers table accumulates stale 'rung' rows and the UI copy 'Accept within the offer window!' (page.tsx:118) is misleading because no window exists.",
+          "fix": "On accept_offer, mark all other offers for that booking state='expired'. Optionally add a time-boxed offer window with a cron that expires offers past created_at + N minutes, and reflect a countdown in the cleaner UI to match the copy.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "balance_paid -> closed transition has no trigger; 'closed' is unreachable",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:110-114; supabase/migrations/0006_reviews.sql",
+          "problem": "The 'closed' status is referenced throughout the UI (bookings list, cleaner earnings 'Closed', RLS address access, cleaner-card job counts), but no code ever sets a booking to 'closed'. After balance_paid and a review, bookings remain 'balance_paid' permanently — the documented terminal state is never reached.",
+          "fix": "Define and implement the close trigger: e.g., move balance_paid -> closed after the review is submitted (or after a review window elapses) via the review action / a cron. Decide the intended semantics and wire one trigger.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No notification when a cleaner accepts or completes a job — the two transitions that require customer payment",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/cleaner/actions.ts:6-14,31-35; supabase/migrations/0003_booking.sql:145,229",
+          "problem": "createNotification is only called in the Stripe webhook (deposit_paid, balance_paid). accept_offer and complete_job create no notification. So when a cleaner accepts, the customer is not told to pay the deposit, and when a cleaner marks the job complete, the customer is not told to pay the balance. Both rely solely on StatusLive realtime refresh, which only helps a customer currently sitting on the booking page. A customer who closed the tab never learns they must pay — directly stalling the revenue flow. no_cleaner_found also notifies nobody.",
+          "fix": "Emit create_notification to the customer on accept ('Cleaner found — pay your deposit'), on complete ('Cleaning done — pay the balance'), and on no_cleaner_found ('No cleaner available'). Best done inside the SECURITY DEFINER RPCs (accept_offer/complete_job/request_booking) so it is atomic, or in the server actions.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Cancellation never issues a refund despite a stated refund policy",
+          "severity": "high",
+          "category": "bug",
+          "file": "supabase/migrations/0008_improvements.sql:135-168; src/app/bookings/[id]/page.tsx:334-336",
+          "problem": "The cancel UI prominently states 'Cancellations made more than 24 hours before... receive a full deposit refund... within 24 hours may forfeit.' But cancel_booking only sets status='cancelled'/cancelled_by/reason — it performs no Stripe refund and computes no fee/window. A customer who paid the deposit and cancels (deposit_paid is in CANCEL_ALLOWED) gets no refund. This is a money/contract correctness defect, not just UX.",
+          "fix": "On cancellation of a deposit_paid booking, look up the deposit payment intent and call stripe.refunds.create based on the 24h window logic, record the refund, and notify the assigned cleaner. If refunds are manual-only, remove/replace the automatic-refund language in the policy text.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "hasReview check queries reviews.reviewer_id which does not exist — review prompt never clears",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/bookings/[id]/page.tsx:100-105",
+          "problem": "The review-existence count uses .eq('reviewer_id', user.id), but the reviews table (0006_reviews.sql) has only id, booking_id, rating, comment, created_at (Review type confirms, types.ts:106-112). The query errors, count is null, hasReview stays false, so 'How was your cleaning? Leave a review' keeps showing even after the customer reviewed; clicking Review again then fails on the unique(booking_id) constraint with a raw error.",
+          "fix": "Query existence by booking_id only (reviews has a unique booking_id): .eq('booking_id', id) without reviewer_id. Optionally also disable the review form / show 'Thanks for your review' when one exists.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Disputed bookings are a dead end — no path back to payable or closed",
+          "severity": "medium",
+          "category": "bug",
+          "file": "supabase/migrations/0008_improvements.sql:171-208; src/app/bookings/[id]/payment-actions.ts:28-29",
+          "problem": "open_dispute flips a 'completed' booking to 'disputed'. payBalance requires status==='completed', so once disputed the customer can never pay the balance. Admin resolution only updates the disputes row (updateDisputeStatus), never the booking — so a disputed booking is stuck in 'disputed' indefinitely with no transition back to completed/balance_paid/closed. The webhook charge.dispute.created path also flips bookings to 'disputed' with the same dead end.",
+          "fix": "When an admin resolves a dispute, transition the booking to an appropriate terminal/payable state (back to completed if upheld in customer's favor partial, or closed/cancelled). Add an RPC the admin action calls to move the booking out of 'disputed'.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No cleaner payout system — earnings page promises weekly direct deposit that does not exist",
+          "severity": "high",
+          "category": "feature",
+          "file": "src/app/cleaner/earnings/page.tsx:128-136",
+          "problem": "The earnings page states 'Payouts are processed weekly every Friday via direct deposit' and shows net-of-15%-fee figures, but there is no Stripe Connect onboarding, no bank/payout details collected, no payouts/transfers table, and no transfer code anywhere (grep for payout/connect/transfer finds only copy). The supply side of the marketplace is never actually paid through any tracked mechanism, and the 15% fee is a hardcoded display constant unrelated to the deposit/balance split.",
+          "fix": "Implement Stripe Connect (Express) onboarding for cleaners, collect payout details, and either use destination charges / transfers on payment or a scheduled payout job; add a payouts table to track status. At minimum, persist owed/paid amounts so the displayed promise is backed by data.",
+          "isImprovement": true,
+          "effort": "large"
+        },
+        {
+          "title": "No password reset, email verification, or resend flow",
+          "severity": "high",
+          "category": "feature",
+          "file": "src/app/login/page.tsx:16-33",
+          "problem": "Login/signup is a single form. There is no 'Forgot password?' (no resetPasswordForEmail), no email-verification handling, and no resend. signUp() is immediately followed by router.push('/'), assuming a live session; if Supabase email confirmation is enabled, the new user has no session and is silently dumped on the home page with no 'check your email' guidance. Account page also has no change-password action (account/actions.ts only updates name/phone).",
+          "fix": "Add a forgot-password page using supabase.auth.resetPasswordForEmail + an /auth/callback update-password route; handle the email-confirmation state with a 'check your email' screen and a resend button; add change-password to the account flow via supabase.auth.updateUser.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "Booking allows past dates — no server-side scheduled_at validation",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/book/actions.ts:13-23; supabase/migrations/0003_booking.sql:93-118",
+          "problem": "submitBooking passes scheduled_at straight to request_booking with no future-date check, and the RPC validates only hours>0. The datetime-local input has no min, so a customer can broadcast a job for a time in the past, which cleaners then see as a live request.",
+          "fix": "Validate in submitBooking (and/or request_booking) that scheduled_at is at least N hours in the future; add min to the datetime-local input; reject otherwise with a clear error.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Review page renders for any booking status and relies on RLS to reject",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/review/page.tsx:16-22; src/app/bookings/[id]/review/actions.ts:6-14",
+          "problem": "The review page only checks ownership, not status, so a customer can open /bookings/[id]/review for a broadcasting/accepted booking and submit. submitReview does no eligibility/duplicate pre-check; it relies entirely on the reviews_insert RLS policy, surfacing a raw error to the user when ineligible or already reviewed. comment is also inserted as '' rather than null when blank.",
+          "fix": "Gate the review page on status in ('completed','balance_paid','closed') and redirect otherwise; in submitReview, pre-check eligibility/existing review and store comment as null when empty.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "no_cleaner_found has no retry/re-broadcast path or customer notification",
+          "severity": "medium",
+          "category": "ux",
+          "file": "supabase/migrations/0003_booking.sql:135-138; src/app/bookings/[id]/page.tsx:33",
+          "problem": "If no verified cleaner serves the area, request_booking sets no_cleaner_found and nobody is notified. The customer's only recourse is 'Book Again' (a blank /book form). There is no 'try a wider window', no auto-retry, and no notification — a dead booking with no guided recovery.",
+          "fix": "Notify the customer on no_cleaner_found, and add a 'Retry / broaden area or time' action that re-runs the broadcast (an RPC re-ringing offers) instead of forcing a brand-new booking.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "Webhook does not handle failed/expired payments or async failures",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:31-134",
+          "problem": "Only checkout.session.completed, charge.dispute.created, and charge.refunded are handled. There is no handling of checkout.session.expired, checkout.session.async_payment_failed, or payment_intent.payment_failed. A failed/abandoned deposit leaves the booking in 'accepted' with no payments row and no signal, and (combined with the missing deposit_deadline expiry) it is stuck silently. charge.refunded only logs and never updates payments/booking state.",
+          "fix": "Handle session expiry/async failure to mark the payment failed and surface it (and re-broadcast or notify), and on charge.refunded update the corresponding payment/booking record rather than only logging.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Webhook creates duplicate notifications on event replay (idempotency leak)",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:72-101,116-132",
+          "problem": "The payments upsert is idempotent and the status update is guarded by .eq('status', prior), but createNotification runs unconditionally whenever checkout.session.completed is processed — it is not gated on the status update having actually changed a row. Stripe legitimately redelivers events, so a replay inserts duplicate 'Deposit paid'/'Deposit received' notifications.",
+          "fix": "Only send notifications when the guarded status update actually mutated a row (check the update's returned row count / use .select() and act on data.length), so replays are no-ops.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No notifications for cancellation, dispute opened, or new chat messages",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/bookings/[id]/cancel-actions.ts:25-31; src/app/bookings/[id]/dispute/actions.ts:29-35; src/app/bookings/[id]/message-actions.ts:17-23",
+          "problem": "Cancelling a booking does not notify the assigned cleaner; opening a dispute notifies neither admins nor the cleaner; sending a chat message notifies no recipient (messages rely on the MessagePanel realtime subscription only). For a job already scheduled, a cleaner can be cancelled-on without any persistent alert, and disputes can sit unseen by admins.",
+          "fix": "Emit create_notification to the counterparty/admins in each action: cancellation -> assigned cleaner; open_dispute -> admins (and cleaner); send_booking_message -> the other party, so users not actively on the page are informed.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No receipts/invoices for payments",
+          "severity": "medium",
+          "category": "feature",
+          "file": "src/app/bookings/[id]/payment-actions.ts:37-52",
+          "problem": "Checkout sessions are created without receipt_email and there is no invoice/receipt artifact for customers or tax records for cleaners. Payments are stored but never surfaced as a downloadable receipt, and the booking page shows amounts but no payment history. A production marketplace needs receipts for both sides.",
+          "fix": "Set receipt_email (or enable Stripe receipts), and add a payments/receipt view on the booking page listing deposit/balance/refund rows with dates and a printable/emailed receipt.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "No recurring bookings and 'Book Again' does not prefill prior details",
+          "severity": "low",
+          "category": "feature",
+          "file": "src/app/bookings/[id]/page.tsx:363-374",
+          "problem": "'Book Again' links to a blank /book form; there is no rebooking-from-previous (prefilled area/hours/address) and no recurring/weekly-biweekly scheduling or favorite-cleaner re-request (customer_favorites exists in the schema but is unused). Repeat-customer retention is a core marketplace lever that is unimplemented.",
+          "fix": "Make Book Again prefill the form from the prior booking (querystring or a rebook action), and add recurring-booking support plus a 'request your favorite cleaner' path leveraging the existing customer_favorites table.",
+          "isImprovement": true,
+          "effort": "medium"
+        }
+      ]
+    },
+    {
+      "dimension": "SECURITY",
+      "summary": "The data layer gets the hard parts right — every table has RLS enabled, all SECURITY DEFINER functions set `search_path = public`, the Stripe webhook verifies its signature, the service-role key is only ever referenced in server-only files (route handlers / \"use server\" actions / server lib), payments are advanced only by the webhook (browser redirect is never trusted), and address masking is enforced at the DB via the `booking_addresses` RLS policy (deposit_paid+), not just the UI. However, there are two CRITICAL privilege-boundary defects caused by UPDATE/INSERT policies that omit a `WITH CHECK` (or column restriction): any customer can self-promote to `admin`, and any cleaner can self-set `id_verified = true`. Either one collapses the entire trust/authz model and is exploitable directly from the browser with the public anon key + a normal session, completely bypassing the server-side admin checks that the app otherwise does correctly. Secondary issues: a SECURITY DEFINER `create_notification` RPC is callable by any authenticated user against arbitrary recipients (notification phishing), booking input is not validated/whitelisted server-side, there is no rate limiting anywhere, `cancel_booking` trusts a client-supplied actor label, and several payment/dispute/refund writes target columns that do not exist in the schema so the financial audit trail silently fails to record.",
+      "findings": [
+        {
+          "title": "Privilege escalation: profiles UPDATE policy lacks WITH CHECK — any user can make themselves admin",
+          "severity": "critical",
+          "category": "security",
+          "file": "supabase/migrations/0002_rls.sql:20-21",
+          "problem": "Policy `profiles_update_self ... for update using (id = auth.uid() or is_admin())` has no WITH CHECK clause. For UPDATE, Postgres reuses the USING expression as the WITH CHECK when omitted, and that expression only constrains `id` (which never changes), not `role`. Supabase grants `authenticated` table-level UPDATE by default, so any logged-in customer can run `supabase.from('profiles').update({ role: 'admin' }).eq('id', myUid)` straight from the browser with the public anon key and become an admin — instantly bypassing every server-side `assertAdmin()` / `role !== 'admin'` guard and `is_admin()` RLS in the app.",
+          "fix": "Add an explicit WITH CHECK that forbids role changes by non-admins, e.g. recreate as `for update using (id = auth.uid() or is_admin()) with check (is_admin() or role = (select role from profiles where id = auth.uid()))`, or remove `role` from the user-writable surface entirely and only mutate role via a service-role/admin path (becomeCleaner should also move to a SECURITY DEFINER fn that hardcodes role='cleaner').",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Cleaner self-verification: cleaner_details INSERT/UPDATE policies let a cleaner set id_verified=true",
+          "severity": "critical",
+          "category": "security",
+          "file": "supabase/migrations/0002_rls.sql:26-29",
+          "problem": "`cleaner_update ... for update using (profile_id = auth.uid() or is_admin())` has no WITH CHECK and `cleaner_insert_self ... with check (profile_id = auth.uid())` does not restrict columns. A cleaner can therefore directly call `supabase.from('cleaner_details').update({ id_verified: true, verified_at: new Date(), active: true }).eq('profile_id', myUid)` (or insert such a row) and self-verify. The in-migration comment (lines 30-31) asserting cleaners 'cannot self-verify through the UI' is false at the API level. This defeats the whole 'verified cleaners' trust layer: an unvetted account gets the ID-verified badge shown to customers (booking page get_cleaner_card), is rung for jobs by request_booking (which filters on `cd.id_verified`), and after deposit gains the customer's full address.",
+          "fix": "Make id_verified/verified_at admin-only: either revoke UPDATE on those columns from authenticated and flip them only via the existing service-role admin action, or add `with check (is_admin() or (id_verified = false))` and a matching insert check, so non-admins can never write a truthy id_verified.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "create_notification SECURITY DEFINER RPC is callable by any user against any recipient (notification phishing/spoofing)",
+          "severity": "high",
+          "category": "security",
+          "file": "supabase/migrations/0008_improvements.sql:246-261",
+          "problem": "create_notification is SECURITY DEFINER with no internal authz check, and no GRANT/REVOKE exists in any migration, so it is executable by `anon`/`authenticated` via the default PUBLIC grant. Any authenticated user can call `supabase.rpc('create_notification', { p_user_id: <victim>, p_type:'x', p_title:'Payment failed — re-enter card', p_body:'<lure>' })` to inject arbitrary in-app notifications into any other user's feed — a convincing in-product phishing/spam vector. The app itself never needs this RPC (it inserts via the service-role client in src/lib/notifications.ts), so it is pure attack surface.",
+          "fix": "`REVOKE EXECUTE ON FUNCTION create_notification(uuid,text,text,text,uuid) FROM anon, authenticated;` (keep service_role). If client callability is ever needed, add an internal check restricting recipient to auth.uid() or is_admin().",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "No server-side validation of booking inputs (area whitelist, hours bounds, schedule date)",
+          "severity": "medium",
+          "category": "security",
+          "file": "src/app/book/actions.ts:13-23",
+          "problem": "submitBooking forwards raw form values to request_booking with no validation, and request_booking (0003_booking.sql:93-142) only relies on the table check `hours > 0`. There is no AREAS whitelist enforcement (arbitrary `area` text accepted), no upper bound on `hours` (e.g. 99999 -> $2M booking) or fractional-hour floor, and no rejection of past `scheduled_at`. `new Date(scheduledLocal)` can also produce an Invalid Date that throws on .toISOString(). This allows malformed/abusive bookings and business-rule bypass.",
+          "fix": "Validate server-side before the RPC: assert `area` ∈ AREAS (src/lib/areas.ts), clamp hours to a sane range (e.g. 1–24, integer/half-hour), require scheduled_at to be a valid future timestamp, and reject empty full_address. Mirror the same checks inside request_booking so direct RPC calls are also guarded.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No rate limiting on booking broadcast, messaging, checkout, or auth",
+          "severity": "medium",
+          "category": "security",
+          "file": "src/app/book/actions.ts:6",
+          "problem": "There is no rate limiting anywhere in the app or DB. request_booking fans out an offer row (and a realtime ring) to every active verified cleaner, so a single user can spam-create bookings to flood/abuse all cleaners; send_booking_message, payDeposit/payBalance (Stripe session creation), and review/dispute creation are likewise unthrottled, and login has no app-level throttle. This enables abuse/DoS and unnecessary Stripe/email cost.",
+          "fix": "Introduce per-user/IP rate limiting (e.g. Upstash Ratelimit or a Postgres counter) on submitBooking, sendMessage, startCheckout, openDispute and the mark-read route; cap concurrent 'broadcasting' bookings per customer.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "cancel_booking trusts client-supplied actor label (p_by spoofing)",
+          "severity": "medium",
+          "category": "security",
+          "file": "supabase/migrations/0008_improvements.sql:135-168",
+          "problem": "cancel_booking authorizes via `customer_id = auth.uid() OR is_admin()` (good) but writes `cancelled_by = p_by` from the caller. A customer can call the RPC directly with `p_by:'admin'` or `'cleaner'` or `'system'` (the table check only restricts the enum set, not the truthfulness), corrupting the cancellation audit trail and any logic/UI that trusts who cancelled.",
+          "fix": "Derive the actor inside the function instead of trusting the parameter: set `cancelled_by = case when is_admin() then 'admin' else 'customer' end` and drop p_by from the signature (or ignore it).",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Dispute/refund webhook and admin refund write to non-existent columns — financial audit trail silently lost",
+          "severity": "medium",
+          "category": "data",
+          "file": "src/app/api/stripe/webhook/route.ts:161-169",
+          "problem": "The charge.dispute.created handler inserts into `disputes` with columns that do not exist in the schema (payment_id, stripe_dispute_id, reason, amount) and omits the table's NOT NULL columns (raised_by, category, description) per 0008_improvements.sql:54-64; admin issueRefund (src/app/admin/disputes/[id]/actions.ts:75-85) inserts payments with non-existent `payment_type`/`notes`/`updated_at` and updateDisputeStatus sets a non-existent `updated_at`. All of these throw at runtime and are swallowed (webhook returns 200, action errors), so Stripe-side chargebacks and issued refunds are never recorded in the DB — a security-relevant loss of financial/dispute audit data and a reconciliation gap. (Related schema drift: bookings/[id]/page.tsx:104 filters reviews on `reviewer_id`, and admin/cleaners pages query a non-existent `offers` table and `reviews.cleaner_id`, so 'already reviewed' detection and cleaner stats are broken.)",
+          "fix": "Add a migration aligning the disputes/payments tables with the code (e.g. add stripe_dispute_id, payment_id, amount, reason to disputes; add a 'refund' payment_type and notes/updated_at to payments) OR fix the inserts to match the current schema and supply all NOT NULL columns; fix the reviewer_id/offers/cleaner_id queries to match real columns.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Reviews are world-readable including free-text comment and booking_id",
+          "severity": "low",
+          "category": "security",
+          "file": "supabase/migrations/0006_reviews.sql:24-26",
+          "problem": "`reviews_select for select using (true)` exposes every review row to anon/any user, including the free-text `comment` (which has no length cap and may contain PII the customer typed) and the `booking_id`. submitReview (src/app/bookings/[id]/review/actions.ts) does not bound comment length. While bookings RLS still protects the booking itself, this leaks all review prose and enumerable booking IDs to the public.",
+          "fix": "Either surface ratings only through the existing SECURITY DEFINER get_cleaner_card aggregate and tighten reviews_select (e.g. drop booking_id from public exposure via a view), or at minimum cap comment length (e.g. <=1000) and consider not exposing raw booking_id publicly.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "mark-read route is a cookie-authenticated state-changing POST with no origin/CSRF check",
+          "severity": "low",
+          "category": "security",
+          "file": "src/app/api/notifications/mark-read/route.ts:4-43",
+          "problem": "Unlike Next.js Server Actions (which have built-in same-origin enforcement), this route handler performs a cookie-authenticated state change (marking a notification read) with no Origin/Referer or CSRF-token check. Impact is low (it only flips read_at for the caller's own rows), but it is the one mutation that bypasses the Server Action CSRF protection used everywhere else.",
+          "fix": "Validate the Origin header against the app origin (or require a CSRF token), or convert mark-read to a Server Action like markAllRead so it inherits framework CSRF protection.",
+          "isImprovement": true,
+          "effort": "small"
+        }
+      ]
+    },
+    {
+      "dimension": "Code Quality & Bugs",
+      "summary": "TypeScript type-checks clean (tsc --noEmit exits 0), but there is a cluster of high-impact runtime bugs caused by code querying/writing columns that do not exist in the actual Postgres schema. The most serious is the admin refund flow: it issues the Stripe refund successfully, then the DB record insert ALWAYS fails (wrong column `payment_type`, invalid enum value 'refund', and nonexistent `notes`/`updated_at` columns) and the error is swallowed — money leaves Stripe with no recorded trace. The admin dispute-resolution update also targets a nonexistent `updated_at` column and fails entirely, so admins cannot resolve disputes; and the dispute page's payments query uses `payment_type`, so the refund UI always shows \"no payments to refund\". The Stripe webhook's `charge.dispute.created` handler inserts disputes with a completely wrong column set (and omits NOT NULL `raised_by`/`category`/`description`), so it always fails silently. The customer booking page checks `reviews.reviewer_id` (nonexistent), so duplicate-review detection never works and re-submission hits a unique-constraint error. There is also a genuine timezone bug (datetime-local parsed in server TZ, not the customer's Pacific TZ), duplicate notifications on Stripe webhook replay, swallowed RPC errors in start/complete job, an over-restrictive profiles RLS policy that prevents booking counterparties from ever seeing each other's names in jobs/chat, and a known duplicate MessagePanel component. Realtime subscriptions are all correctly cleaned up (no leaks).",
+      "findings": [
+        {
+          "title": "Admin refund records to nonexistent columns/enum — Stripe refund succeeds but DB write silently fails",
+          "severity": "critical",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/actions.ts:75-85",
+          "problem": "issueRefund() calls stripe.refunds.create() FIRST, then inserts into `payments` with `payment_type: 'refund'`, `notes`, `updated_at`, `created_at`. The payments table (migration 0005) has column `type` (not `payment_type`), the `type` enum is only ('deposit','balance') so 'refund' is invalid, and `notes`/`updated_at` columns do not exist. The required NOT NULL `type` is never supplied. The insert ALWAYS errors, but the result is never checked, so the error is swallowed. Net effect: money is refunded in Stripe with zero DB record, no booking/dispute status change, and no error surfaced to the admin.",
+          "fix": "Change the insert to use the real columns: `type` (you must first add 'refund' to the payment_type enum, or model refunds with a negative-amount 'balance'/'deposit' row + a separate refunds table), drop `notes`/`updated_at` (no such columns; add a `notes` column via migration if needed), and check `error` and surface failures. Also wrap so the Stripe refund and DB write are reconciled (e.g. record an intent row before calling Stripe).",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Admin dispute status update targets nonexistent `updated_at` — update always fails, disputes can't be resolved",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/actions.ts:45",
+          "problem": "updateDisputeStatus() sets `updated_at: new Date().toISOString()` in the disputes UPDATE. The disputes table (migration 0008) has no `updated_at` column, so the entire update is rejected by Postgres. The result/error is not checked, so it fails silently — status, resolution and resolved_at are never persisted. Admins literally cannot mark a dispute investigating/resolved/closed.",
+          "fix": "Remove the `updated_at` key from the update object (or add an `updated_at timestamptz` column + trigger via migration if you want audit timestamps). Also check the returned `error` and surface it.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Admin dispute page payments query uses wrong column `payment_type` — refund panel always empty",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/page.tsx:64,67,211",
+          "problem": "The payments query selects `payment_type` and filters `.neq('payment_type','refund')`; the column is actually `type`. The query errors, `payments` is null, and the page renders 'No paid payments available to refund.' So the admin can never even open the refund form. Line 211 also renders `{p.payment_type}` which would be undefined. (Note the admin BOOKINGS detail page at src/app/admin/bookings/[id]/page.tsx:82 correctly uses `type` with a comment, confirming this is a regression.)",
+          "fix": "Replace `payment_type` with `type` in the select, the .neq filter, and the option label. Since 'refund' isn't a valid value of `type` yet, reconsider the .neq filter accordingly.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Stripe webhook charge.dispute.created inserts disputes with wrong schema — always fails, booking flagged with no dispute row",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:161-169",
+          "problem": "The handler inserts into `disputes` with columns payment_id, stripe_dispute_id, reason, amount, status, created_at. The disputes table (migration 0008) has none of payment_id/stripe_dispute_id/reason/amount, and requires NOT NULL raised_by, category, description which are not provided. The insert always errors; the error is unchecked. Meanwhile the booking IS updated to status 'disputed' (line 154-158), so a Stripe chargeback leaves a booking stuck in 'disputed' with no corresponding dispute record for admins to action. There is also no idempotency guard, so a replayed event would re-mark/re-insert.",
+          "fix": "Either add the missing columns to disputes via migration (payment_id, stripe_dispute_id, reason, amount, and make raised_by/category/description nullable or supply system defaults) or map the Stripe dispute onto the existing schema (category='payment_issue', description=dispute.reason, raised_by=customer_id from booking). Add a unique index on stripe_dispute_id and upsert for idempotency, and check the error.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Booking time stored in wrong timezone (server TZ instead of customer's Pacific)",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/book/actions.ts:13-19",
+          "problem": "The form sends a `datetime-local` string (no timezone, e.g. '2026-06-26T14:00'). submitBooking does `new Date(scheduledLocal).toISOString()` on the SERVER, which interprets the naive string in the server's local timezone. On Vercel/most hosts the server runs in UTC, so a Courtenay BC customer (Pacific, UTC-7/-8) who picks 2:00pm gets stored as 14:00 UTC = 7:00am Pacific. Every booking time is off by 7-8 hours, shown to both customer and cleaner.",
+          "fix": "Capture the customer's timezone offset on the client (hidden input or convert in a client component using the browser's Date), or store the local wall-clock + an explicit IANA tz (e.g. 'America/Vancouver') and convert deterministically. Do not rely on server-local parsing of a naive datetime-local value.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Duplicate-review check queries nonexistent `reviews.reviewer_id` — prompt never clears, resubmit errors",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/bookings/[id]/page.tsx:99-106",
+          "problem": "hasReview is computed via `.from('reviews').select('id',{count:'exact',head:true}).eq('booking_id',id).eq('reviewer_id',user.id)`. The reviews table (migration 0006) has columns id, booking_id, rating, comment, created_at — there is no `reviewer_id`. The query errors, count is null, hasReview is always false, so the 'How was your cleaning? Leave a review' prompt is shown even after the customer has reviewed. Clicking it again calls submitReview, which violates the `booking_id` UNIQUE constraint and throws an unhandled error to the user.",
+          "fix": "Drop the `.eq('reviewer_id', user.id)` filter (the booking_id is already unique per booking, and the page already verified customer ownership). Just check existence by booking_id.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Duplicate notifications on Stripe webhook replay",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:72-101,116-132",
+          "problem": "The payment upsert is idempotent (onConflict stripe_session_id, ignoreDuplicates) and the booking status update is gated by prior status, but the createNotification calls fire unconditionally every time checkout.session.completed is delivered. Stripe legitimately re-delivers/retries events, so customers and cleaners get duplicate 'deposit paid'/'deposit received'/'balance received' notifications.",
+          "fix": "Only send notifications when the status update actually transitioned a row. Use `.update(...).eq('status','accepted').select('id')` and send notifications only if the returned array is non-empty (i.e. this delivery performed the transition).",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "startJob/completeJob swallow RPC errors (fire-and-forget)",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/app/cleaner/actions.ts:25-35",
+          "problem": "Unlike acceptJob/declineJob, startJob and completeJob call supabase.rpc without destructuring or checking `error`, then immediately revalidatePath. If the RPC fails (e.g. status guard not met, or the SECURITY DEFINER function raises), the failure is invisible: the UI just refreshes and the button reappears with no feedback. The underlying SQL functions also no-op silently when the WHERE guard (cleaner_id/status) doesn't match.",
+          "fix": "Destructure `{ error }` from both rpc calls and `throw new Error(error.message)` on failure, matching acceptJob/declineJob. Consider returning a boolean of whether the transition occurred.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Profiles RLS blocks booking counterparties from reading each other's names",
+          "severity": "medium",
+          "category": "bug",
+          "file": "supabase/migrations/0002_rls.sql:18-19",
+          "problem": "profiles_select policy is `id = auth.uid() OR is_admin()`. So when the cleaner jobs page embeds `profiles!bookings_customer_id_fkey(name)` (src/app/cleaner/jobs/page.tsx:68, jobs/[id]/page.tsx:64) the join returns null and customerName always falls back to 'Customer'. Likewise MessagePanel fetches the sender's profile name (src/app/bookings/[id]/MessagePanel.tsx:60-64, src/components/MessagePanel.tsx:62-66); the other party's row is unreadable, so chat shows 'Cleaner'/'Unknown' instead of real names. The customer booking page only sees the cleaner name because it goes through the SECURITY DEFINER get_cleaner_card RPC, masking how broken the direct path is.",
+          "fix": "Add an RLS policy allowing a user to read the name of a profile they share a booking with (customer<->assigned cleaner), or expose names via a SECURITY DEFINER RPC like get_cleaner_card for both directions. Then the embedded joins/sender lookups will resolve.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Duplicate, divergent MessagePanel components",
+          "severity": "medium",
+          "category": "bug",
+          "file": "src/components/MessagePanel.tsx vs src/app/bookings/[id]/MessagePanel.tsx",
+          "problem": "Two MessagePanel implementations exist and diverge: components/MessagePanel.tsx (used by the cleaner job detail page) calls the send_booking_message RPC directly, caps input at 500 chars, and shows relative time; app/bookings/[id]/MessagePanel.tsx (used by the customer page) calls the sendMessage server action, caps at 1000, and shows clock time. They also create the browser client differently (components version calls createClient() in the render body on every render). This is drift-prone duplicated logic.",
+          "fix": "Delete one and standardize on a single shared component (prefer the server-action variant for consistent revalidation, and create the Supabase client inside useEffect/useRef rather than per-render). Align the char limit with the DB CHECK (booking_messages body BETWEEN 1 AND 1000).",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "JS-free refund form always uses the first payment's intent/amount, not the selected one",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/admin/disputes/[id]/page.tsx:208-235",
+          "problem": "The payment <select> has no JS wiring (onChange is a no-op), but the hidden `stripe_payment_intent_id` field and the amount `max` are hardcoded to `payments?.[0]`. If a booking has multiple paid payments (deposit + balance), choosing the second option still refunds against the first payment's intent and validates against the wrong max. (Currently moot because the payments query is broken, but it will misfire once that's fixed.)",
+          "fix": "Make the panel a small client component that updates the hidden intent and amount max from the selected option, or submit the payment_id only and have issueRefund look up the intent/amount server-side from the chosen payment row.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Leftover console.log statements in Stripe webhook",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/api/stripe/webhook/route.ts:171,193,199,201",
+          "problem": "Several console.log calls for dispute/refund debugging remain in the production webhook handler (lines 171, 193, 199, 201). console.error at 208/mark-read 38 is acceptable; the console.log lines are noise and may leak booking/payment ids into logs.",
+          "fix": "Remove the console.log calls or route them through a leveled logger; keep console.error for genuine failures.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Deposit rounding mismatch between computePrice/UI (whole units) and DB (2 decimals)",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/lib/types.ts:29 and src/app/book/page.tsx:84",
+          "problem": "computePrice rounds the deposit with Math.round((total*depositPercent)/100) — to a whole dollar — and the booking form preview uses the same Math.round((rate*3*depositPercent)/100). The authoritative DB function request_booking (migration 0003:119) computes round(v_total * v_deposit_pct/100.0, 2) to 2 decimals. For non-integer results the customer-facing estimate can differ by cents from the amount actually charged. computePrice is currently only exercised by types/tests, but the divergent rounding is a latent money-display inconsistency.",
+          "fix": "Round to 2 decimals consistently (Math.round(x*100)/100) in computePrice and the book page preview so the displayed deposit matches the stored/charged deposit_amount.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Marking notifications read doesn't refresh the nav unread badge",
+          "severity": "low",
+          "category": "ux",
+          "file": "src/app/notifications/actions.ts:23",
+          "problem": "markAllRead revalidates only '/notifications'. The unread count bubble is rendered by the layout-level Nav (src/components/Nav.tsx) which counts unread notifications. After 'Mark all read', the bubble in the navbar still shows the old count until the next full navigation, because the layout segment isn't revalidated.",
+          "fix": "Call revalidatePath('/', 'layout') (or revalidate the relevant layout) in markAllRead and the mark-read route so the Nav unread count recomputes.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Admin reassignCleaner only sets cleaner_id, leaving status/offers inconsistent",
+          "severity": "low",
+          "category": "bug",
+          "file": "src/app/admin/bookings/[id]/actions.ts:52-60",
+          "problem": "reassignCleaner updates only `cleaner_id`. It doesn't adjust status, create/accept a booking_offers row for the new cleaner, or notify anyone. A booking can end up with a cleaner_id while status is still 'broadcasting' (or with a new cleaner who has no offer row and no address access path consistent with the offer model), and the new cleaner gets no notification.",
+          "fix": "In reassignCleaner, also set an appropriate status, upsert an accepted booking_offers row for the new cleaner (and mark the old one), and send a notification. Ideally implement as a SECURITY DEFINER RPC mirroring accept_offer semantics.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Add deposit deadline enforcement so accepted bookings can't hang forever",
+          "severity": "medium",
+          "category": "feature",
+          "file": "supabase/migrations/0008_improvements.sql (deposit_deadline) + accept flow",
+          "problem": "A `deposit_deadline` column exists on bookings but is never set or enforced anywhere. accept_offer (migration 0003:145) moves a booking to 'accepted' with no deadline, and nothing expires it. If the customer never pays the deposit, the booking sits in 'accepted' indefinitely, the assigned cleaner is blocked from other matching, and the address stays masked with no resolution.",
+          "fix": "Set deposit_deadline = now() + interval (e.g. 1h) when a cleaner accepts, and add a scheduled job/cron (or a guarded RPC invoked on read) that re-broadcasts or moves expired accepted bookings back to broadcasting / no_cleaner_found and notifies the customer.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "Notify the customer when a cleaner accepts the job",
+          "severity": "low",
+          "category": "feature",
+          "file": "supabase/migrations/0003_booking.sql:145 (accept_offer)",
+          "problem": "When a cleaner accepts (accept_offer), the customer only finds out via the StatusLive realtime page refresh while that page is open. No notification row is created, unlike deposit_paid/balance_paid which do notify. A customer who isn't currently viewing the booking page never learns a cleaner was found until they revisit.",
+          "fix": "In accept_offer (or the acceptJob server action) create a notification for booking.customer_id ('Cleaner found — confirm with your deposit', booking_id) so it appears in the bell/notifications list.",
+          "isImprovement": true,
+          "effort": "small"
+        }
+      ]
+    },
+    {
+      "dimension": "Accessibility, Error-Resilience & SEO",
+      "summary": "The app has solid bones (semantic landmarks: per-page <main>, <nav>, <footer>; correct html lang=\"en\"; most form inputs are wrapped in <label>; sitemap.ts and robots.ts exist; root + /about have metadata), but several material gaps remain. Error-resilience is the weakest area: there are NO error boundaries (app/error.tsx, app/global-error.tsx) and NO app/not-found.tsx, so any thrown Supabase/render error or a notFound() call drops the user onto an unstyled, brand-less default page with no recovery. There are also no loading.tsx boundaries despite every page being an async server component running multiple sequential Supabase queries. Accessibility has one outright defect — the global .btn-primary/.btn-secondary :focus rules call outline:none and then use non-existent CSS properties (ring/ring-color/ring-offset are Tailwind shorthands, not CSS), so keyboard users get NO visible focus ring on the primary action buttons (WCAG 2.4.7) — plus a couple of unlabeled textareas, a mobile menu with no Escape/outside-click/focus handling, no skip link, and low-contrast placeholder/helper text. SEO is functional but thin: only 2 of ~14 public/auth pages set their own title/description, there is no Open Graph/Twitter card, no metadataBase, and robots.ts allows crawling of private authed routes. No hard render-crash risks were found (all .toFixed calls are wrapped in Number(...), which yields a benign \"NaN\" string rather than throwing, and .map/.charAt sites are null-guarded), though a few money fields can display \"$NaN\".",
+      "findings": [
+        {
+          "title": "No error boundary anywhere (app/error.tsx & app/global-error.tsx missing)",
+          "severity": "high",
+          "category": "bug",
+          "file": "src/app/ (no error.tsx / global-error.tsx)",
+          "problem": "There is no app/error.tsx or app/global-error.tsx. Every page is an async Server Component that awaits Supabase queries (e.g. bookings/[id]/page.tsx runs ~4 awaits, Nav.tsx queries notifications). If any query throws (network blip, RLS error, Supabase down) or a child component throws, React has no error boundary to catch it — in production the user sees the bare Next.js 'Application error: a client-side exception has occurred' page with no nav, footer, branding, or retry. There is no recovery path.",
+          "fix": "Add src/app/error.tsx ('use client') with a styled fallback and a reset() retry button, and src/app/global-error.tsx for root-layout-level failures (must render its own <html><body>). Consider per-section error.tsx for /bookings, /cleaner, /admin so a failure in one area doesn't blank the whole route.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Primary/secondary buttons have no visible keyboard focus indicator (invalid CSS)",
+          "severity": "high",
+          "category": "a11y",
+          "file": "src/app/globals.css:123-128, 148-153",
+          "problem": ".btn-primary:focus and .btn-secondary:focus set 'outline: none' and then declare 'ring: 2px; ring-color: ...; ring-offset: 2px;'. ring/ring-color/ring-offset are Tailwind utility names, NOT real CSS properties, so the browser ignores them. Net effect: the outline is removed and nothing replaces it, leaving the main CTAs ('Book a Cleaning', 'Pay deposit', 'Accept', 'Submit Dispute', etc.) with zero visible focus state for keyboard users. Violates WCAG 2.4.7 Focus Visible.",
+          "fix": "Replace the invalid properties with real CSS, e.g. `.btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(5,150,105,0.45); }` and similar for btn-secondary. Prefer :focus-visible so the ring only shows for keyboard users. Add a global `:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }` fallback.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "No custom 404 page (app/not-found.tsx missing) despite notFound() being used",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/ (no not-found.tsx); called in src/app/bookings/[id]/page.tsx:80",
+          "problem": "bookings/[id]/page.tsx calls notFound() when a booking isn't owned by the user, and any unknown URL 404s. With no app/not-found.tsx, users hit the default unstyled Next.js 404 with no Nav/Footer, no branding, and no link back to safety. For a consumer marketplace this is a jarring dead end.",
+          "fix": "Add src/app/not-found.tsx rendering a branded 404 inside the shared layout with a heading, short copy, and links to '/' and '/book'.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "No route-level loading.tsx — navigations show no loading state",
+          "severity": "medium",
+          "category": "ux",
+          "file": "src/app/ (no loading.tsx files)",
+          "problem": "Every page is an async Server Component performing multiple sequential Supabase round-trips before first paint (e.g. bookings/[id] does booking + get_cleaner_card + address + reviews + messages). With no loading.tsx, navigation appears frozen on the previous page until all data resolves — no spinner or skeleton, hurting perceived performance, especially on mobile/slow networks.",
+          "fix": "Add loading.tsx at the app root and/or per heavy segment (/bookings, /bookings/[id], /cleaner, /admin) rendering a skeleton or spinner using the existing .card styles so Next streams an instant Suspense fallback.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "Most pages lack their own <title>/description (SEO)",
+          "severity": "medium",
+          "category": "config",
+          "file": "src/app/book/page.tsx, src/app/login/page.tsx (and all others except layout.tsx & about)",
+          "problem": "Only layout.tsx and about/page.tsx export metadata. Every other route — including the public, indexable /book and /login pages — inherits the generic root title 'Dust Busters — Home Cleaning in Courtenay, BC'. Search results and browser tabs can't distinguish pages, and the high-intent /book page has no targeted title/description.",
+          "fix": "Add `export const metadata = { title, description }` to server-component pages (book, bookings list, etc.). For client-component pages like login/page.tsx (which can't export metadata), introduce a login/layout.tsx that exports the metadata. Consider a title.template like '%s · Dust Busters' in the root layout.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No Open Graph / Twitter card metadata and no metadataBase",
+          "severity": "medium",
+          "category": "config",
+          "file": "src/app/layout.tsx:17-21",
+          "problem": "Root metadata defines only title/description — no openGraph, no twitter, no metadataBase, and there is no opengraph-image (public/ only contains leftover Next scaffold SVGs and a default favicon.ico). Shared links (SMS, Messenger, Slack, X) render with no preview image, title, or card. Without metadataBase, any future OG/canonical URLs also won't resolve to absolute URLs.",
+          "fix": "In layout.tsx metadata add metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'), plus openGraph {title, description, type:'website', locale:'en_CA', siteName} and twitter {card:'summary_large_image'}. Add an app/opengraph-image.png (or opengraph-image.tsx) and a real favicon/icon set.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "robots.ts lets crawlers index private/authenticated routes",
+          "severity": "medium",
+          "category": "config",
+          "file": "src/app/robots.ts:6-12",
+          "problem": "robots returns a single rule allowing '/' with no disallow entries. Crawlers will follow links into /admin, /account, /bookings, /cleaner, /notifications, and /book — all auth-gated routes that just redirect to /login. This wastes crawl budget and risks indexing thin login-redirect/duplicate pages. sitemap.ts also lists /login, which shouldn't be in the sitemap.",
+          "fix": "Add disallow: ['/admin', '/account', '/bookings', '/cleaner', '/notifications', '/api', '/auth'] to the robots rule (keep allow:'/'). Remove '/login' from sitemap.ts and keep only genuinely public marketing pages ('/', '/about', '/book').",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Unlabeled textareas/inputs lack accessible names",
+          "severity": "medium",
+          "category": "a11y",
+          "file": "src/app/bookings/[id]/page.tsx:345-351; src/components/MessagePanel.tsx:166-178; src/app/bookings/[id]/MessagePanel.tsx:151-158",
+          "problem": "The cancel-reason <textarea> (bookings/[id]/page.tsx) has only a placeholder and no <label>/aria-label. Both chat message controls (the textarea in components/MessagePanel.tsx and the input in bookings/[id]/MessagePanel.tsx) likewise rely on placeholder-only. Placeholders are not accessible names, so screen-reader users hear an unlabeled 'edit text' field, and the label disappears once typing begins (WCAG 1.3.1 / 4.1.2).",
+          "fix": "Add aria-label to each: cancel textarea -> aria-label=\"Reason for cancellation\"; message fields -> aria-label=\"Type a message\". (The dispute/review forms already use proper htmlFor labels — mirror that pattern.)",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Mobile nav menu: no Escape/outside-click close, missing aria-controls, no focus management",
+          "severity": "medium",
+          "category": "a11y",
+          "file": "src/components/NavClient.tsx:93-136",
+          "problem": "The new mobile hamburger menu toggles an absolutely-positioned dropdown. The toggle button has aria-expanded/aria-label (good) but no aria-controls/aria-haspopup, and the panel has no id. The menu does not close on Escape or on outside click, and focus is neither moved into the open panel nor returned to the button on close. Keyboard/screen-reader users can open it but have no standard way to dismiss it.",
+          "fix": "Give the panel an id and reference it via aria-controls on the button; add aria-haspopup=\"menu\". Add a keydown handler closing on Escape (and returning focus to the toggle) and a document click/route-change listener to close on outside interaction. Existing per-link onClick close is fine to keep.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "No skip-to-content link for keyboard users",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/layout.tsx:33-37",
+          "problem": "There is no 'Skip to main content' link, and the <main> elements have no id. Keyboard and screen-reader users must tab through the entire sticky nav (logo + all role-based links + notifications + logout) on every page before reaching content (WCAG 2.4.1 Bypass Blocks).",
+          "fix": "Add a visually-hidden-until-focused anchor as the first body child in layout.tsx (e.g. `<a href=\"#main\" className=\"sr-only focus:not-sr-only ...\">Skip to content</a>`) and add id=\"main\" to the content wrapper <div> (or to each page's <main>).",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "Low color-contrast placeholder and helper text",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/globals.css:175-177; e.g. src/app/notifications/page.tsx:126, src/app/bookings/[id]/dispute/page.tsx:105",
+          "problem": ".input-modern::placeholder is #cbd5e1 (slate-300) on white ≈ 1.5:1 contrast, far below the 4.5:1 minimum. Meaningful (non-incidental) text is also frequently rendered in text-slate-400 (#94a3b8 ≈ 2.5:1) — timestamps ('timeAgo'), 'Minimum 20 characters', 'net ~$x', empty-state messages — which fails WCAG 1.4.3.",
+          "fix": "Darken placeholder to ~slate-400/500 and switch meaningful helper/timestamp text from text-slate-400 to at least text-slate-500 (#64748b ≈ 4.8:1). Reserve slate-400 for truly decorative text.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "Money fields can render '$NaN' when amounts are null",
+          "severity": "low",
+          "category": "data",
+          "file": "src/app/bookings/[id]/page.tsx:213,220,225,245,260; src/app/cleaner/jobs/page.tsx:149,224",
+          "problem": "These use `Number(booking.total_amount).toFixed(2)` without the `?? 0` guard used elsewhere. If the column is null/undefined (e.g. a booking still 'broadcasting' before amounts are computed, or a partial row), Number(undefined) is NaN and the UI shows '$NaN' / 'Pay $NaN deposit securely'. It does not crash, but it is a visible data/UX bug on the customer's payment CTA.",
+          "fix": "Apply the same guard used in admin/earnings pages: `Number(booking.total_amount ?? 0).toFixed(2)` (and likewise for deposit_amount/balance_amount), or hide the payment card until amounts exist.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Decorative lucide icons not hidden from screen readers",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/page.tsx (Shield/Clock/Star/...), and most pages using lucide-react",
+          "problem": "lucide-react renders <svg> without aria-hidden by default. The app uses dozens of purely decorative icons next to visible text labels; some screen readers announce these as 'image/graphic', adding noise. A few icon-only controls are correctly labeled, but the pervasive decorative icons are not marked decorative.",
+          "fix": "Add aria-hidden=\"true\" (and focusable=\"false\") to decorative icons, e.g. via a small wrapper or by passing aria-hidden on each icon. Keep accessible names only on icon-only interactive elements (already done for the nav bell and send button).",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "Live status/notification updates are not announced to assistive tech",
+          "severity": "low",
+          "category": "a11y",
+          "file": "src/app/bookings/[id]/StatusLive.tsx:9-26; src/app/cleaner/jobs/JobsLive.tsx",
+          "problem": "Realtime changes (cleaner found, deposit paid, new job offer) trigger a silent router.refresh(). The booking status badge text changes with no aria-live region, so screen-reader users get no notification that the state changed — a core part of the booking flow's value (real-time matching) is invisible to them.",
+          "fix": "Wrap the status badge in bookings/[id]/page.tsx with role=\"status\" aria-live=\"polite\" (and similarly announce new job offers), so the updated label is read out after the realtime refresh.",
+          "isImprovement": true,
+          "effort": "small"
+        }
+      ]
+    },
+    {
+      "dimension": "DATA/MIGRATIONS, BUILD & DEPLOY config",
+      "summary": "The build toolchain is fundamentally sound: typecheck passes cleanly, the 3 unit tests pass, vitest is sensibly configured (sequential DB tests, generous timeouts), .gitignore correctly ignores all env files (no secret is committed), migrations are numerically ordered, and the 0007/0008 migrations show good idempotency intent (IF NOT EXISTS, unique-index upsert guard). However the project is NOT deploy-ready. Two runtime-blocking gaps exist: STRIPE_WEBHOOK_SECRET is empty (every webhook returns 400, so no booking ever advances past accepted/completed) and NEXT_PUBLIC_BASE_URL is still localhost (Stripe success/cancel redirects, sitemap and robots all point at localhost in prod). A real data/schema defect: the Stripe charge.dispute.created webhook inserts columns (payment_id, stripe_dispute_id, reason, amount) that do not exist on the disputes table and omits its NOT NULL columns, so that handler always throws. next.config.ts is empty — no security headers (CSP/HSTS/etc.) and no image config. Surrounding deploy hygiene is missing: README is a one-liner, no .env.example, no vercel.json, no CI workflow, no coverage tooling, no engines pin, and migration 0008 has one non-idempotent ADD CONSTRAINT inconsistent with the rest of the file. The default `npm test` only runs 3 trivial pricing/role assertions; the payment/webhook and RLS logic have zero automated coverage in CI.",
+      "findings": [
+        {
+          "title": "STRIPE_WEBHOOK_SECRET empty — all webhooks 400, bookings never advance after payment",
+          "severity": "critical",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/.env.local:9 (and src/app/api/stripe/webhook/route.ts:23)",
+          "problem": "STRIPE_WEBHOOK_SECRET is blank. In route.ts the handler calls stripe.webhooks.constructEvent(body, sig!, secret!) with secret undefined, which throws, returning HTTP 400 for every event. Since the booking status transitions (accepted->deposit_paid, completed->balance_paid) and the payments rows are written ONLY by this webhook, a production deploy with this unset means customers pay via Stripe Checkout but the booking is never marked paid, the address is never revealed to the cleaner, and no payment is recorded. This is a hard launch blocker.",
+          "fix": "Create the webhook endpoint in the Stripe dashboard (Developers -> Webhooks) for the deployed URL, subscribe to checkout.session.completed, charge.dispute.created, charge.refunded, copy the signing secret (whsec_...) into the Vercel env var STRIPE_WEBHOOK_SECRET, and add a startup/runtime guard that fails loudly if it is missing in production rather than returning a generic 400.",
+          "isImprovement": false,
+          "effort": "small"
+        },
+        {
+          "title": "NEXT_PUBLIC_BASE_URL hardcoded to localhost — broken Stripe redirects, sitemap, robots in prod",
+          "severity": "high",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/.env.local:12",
+          "problem": "NEXT_PUBLIC_BASE_URL=http://localhost:3000. This value feeds Stripe Checkout success_url/cancel_url (src/app/bookings/[id]/payment-actions.ts:50-51 via lib/stripe.baseUrl()), sitemap (src/app/sitemap.ts:3) and robots (src/app/robots.ts:3). If deployed without overriding it, after paying the customer is redirected to localhost (dead page), and the sitemap/robots advertise localhost URLs to crawlers. The lib/stripe.ts and sitemap/robots fallbacks all default to localhost too, so a forgotten env var fails silently instead of erroring.",
+          "fix": "Set NEXT_PUBLIC_BASE_URL to the production origin (e.g. https://dustbusters.vercel.app or custom domain) in Vercel project env. Consider deriving it from VERCEL_PROJECT_PRODUCTION_URL as a safer default than localhost, and document it in .env.example.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "disputes table schema does not match the Stripe charge.dispute.created webhook insert (handler always throws)",
+          "severity": "high",
+          "category": "data",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/src/app/api/stripe/webhook/route.ts:161-169 vs supabase/migrations/0008_improvements.sql:54-64",
+          "problem": "The disputes table (0008) has columns: booking_id, raised_by (NOT NULL), category (NOT NULL, CHECK list), description (NOT NULL), status, resolution, resolved_at, created_at. The webhook inserts { booking_id, payment_id, stripe_dispute_id, reason, amount, status, created_at } — payment_id, stripe_dispute_id, reason and amount do not exist as columns, and it omits the NOT NULL raised_by/category/description. So every charge.dispute.created (Stripe chargeback) insert fails with a column/NOT-NULL error; it is swallowed by the try/catch and logged, meaning chargebacks silently never get recorded and the booking is left flagged 'disputed' with no dispute row. The status value passed from Stripe (e.g. 'needs_response') also violates the CHECK (open/investigating/resolved/closed).",
+          "fix": "Add a new migration that either (a) creates a dedicated stripe_disputes/chargebacks table (booking_id, payment_id, stripe_dispute_id unique, reason, amount, stripe_status, created_at), or (b) adds those columns to disputes and makes raised_by/category/description nullable for system-raised disputes. Then update the webhook to write the matching columns and map Stripe's status into the allowed enum. Add a regression test for the charge.dispute.created branch.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Empty next.config.ts — no security headers (CSP, HSTS, X-Frame-Options, etc.)",
+          "severity": "high",
+          "category": "security",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/next.config.ts:3-5",
+          "problem": "nextConfig is an empty object. There is no headers() function and no middleware/proxy header logic (src/proxy.ts only refreshes Supabase sessions). The deployed app therefore ships with no Content-Security-Policy, no Strict-Transport-Security (HSTS), no X-Content-Type-Options: nosniff, no X-Frame-Options/frame-ancestors (clickjacking), no Referrer-Policy and no Permissions-Policy. For a payment-handling marketplace this is a meaningful hardening gap and will fail most security/launch checklists.",
+          "fix": "Add an async headers() to next.config.ts returning a baseline set for all routes: Strict-Transport-Security (max-age=63072000; includeSubDomains; preload), X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin, X-Frame-Options: DENY (or CSP frame-ancestors 'none'), Permissions-Policy, and a CSP that allows self plus js.stripe.com / *.supabase.co (Stripe Checkout is a redirect so script-src can stay tight). Test that Stripe and Supabase realtime still work under the CSP.",
+          "isImprovement": false,
+          "effort": "medium"
+        },
+        {
+          "title": "Migration 0008 ADD CONSTRAINT is not idempotent (inconsistent with the rest of the file)",
+          "severity": "medium",
+          "category": "data",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/supabase/migrations/0008_improvements.sql:9-12",
+          "problem": "Every other statement in 0008 is guarded for idempotency (ADD COLUMN IF NOT EXISTS, CREATE TABLE IF NOT EXISTS, ADD VALUE IF NOT EXISTS, CREATE INDEX IF NOT EXISTS, CREATE OR REPLACE FUNCTION), but ALTER TABLE bookings ADD CONSTRAINT bookings_cancelled_by_check ... NOT VALID has no guard. Postgres has no ADD CONSTRAINT IF NOT EXISTS, so re-applying this file (manual psql replay, partial-failure re-run, or applying against an already-migrated DB) errors with 'constraint already exists'. The constraint is also NOT VALID and never VALIDATEd, so existing rows are never checked.",
+          "fix": "Wrap it in a guard: DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='bookings_cancelled_by_check') THEN ALTER TABLE bookings ADD CONSTRAINT bookings_cancelled_by_check CHECK (cancelled_by IN ('customer','cleaner','system','admin')) NOT VALID; END IF; END $$; and optionally add a follow-up ALTER TABLE ... VALIDATE CONSTRAINT once data is known clean.",
+          "isImprovement": false,
+          "effort": "trivial"
+        },
+        {
+          "title": "Default test script covers almost nothing; no CI workflow and no coverage tooling",
+          "severity": "medium",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/package.json:9-11",
+          "problem": "npm test runs only vitest run tests/lib — 3 trivial assertions (computePrice math, ROLES array). The meaningful logic (RLS policies in tests/db/rls.test.ts, dispatch/accept-race/address-masking in tests/db/dispatch.test.ts) lives under test:db which is not part of test and requires a live remote Supabase + service-role key, so it cannot run in a standard CI runner. There is no .github/workflows, no coverage reporter (no @vitest/coverage-v8, no --coverage), and the entire Stripe webhook handler (including the broken disputes branch) has zero tests. Regressions in pricing, dispatch, payments and RLS would not be caught before deploy.",
+          "fix": "Add a GitHub Actions workflow running typecheck + vitest on push/PR. Add @vitest/coverage-v8 and a coverage:check script with thresholds. Refactor the webhook handler logic into a pure, unit-testable function (event -> intended DB mutations) so it can be tested without a live Stripe/Supabase, and spin up a Supabase service-container (or branch DB) so the db/rls suites can run in CI with secrets.",
+          "isImprovement": true,
+          "effort": "medium"
+        },
+        {
+          "title": "README is a single non-informative line — no setup, env, migration, or deploy docs",
+          "severity": "medium",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/README.md:1",
+          "problem": "README.md contains only 'Dust Buster! Lets GO!!!!'. A new developer or deployer has no documented list of required env vars (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_BASE_URL), how to run migrations (supabase db push / reset), how to seed, how to create the first admin, how to run tests (test vs test:db), or the deploy steps and Stripe webhook setup. This compounds the launch risk because the two critical missing env values above are not documented anywhere.",
+          "fix": "Write a real README covering: stack overview, prerequisites, env var table, supabase migration + seed commands, admin bootstrap, dev/test commands, and a Vercel deploy section that explicitly lists setting NEXT_PUBLIC_BASE_URL and STRIPE_WEBHOOK_SECRET and registering the Stripe webhook endpoint.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "No .env.example to document required environment variables for deploy",
+          "severity": "medium",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/.env.local",
+          "problem": "Only .env.local exists (correctly gitignored, containing real keys). There is no committed .env.example template, so the set of variables the app needs is undiscoverable without grepping the source. Combined with the localhost/empty-secret defaults that fail silently, deployers are very likely to ship with missing or wrong values.",
+          "fix": "Commit a .env.example with every required key, blank values, and a one-line comment per key (which are public NEXT_PUBLIC_* vs server-only secrets). Reference it from the README. Keep .env.example out of the .gitignore env-file patterns.",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "No engines field — Node version not pinned for Next 16 / React 19",
+          "severity": "low",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/package.json:1-13",
+          "problem": "package.json has no engines field and no packageManager field. Next 16 and React 19 require a modern Node (>=20.9). On Vercel or another host without a pinned version, a default/older Node could be selected, producing build or runtime differences from the local environment (local is Node 24).",
+          "fix": "Add \"engines\": { \"node\": \">=20.9.0\" } (and optionally a \"packageManager\" field) to package.json and/or a .nvmrc, so CI, Vercel, and contributors all build on a compatible Node.",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "metadataBase not set — OG/canonical URLs resolve to localhost and build warns",
+          "severity": "low",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/src/app/layout.tsx:17-21",
+          "problem": "The root metadata export defines title/description but no metadataBase. Next.js resolves relative metadata URLs (Open Graph images, canonical, etc.) against http://localhost:3000 and emits a build-time warning. Any future OG image or canonical link will point at localhost in production.",
+          "fix": "Set metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000') in the layout metadata, and add basic openGraph/twitter metadata while you are there.",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "No image optimization config in next.config (remotePatterns) for future Supabase storage images",
+          "severity": "low",
+          "category": "perf",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/next.config.ts:3-5",
+          "problem": "next.config.ts defines no images config. Today only local SVGs in /public are used (no next/image with remote sources), so nothing is broken yet, but the moment cleaner avatars or uploaded photos are served from Supabase Storage, next/image will reject the remote host without an images.remotePatterns allowlist, and there is no formats/deviceSizes tuning.",
+          "fix": "Pre-add images.remotePatterns for the Supabase storage hostname ({ protocol:'https', hostname:'<project>.supabase.co', pathname:'/storage/v1/object/public/**' }) so avatar/photo features work when added, and consider setting formats: ['image/avif','image/webp'].",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "No vercel.json — build/region/function settings and headers undocumented",
+          "severity": "low",
+          "category": "config",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/vercel.json",
+          "problem": "There is no vercel.json. Next on Vercel works without one, but there is no committed declaration of region (Supabase project is single-region; co-locating functions reduces latency for the realtime/webhook paths), function maxDuration, or platform-level headers/redirects, and no infra-as-code record of the deploy target.",
+          "fix": "Add a minimal vercel.json pinning the deploy region close to the Supabase project region and, if needed, function maxDuration for the Stripe webhook route. Keep security headers in next.config.ts (preferred) rather than duplicating here.",
+          "isImprovement": true,
+          "effort": "trivial"
+        },
+        {
+          "title": "Marketing pages are forced dynamic — no static generation / revalidation strategy",
+          "severity": "low",
+          "category": "perf",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/src/app/page.tsx",
+          "problem": "Public, content-static routes (/, /about) render through the same auth-aware server tree and are effectively dynamic on every request; there is no export const revalidate or static rendering anywhere in the app. For pages whose content does not depend on the user, this wastes server compute and hurts TTFB/cache hit rate on Vercel's edge.",
+          "fix": "For genuinely static marketing routes, avoid per-request auth reads in the page itself (move user-aware UI into the Nav/client island) and add export const revalidate = <seconds> or render them statically so they can be CDN-cached, while keeping authenticated dashboards dynamic.",
+          "isImprovement": true,
+          "effort": "small"
+        },
+        {
+          "title": "Refund handling incomplete and payment_status enum has no 'refunded' state",
+          "severity": "low",
+          "category": "data",
+          "file": "C:/Users/HP/Desktop/Dust Busters/Dust-Busters/src/app/api/stripe/webhook/route.ts:176-205 (enum in supabase/migrations/0005_payments.sql:6)",
+          "problem": "The charge.refunded webhook branch only console.logs; it does not update the payments row or the booking. The payment_status enum is ('pending','paid','failed') with no 'refunded' value, so even if the handler tried to record a refund there is no terminal state to set, and refunds/partial refunds leave the data showing the payment as still 'paid'.",
+          "fix": "Add a migration extending payment_status with 'refunded' (and optionally a refunded_amount column), then update the charge.refunded handler to mark the matching payment refunded and reflect it on the booking/admin views.",
+          "isImprovement": true,
+          "effort": "small"
+        }
+      ]
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Audit"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "ui-public",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aa8f0e3e722e12d4e",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868672,
+      "queuedAt": 1782469868627,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "UX/UI quality of PUBLIC + AUTH pages",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470199213,
+      "tokens": 50492,
+      "toolCalls": 21,
+      "durationMs": 330540,
+      "resultPreview": "{\"dimension\":\"UX/UI quality of PUBLIC + AUTH pages\",\"summary\":\"The public/auth surface is visually coherent and well-structured (clear hero, how-it-works, trust grid, pricing, service-area, footer CTA), and the prior dark-mode/Nav/Footer fixes hold up. However there is a class of real, demonstrable defects rooted in the Tailwind v4 theme setup: the `--color-accent*` variables were left in `:root` …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "ui-customer",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aba7295a2836957be",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868676,
+      "queuedAt": 1782469868628,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "UX/UI + flow quality of CUSTOMER pages (book, bookings list…",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470128556,
+      "tokens": 56685,
+      "toolCalls": 22,
+      "durationMs": 259880,
+      "resultPreview": "{\"dimension\":\"UX/UI + flow quality of CUSTOMER pages (book, bookings list/detail/dispute/review, StatusLive/MessagePanel/actions, account, notifications)\",\"summary\":\"The customer flow is visually polished and consistent (cards, accent system, good status badges, sensible empty states, gated address/messaging/review by status). However there are several material defects. The headline bug is on /boo…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "ui-cleaner",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a0b81f7a2418e8145",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868676,
+      "queuedAt": 1782469868628,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "UX/UI + flow quality of CLEANER pages (src/app/cleaner)",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470124360,
+      "tokens": 52719,
+      "toolCalls": 20,
+      "durationMs": 255684,
+      "resultPreview": "{\"dimension\":\"UX/UI + flow quality of CLEANER pages (src/app/cleaner)\",\"summary\":\"The cleaner area is visually polished and consistent (cards, teal accent, lucide icons) on the jobs, earnings, profile and job-detail pages, with good empty states and a working messaging panel. However the core real-time and feedback loop that the whole marketplace depends on is incomplete: JobsLive only subscribes …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "ui-admin",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ad306f68350f68d73",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868677,
+      "queuedAt": 1782469868628,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "UX/UI + completeness of ADMIN pages (src/app/admin)",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470202443,
+      "tokens": 73006,
+      "toolCalls": 26,
+      "durationMs": 333766,
+      "resultPreview": "{\"dimension\":\"UX/UI + completeness of ADMIN pages (src/app/admin)\",\"summary\":\"The admin area is visually coherent and reasonably responsive (every list uses overflow-x-auto, detail pages reflow to one column on mobile), but it is riddled with schema-mismatch bugs that silently break core metrics and the refund flow, plus several completeness gaps. The most serious: the dispute Issue-Refund path qu…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "features-flows",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a56a7a37173cb76f8",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868678,
+      "queuedAt": 1782469868628,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "FUNCTIONAL completeness and flow correctness",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470253917,
+      "tokens": 87408,
+      "toolCalls": 38,
+      "durationMs": 385239,
+      "resultPreview": "{\"dimension\":\"FUNCTIONAL completeness and flow correctness\",\"summary\":\"The happy path (broadcast -> accept -> deposit -> start -> complete -> balance) is wired correctly with atomic accept locking and an idempotent Stripe webhook for the two checkout.session.completed cases. However, the state machine has significant unfinished edges and several outright-broken admin/dispute/refund/review code pat…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "security-rls",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a4616e54db0858be1",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782469868679,
+      "queuedAt": 1782469868628,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "SECURITY",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470321823,
+      "tokens": 107838,
+      "toolCalls": 48,
+      "durationMs": 453144,
+      "resultPreview": "{\"dimension\":\"SECURITY\",\"summary\":\"The data layer gets the hard parts right — every table has RLS enabled, all SECURITY DEFINER functions set `search_path = public`, the Stripe webhook verifies its signature, the service-role key is only ever referenced in server-only files (route handlers / \\\"use server\\\" actions / server lib), payments are advanced only by the webhook (browser redirect is never …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "code-bugs",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ae6326c09bdc20209",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470124363,
+      "queuedAt": 1782469868629,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Code Quality & Bugs",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470521222,
+      "tokens": 114579,
+      "toolCalls": 59,
+      "durationMs": 396859,
+      "resultPreview": "{\"dimension\":\"Code Quality & Bugs\",\"summary\":\"TypeScript type-checks clean (tsc --noEmit exits 0), but there is a cluster of high-impact runtime bugs caused by code querying/writing columns that do not exist in the actual Postgres schema. The most serious is the admin refund flow: it issues the Stripe refund successfully, then the DB record insert ALWAYS fails (wrong column `payment_type`, invalid…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "a11y-resilience",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ad5e827a83c5c818e",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470128558,
+      "queuedAt": 1782469868629,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Accessibility, Error-Resilience & SEO",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470393882,
+      "tokens": 85633,
+      "toolCalls": 31,
+      "durationMs": 265324,
+      "resultPreview": "{\"dimension\":\"Accessibility, Error-Resilience & SEO\",\"summary\":\"The app has solid bones (semantic landmarks: per-page <main>, <nav>, <footer>; correct html lang=\\\"en\\\"; most form inputs are wrapped in <label>; sitemap.ts and robots.ts exist; root + /about have metadata), but several material gaps remain. Error-resilience is the weakest area: there are NO error boundaries (app/error.tsx, app/global…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "data-config-deploy",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aabdaf84c44166861",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1782470199216,
+      "queuedAt": 1782469868629,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "DATA/MIGRATIONS, BUILD & DEPLOY config",
+      "promptPreview": "You are auditing a Next.js 16 (App Router, TS) + Supabase (Postgres/Auth/Realtime/RLS) + Stripe home-cleaning booking marketplace called \"Dust Busters\" (Courtenay BC, CAD $20/hr).\nThe project root is: \"C:/Users/HP/Desktop/Dust Busters/Dust-Busters\"  (note the space in the path — always quote it in Bash).\nUse the Read, Grep, Glob tools and Bash (git bash) to inspect files. Read actual source — do N…",
+      "lastProgressAt": 1782470502121,
+      "tokens": 72780,
+      "toolCalls": 39,
+      "durationMs": 302904,
+      "resultPreview": "{\"dimension\":\"DATA/MIGRATIONS, BUILD & DEPLOY config\",\"summary\":\"The build toolchain is fundamentally sound: typecheck passes cleanly, the 3 unit tests pass, vitest is sensibly configured (sequential DB tests, generous timeouts), .gitignore correctly ignores all env files (no secret is committed), migrations are numerically ordered, and the 0007/0008 migrations show good idempotency intent (IF NOT…"
+    }
+  ],
+  "totalTokens": 701140,
+  "totalToolCalls": 304
+}

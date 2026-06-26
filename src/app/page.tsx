@@ -164,7 +164,7 @@ export default async function Home() {
             <h2 className="text-white">Simple pricing</h2>
             <p className="text-lg text-slate-300">
               From{" "}
-              <span className="text-4xl font-bold text-gradient">$20</span>
+              <span className="text-4xl font-bold text-gradient-on-dark">$20</span>
               <span className="text-slate-300"> / hr CAD</span>
             </p>
             <div className="flex flex-col items-center gap-2 text-slate-400 text-sm">
@@ -223,21 +223,6 @@ export default async function Home() {
           </Link>
         </div>
       </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-slate-200 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center text-sm text-slate-500">
-          <div className="flex flex-wrap justify-center gap-8">
-            <Link href="/about" className="transition hover:text-emerald-600">
-              About
-            </Link>
-            <a href="mailto:support@dustbusters.ca" className="transition hover:text-emerald-600">
-              support@dustbusters.ca
-            </a>
-          </div>
-          <p>Dust Busters &bull; Home cleaning in Courtenay, BC</p>
-        </div>
-      </footer>
 
     </main>
   );
