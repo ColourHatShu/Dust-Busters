@@ -98,7 +98,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Payment receipts/invoices (view/download).
 - [ ] `no_cleaner_found` retry / re-broadcast path + customer notification.
 - [ ] Rate limiting on booking broadcast, messaging, checkout, auth.
-- [ ] Star-rating UI for the review form; "Book again" prefill; mark-notification-read-on-click.
+- [x] **Star-rating UI** for the review form — interactive `StarRating` (hover preview + labels) + a fully rebranded review page (card, back link, branded button). ✅
+- [ ] "Book again" prefill; mark-notification-read-on-click.
 - [ ] Cleaner payout system (Stripe Connect) — LARGE; founder decision (log rationale; needs Stripe Connect setup → likely partly [blocked]).
 
 ## P3 — Polish / nice-to-have

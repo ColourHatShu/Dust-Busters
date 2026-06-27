@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { submitReview } from "./actions";
+import StarRating from "./StarRating";
 
 export default async function ReviewPage({
   params,
@@ -22,49 +25,49 @@ export default async function ReviewPage({
   if (!booking || booking.customer_id !== user.id) redirect("/");
 
   return (
-    <main className="mx-auto max-w-lg p-6">
-      <h1 className="mb-4 text-2xl font-bold">Rate your cleaning</h1>
+    <main className="mx-auto max-w-lg space-y-6 p-6">
+      <Link
+        href={`/bookings/${id}`}
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-800"
+      >
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+        Back to booking
+      </Link>
+
+      <div className="space-y-2 text-center">
+        <h1 className="text-2xl font-bold text-slate-900">Rate your cleaning</h1>
+        <p className="text-slate-600">
+          Your feedback helps cleaners improve and helps other customers choose.
+        </p>
+      </div>
+
       <form
         action={async (formData) => {
           "use server";
           await submitReview(booking.id, formData);
         }}
-        className="space-y-4"
+        className="card flex flex-col gap-6"
       >
-        <div>
-          <label htmlFor="rating" className="mb-1 block text-sm font-medium">
-            Rating
-          </label>
-          <select
-            id="rating"
-            name="rating"
-            defaultValue="5"
-            className="w-full rounded border p-2"
-          >
-            <option value="5">5 - Excellent</option>
-            <option value="4">4 - Good</option>
-            <option value="3">3 - Okay</option>
-            <option value="2">2 - Poor</option>
-            <option value="1">1 - Terrible</option>
-          </select>
+        <div className="flex flex-col gap-3">
+          <span className="text-center text-sm font-medium text-slate-900">
+            How was it?
+          </span>
+          <StarRating />
         </div>
 
-        <div>
-          <label htmlFor="comment" className="mb-1 block text-sm font-medium">
-            Comment
-          </label>
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-900">
+            Comment <span className="font-normal text-slate-400">(optional)</span>
+          </span>
           <textarea
-            id="comment"
             name="comment"
             rows={4}
-            placeholder="Tell us how it went..."
-            className="w-full rounded border p-2"
+            placeholder="Tell us how it went…"
+            className="input-modern"
           />
-        </div>
+        </label>
 
-        <button className="w-full rounded bg-blue-600 p-3 font-medium text-white">
-          Submit review
-        </button>
+        <button className="btn-base btn-primary">Submit review</button>
       </form>
     </main>
   );

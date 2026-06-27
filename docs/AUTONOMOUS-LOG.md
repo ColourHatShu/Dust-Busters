@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: star-rating review UI
+
+- **Item:** P2. The review form was off-brand (plain select + textarea + blue
+  button, no stars). Added an interactive `StarRating` client component (5 stars,
+  hover preview, labels Terrible→Excellent, a11y radiogroup, posts a hidden
+  `rating` input) and rebranded the review page (card, back link, branded button,
+  friendly copy, optional comment). The `submitReview` action is unchanged.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** mark-notification-read-on-click, "Book again" prefill, README +
+  .env.example, payment receipts.
+
+---
+
 ## 2026-06-27 — Founder-spec landing background refinement
 
 The earlier council fix flattened everything to transparent; the founder wanted
