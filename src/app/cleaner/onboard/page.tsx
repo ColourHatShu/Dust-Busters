@@ -4,8 +4,12 @@ import { AREAS } from "@/lib/areas";
 import { becomeCleaner } from "./actions";
 
 export default async function CleanerOnboardPage() {
-  const { user } = await getSessionProfile();
+  const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
+  // Already a cleaner? Re-running onboarding would let a deactivated cleaner
+  // self-reactivate. Admins shouldn't accidentally demote themselves to cleaner.
+  if (profile?.role === "cleaner") redirect("/cleaner/jobs");
+  if (profile?.role === "admin") redirect("/admin");
 
   return (
     <main className="mx-auto max-w-lg p-6">

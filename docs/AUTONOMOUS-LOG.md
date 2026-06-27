@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Audit 🟠: cleaner-UX trio (re-applied on light)
+
+- **Guard `/cleaner/onboard`:** it was unguarded — an existing/deactivated cleaner
+  could re-run `becomeCleaner` (self-reactivate) and an admin could accidentally
+  demote to cleaner. Now redirects cleaners → `/cleaner/jobs`, admins → `/admin`.
+- **Finished jobs stay visible:** the "My jobs" query only included
+  accepted/deposit_paid/in_progress/completed, so once a job hit `balance_paid`/
+  `closed` it fell off the list — and the "rate the customer" action became
+  unreachable. Added `balance_paid` + `closed` (they group under "Earlier").
+- **Cleaner Profile nav link:** the built profile page had no entry point — added
+  a "Profile" link to the cleaner nav.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next (AUDIT-FIXES-TODO):** timezone parse, admin avg-rating; re-add `disputed`
+  to the status maps.
+
+---
+
 ## 2026-06-28 — Audit 🔴: admin dispute fixes (re-applied on light)
 
 - **Wrong Stripe intent refunded:** the refund form pinned a hidden

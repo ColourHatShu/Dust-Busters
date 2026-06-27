@@ -26,6 +26,7 @@ export default async function Nav() {
     if (profile?.role === "cleaner") {
       links.push({ href: "/cleaner/jobs", label: "Job requests" });
       links.push({ href: "/cleaner/earnings", label: "Earnings" });
+      links.push({ href: "/cleaner/profile", label: "Profile" });
     }
     if (profile?.role === "admin") {
       links.push({ href: "/admin", label: "Admin" });

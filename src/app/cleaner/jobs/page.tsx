@@ -112,7 +112,14 @@ export default async function CleanerJobsPage({
        booking_addresses(full_address)`
     )
     .eq("cleaner_id", user.id)
-    .in("status", ["accepted", "deposit_paid", "in_progress", "completed"])
+    .in("status", [
+      "accepted",
+      "deposit_paid",
+      "in_progress",
+      "completed",
+      "balance_paid",
+      "closed",
+    ])
     .order("scheduled_at", { ascending: true });
 
   type MyJob = {
