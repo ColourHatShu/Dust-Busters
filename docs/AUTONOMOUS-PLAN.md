@@ -73,11 +73,15 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Security headers in `next.config.ts`: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (always) + a Stripe/Supabase-aware CSP (production-only, so dev HMR isn't broken). ✅
 - [ ] `mark-read` POST has no origin/CSRF check — add same-origin guard.
 
-## P-FLAGSHIP — Uber-style live cleaner map  ⭐ (see docs/specs/uber-cleaner-map.md)
-- [ ] Map library: react-leaflet + OpenStreetMap (no API key), SSR-safe dynamic import.
-- [ ] Migration: approximate, privacy-jittered cleaner coordinates (never real homes) + RLS-safe RPC returning only safe pins for an area/booking.
-- [ ] `MatchingMap` client component on `/bookings/[id]` while `status=broadcasting`: area-centered map, animated cleaner pins, radar "finding your cleaner" pulse, notified-count, cancel-search, accept transition → cleaner card; `no_cleaner_found` fallback.
-- [ ] Realtime wiring (subscribe to this booking's offers/status) + bug-free edge cases (zero cleaners, all decline, timeout, mid-search cancel, tile failure).
+## 🎯 P-FLAGSHIP — Uber-style live cleaner map  ⭐ ACTIVE (see docs/specs/uber-cleaner-map.md)
+- [x] **Data foundation (migration `0016`, APPLIED + verified live):** `area_centroids`,
+  `cleaner_details.approx_lat/lng`, `bookings.broadcast_expires_at` + `settings.broadcast_ttl_mins`
+  (set via insert trigger), deterministic `fuzz_pin()` (verified stable + per-booking), and the
+  authorising/fuzzing `get_booking_matching(booking_id)` RPC — the ONLY path map data reaches the
+  client (no cleaner_id / real coords ever cross the wire).
+- [ ] Map library: `react-leaflet@5` + `leaflet@1.9` + OSM tiles (no API key), SSR-safe `dynamic(ssr:false)`; `L.divIcon` CSS markers.
+- [ ] `MatchingMap` client on `/bookings/[id]` while `status ∈ {broadcasting, accepted, no_cleaner_found}`: area-centered map, fuzzed pulsing cleaner pins, radar "finding your cleaner" sweep, notified/deciding counts, cancel-search, winner reveal → cleaner card; SVG fallback basemap.
+- [ ] Realtime wiring (subscribe to this booking's offers/status; poll fallback) + edge cases (zero cleaners, all decline, timeout, mid-search cancel, tile failure).
 > Full UX + technical spec is being finalized from the brainstorm into
 > `docs/specs/uber-cleaner-map.md`; refine these sub-items from it.
 

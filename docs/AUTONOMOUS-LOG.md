@@ -5,6 +5,31 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — 🎯 FLAGSHIP kickoff: Uber map data foundation (migration 0016)
+
+Founder set the live cleaner map as the active priority ("see available cleaners
+like Uber cars") and asked the knight to drive the project to completion like a
+product owner (added to the playbook mission).
+
+- **Shipped:** migration `0016_live_matching.sql`, applied + verified live:
+  - `area_centroids` (3 towns) with RLS read; `cleaner_details.approx_lat/lng`
+    (opt-in coarse base); `bookings.broadcast_expires_at` + `settings.broadcast_ttl_mins`
+    set by an insert trigger.
+  - `fuzz_pin(cleaner, booking, area)` — deterministic synthesized pin in a
+    0.6–2.4 km disc around the town centroid; **verified stable + per-booking**
+    (no real location exists to recover).
+  - `get_booking_matching(booking_id)` SECURITY DEFINER RPC — authorises (owner/
+    admin only), returns `{status, center, notified, deciding, expires_at, pins[],
+    winner}`; **no cleaner_id / real coords / address ever cross the wire**.
+- Also: route-level loading skeletons shipped earlier this session (commit `eec2f0e`).
+- **Verify:** migration applied via pooler; fuzz determinism + centroids + column
+  presence confirmed. (No TS changes this step.)
+- **Next firing:** install `react-leaflet`/`leaflet`, build the SSR-safe
+  `MatchingMap` (divIcon pins + radar) and wire it into `/bookings/[id]` for the
+  broadcasting state — the visible map.
+
+---
+
 ## 2026-06-27 — Knight iteration: security headers
 
 - **Item:** P1 security. `next.config.ts` was empty (no headers). Added a

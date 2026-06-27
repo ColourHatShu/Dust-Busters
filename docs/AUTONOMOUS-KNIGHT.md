@@ -9,6 +9,20 @@ Take Dust Busters to **production-complete**: fix every real defect, build the
 flagship Uber-style live cleaner-map matching experience, and ship the agreed
 high-value improvements — autonomously, while the founder is away.
 
+## Think like the product owner
+Don't just clear tickets — own the product. Each iteration, ask "what would make
+this genuinely great to use and ship?" Bias toward: a polished, modern,
+graphics-rich UX; the flagship Uber-style map where customers watch available
+cleaners appear and get matched live; cohesive visual design; and closing the gap
+to a launchable product. When the backlog is thin, propose ambitious-but-grounded
+features (see IDEAS.md), not busywork.
+
+## 🎯 ACTIVE PRIORITY (founder-set, 2026-06-27)
+Build the **Uber-style live cleaner map** to completion — spec in
+`docs/specs/uber-cleaner-map.md`. Customers should see available cleaners on a map
+(like seeing cars in Uber) and watch the live match happen. Work it before other
+P2/P3 items until it's shipped end-to-end.
+
 ## Environment
 - Repo: `C:\Users\HP\Desktop\Dust Busters\Dust-Busters` (quote the space in Bash).
 - Stack: Next.js 16 (App Router, TS) + Supabase (hosted) + Stripe. Tailwind v4.
