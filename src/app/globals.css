@@ -377,7 +377,7 @@ p {
     rgba(15, 23, 42, 0.55) 0%,
     transparent 16%,
     transparent 66%,
-    #0b1220 100%
+    #070b14 100%
   );
 }
 
@@ -1558,4 +1558,24 @@ p {
   .cta-mote {
     animation: none !important;
   }
+}
+
+
+/* === Seamless landing fix ===========================================
+   Each section was painting its own top-lit opaque gradient that faded to
+   #070b14, so every section boundary showed a dark->lighter seam (the page
+   looked "divided"). Drop the opaque bases — the page bg (#070b14) plus each
+   section's glow overlay give depth — and keep a soft accent glow on pricing
+   and the final CTA. */
+.hiw-section,
+.trust-section,
+.area-section,
+.assure-section {
+  background: transparent;
+}
+.price-section {
+  background: radial-gradient(120% 90% at 50% 0%, rgba(16, 185, 129, 0.07), transparent 60%);
+}
+.cta-shell {
+  background: radial-gradient(125% 140% at 50% 120%, rgba(16, 185, 129, 0.10), transparent 55%);
 }
