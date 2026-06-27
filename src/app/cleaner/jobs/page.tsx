@@ -73,10 +73,34 @@ export default async function CleanerJobsPage({
     .eq("cleaner_id", user.id)
     .eq("state", "rung");
 
-  const openOffers = (offers ?? []).filter((o) => {
+  const broadcastingOffers = (offers ?? []).filter((o) => {
     const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
     return b?.status === "broadcasting";
   });
+
+  // Drop offers whose broadcast window has expired, and flip those abandoned
+  // broadcasts to no_cleaner_found (the customer page does this too, but a
+  // never-reopened booking would otherwise linger — close it from here as well).
+  const nowMs = Date.now();
+  const expiredBookingIds: string[] = [];
+  const openOffers = broadcastingOffers.filter((o) => {
+    const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
+    const exp = b?.broadcast_expires_at
+      ? new Date(b.broadcast_expires_at).getTime()
+      : null;
+    if (exp !== null && exp < nowMs) {
+      if (b?.id) expiredBookingIds.push(b.id);
+      return false;
+    }
+    return true;
+  });
+  if (expiredBookingIds.length > 0) {
+    await Promise.all(
+      expiredBookingIds.map((bid) =>
+        supabase.rpc("expire_booking_if_stale", { p_booking_id: bid }),
+      ),
+    );
+  }
 
   // Jobs this cleaner has won — join customer profile + address
   const { data: myJobsRaw } = await supabase

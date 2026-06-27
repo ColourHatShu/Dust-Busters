@@ -5,6 +5,29 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: cleaner-side stale-offer expiry + 📊 milestone
+
+**This iteration:** completed the lazy-expiry feature symmetrically. The cleaner
+jobs page now hides open offers whose `broadcast_expires_at` has passed AND calls
+`expire_booking_if_stale` on those bookings — so an abandoned broadcast that the
+customer never reopens still gets closed to `no_cleaner_found` (it was only
+flipped from the customer page before). Verify: tsc clean · vitest 15/15 · build 27/27.
+
+### 📊 Milestone summary (~8 items since the last)
+All verified, DB items applied live:
+- offer-card take-home + countdown · favorite cleaners (toggle + list) · cleaner
+  "Today" grouping · saved addresses (0018) · **lazy broadcast expiry (0019)** +
+  cleaner-side · extracted & tested money-path logic (refund window + booking
+  validation → 15 tests) · CI workflow + Node engines · OG metadata · admin search.
+
+**Backlog now:** mostly P3 polish + a few medium features (favorites 2b
+book-a-favorite, two-way reviews, in-app tip) + ideation. **Founder-gated
+(unchanged):** dispatch cron, real ID verification, transactional email/SMS keys,
+Stripe live keys/webhook, NEXT_PUBLIC_BASE_URL, Vercel deploy, rotate service-role
+key + DB password.
+
+---
+
 ## 2026-06-27 — Knight iteration: testable booking validation
 
 - **Item:** continue test coverage. Extracted the **booking input validation**
