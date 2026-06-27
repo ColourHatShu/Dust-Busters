@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: mark-notification-read-on-click
+
+- **Item:** P2. Notifications could only be cleared via bulk "Mark all read".
+  Added a `markRead(id, bookingId)` action and made each notification a full-row
+  clickable form: clicking marks it read and, if it has a `booking_id`, redirects
+  to that booking (otherwise just clears the unread highlight). Bulk "Mark all
+  read" kept. (RLS scopes the update to the user's own rows.)
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** "Book again" prefill; payment receipts; then P3 polish (a11y skip-link,
+  CI, vercel.json) and continued ideation.
+
+---
+
 ## 2026-06-27 — Founder fixes: How-it-works card alignment + login redesign
 
 1. **How-it-works cards unaligned** (founder screenshot): cards had unequal

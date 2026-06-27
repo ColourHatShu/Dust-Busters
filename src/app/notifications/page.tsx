@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { Bell, ChevronRight } from "lucide-react";
-import { markAllRead } from "./actions";
+import { markAllRead, markRead } from "./actions";
 
 interface Notification {
   id: string;
@@ -109,32 +108,33 @@ export default async function NotificationsPage() {
             </h2>
             <ul className="flex flex-col gap-2">
               {groupItems.map((n) => (
-                <li
-                  key={n.id}
-                  className={[
-                    "card flex items-start gap-4 transition-colors",
-                    !n.read_at
-                      ? "border-l-4 border-accent bg-accent/5"
-                      : "border-l-4 border-transparent",
-                  ].join(" ")}
-                >
-                  <div className="flex-1 space-y-0.5">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {n.title}
-                    </p>
-                    <p className="text-sm text-slate-600">{n.body}</p>
-                    <p className="text-xs text-slate-400">{timeAgo(n.created_at)}</p>
-                  </div>
-
-                  {n.booking_id && (
-                    <Link
-                      href={`/bookings/${n.booking_id}`}
-                      className="flex items-center gap-1 text-xs text-accent hover:underline whitespace-nowrap"
+                <li key={n.id}>
+                  {/* Whole row is clickable: marks read, then opens the booking
+                      if there is one (otherwise just clears the unread state). */}
+                  <form action={markRead.bind(null, n.id, n.booking_id)}>
+                    <button
+                      type="submit"
+                      className={[
+                        "card card-lift flex w-full items-start gap-4 text-left transition-colors",
+                        !n.read_at
+                          ? "border-l-4 border-accent bg-accent/5"
+                          : "border-l-4 border-transparent",
+                      ].join(" ")}
                     >
-                      View booking
-                      <ChevronRight className="h-3 w-3" />
-                    </Link>
-                  )}
+                      <div className="flex-1 space-y-0.5">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {n.title}
+                        </p>
+                        <p className="text-sm text-slate-600">{n.body}</p>
+                        <p className="text-xs text-slate-400">
+                          {timeAgo(n.created_at)}
+                        </p>
+                      </div>
+                      {n.booking_id && (
+                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                      )}
+                    </button>
+                  </form>
                 </li>
               ))}
             </ul>
