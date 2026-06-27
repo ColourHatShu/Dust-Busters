@@ -5,6 +5,26 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — 🐛 "Search again" crash + notify-on-accept
+
+- **Founder-reported crash:** clicking "Search again" threw *"Only a booking with
+  no cleaner found can be re-broadcast"* → error boundary. Race: after a successful
+  re-broadcast the booking is `broadcasting`, but the client button lingers ~2.5s
+  until the next poll, so a second click hit `rebroadcast_booking` in the wrong
+  state. **Fix:** migration `0025` makes it idempotent — re-ring while
+  `broadcasting` OR `no_cleaner_found`, resolve status from the count, reject only
+  committed/terminal states. Also made `rebroadcastBooking` log-and-revalidate
+  instead of throwing (the map re-polls to truth). Applied + verified.
+- **Gap fix (committed `…`):** `accept_offer` now inserts a "Cleaner found! 🎉"
+  notification for the customer (migration `0024`) — previously a customer who
+  left the map never learned a cleaner accepted.
+- **⚠️ Note for testing:** a freshly-onboarded cleaner is `id_verified = false`,
+  and dispatch only rings **verified** cleaners. To make a test cleaner matchable,
+  verify them in **/admin → cleaners**. (Working as designed — the trust gate.)
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-28 — 🐛 Regression fix: cleaner onboarding was broken (+ admin margins)
 
 - **Founder-reported:** picking areas on "Become a cleaner" and submitting just

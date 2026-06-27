@@ -13,7 +13,9 @@ export async function rebroadcastBooking(bookingId: string) {
   const { error } = await supabase.rpc("rebroadcast_booking", {
     p_booking_id: bookingId,
   });
-  if (error) throw new Error(error.message);
+  // Don't crash the page on a benign race (e.g. the booking already moved on);
+  // the matching map re-polls and reflects the real state on its own.
+  if (error) console.error("rebroadcast_booking failed:", error.message);
 
   revalidatePath(`/bookings/${bookingId}`);
 }
