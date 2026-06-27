@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: testable booking validation
+
+- **Item:** continue test coverage. Extracted the **booking input validation**
+  (valid date, ≥15 min lead, hours 1–12 integer, area whitelist, non-empty
+  address) — previously inline in `book/actions.ts` — into a pure
+  `validateBooking()` in `src/lib/booking.ts`, refactored the action to use it,
+  and added 6 branch tests. Suite is now **15 tests / 2 files**.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** favorites 2b (book-a-favorite); two-way reviews; cleaner-side stale
+  offer expiry.
+
+---
+
 ## 2026-06-27 — Knight iteration: testable refund-window logic
 
 - **Item:** expand test coverage (the CI gate now runs `npm test`, so tests guard

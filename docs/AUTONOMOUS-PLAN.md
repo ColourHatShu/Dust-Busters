@@ -116,7 +116,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.
 - [x] Offer card: live **expiry countdown** (`Countdown` client component, from `broadcast_expires_at`) + the cleaner's **take-home** (`cleaner_payout`) shown as the headline amount with the gross as subtext. ✅
 - [x] **CI workflow** (`.github/workflows/ci.yml`) — typecheck + unit tests + production build on push/PR (dummy env so build needs no secrets); pinned Node `engines` (>=20). ✅
-- [~] Expand test coverage: extracted the money-path refund-window logic into a pure `src/lib/booking.ts` (`hoursUntil`, `isDepositRefundable`, `FREE_CANCEL_HOURS`), refactored the cancel action to use it, and added boundary tests (now 9 tests). More to come.
+- [x] Expand test coverage: pure `src/lib/booking.ts` now holds the refund-window logic AND `validateBooking` (booking input validation), both extracted from their server actions and covered by boundary tests. Suite: **15 tests / 2 files**. ✅
 - [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage.
 - [ ] Static generation/revalidation for marketing pages.
 

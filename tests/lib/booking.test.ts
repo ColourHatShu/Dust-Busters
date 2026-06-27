@@ -2,11 +2,25 @@ import { describe, it, expect } from "vitest";
 import {
   hoursUntil,
   isDepositRefundable,
+  validateBooking,
   FREE_CANCEL_HOURS,
 } from "@/lib/booking";
 
 const HOUR = 3_600_000;
 const NOW = 1_700_000_000_000;
+const AREAS = ["Courtenay", "Comox", "Cumberland"] as const;
+
+function inFuture(hours: number): string {
+  return new Date(NOW + hours * HOUR).toISOString();
+}
+const validInput = {
+  scheduledLocal: inFuture(48),
+  hours: 3,
+  area: "Courtenay",
+  fullAddress: "123 Cliffe Ave, Courtenay",
+  nowMs: NOW,
+  areas: AREAS,
+};
 
 describe("hoursUntil", () => {
   it("is positive for a future appointment", () => {
@@ -33,5 +47,32 @@ describe("isDepositRefundable", () => {
   });
   it("defaults the window to 24 hours", () => {
     expect(FREE_CANCEL_HOURS).toBe(24);
+  });
+});
+
+describe("validateBooking", () => {
+  it("accepts a valid booking and returns the ISO date", () => {
+    const r = validateBooking(validInput);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.scheduledISO).toBe(inFuture(48));
+  });
+  it("rejects an invalid date", () => {
+    const r = validateBooking({ ...validInput, scheduledLocal: "not-a-date" });
+    expect(r).toEqual({ ok: false, error: "Please choose a valid date and time." });
+  });
+  it("rejects a date inside the lead window", () => {
+    const r = validateBooking({ ...validInput, scheduledLocal: inFuture(0.1) });
+    expect(r.ok).toBe(false);
+  });
+  it("rejects out-of-range or non-integer hours", () => {
+    expect(validateBooking({ ...validInput, hours: 0 }).ok).toBe(false);
+    expect(validateBooking({ ...validInput, hours: 13 }).ok).toBe(false);
+    expect(validateBooking({ ...validInput, hours: 2.5 }).ok).toBe(false);
+  });
+  it("rejects an area not in the whitelist", () => {
+    expect(validateBooking({ ...validInput, area: "Vancouver" }).ok).toBe(false);
+  });
+  it("rejects a too-short address", () => {
+    expect(validateBooking({ ...validInput, fullAddress: "  a " }).ok).toBe(false);
   });
 });
