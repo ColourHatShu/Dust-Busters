@@ -85,7 +85,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Open Graph / Twitter card metadata + `metadataBase` (per-page titles/descriptions).
 - [ ] Terms of Service + Privacy Policy pages (legal/trust for a payments marketplace).
 - [ ] `.env.example` documenting all required env vars; real `README.md` (setup/env/migrate/deploy).
-- [ ] Route-level `loading.tsx` skeletons (customer + admin).
+- [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
 - [ ] Search/filter on bookings, customers, cleaners admin lists.
 - [ ] Payment receipts/invoices (view/download).
 - [ ] `no_cleaner_found` retry / re-broadcast path + customer notification.
