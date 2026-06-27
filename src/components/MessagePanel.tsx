@@ -118,8 +118,8 @@ export default function MessagePanel({
   }
 
   return (
-    <div className="surface-card flex flex-col gap-4">
-      <h3 className="font-semibold text-slate-100">Messages</h3>
+    <div className="card flex flex-col gap-4">
+      <h3 className="font-semibold text-slate-900">Messages</h3>
 
       {/* Message list */}
       <div
@@ -142,15 +142,15 @@ export default function MessagePanel({
               key={msg.id}
               className={`flex flex-col gap-0.5 ${isOwn ? "items-end" : "items-start"}`}
             >
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 {isOwn ? "You" : senderName}
                 {mounted && <> &middot; {formatRelativeTime(msg.created_at)}</>}
               </span>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed ${
                   isOwn
-                    ? "rounded-tr-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-                    : "rounded-tl-sm border border-white/10 bg-white/[0.06] text-slate-200"
+                    ? "rounded-tr-sm bg-teal-600 text-white"
+                    : "rounded-tl-sm bg-slate-100 text-slate-800"
                 }`}
               >
                 {msg.body}
@@ -162,7 +162,7 @@ export default function MessagePanel({
 
       {/* Error */}
       {error && (
-        <p className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
       )}
@@ -174,7 +174,7 @@ export default function MessagePanel({
           onChange={(e) => setBody(e.target.value.slice(0, 500))}
           placeholder="Type a message..."
           rows={2}
-          className="input-dark flex-1 resize-none"
+          className="input-modern flex-1 resize-none"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -185,7 +185,7 @@ export default function MessagePanel({
         <button
           type="submit"
           disabled={!body.trim() || sending}
-          className="btn-base btn-glow flex items-center gap-1.5 self-end disabled:opacity-50"
+          className="btn-base btn-primary flex items-center gap-1.5 self-end disabled:opacity-50"
         >
           <Send className="h-4 w-4" strokeWidth={1.5} />
           <span>{sending ? "..." : "Send"}</span>

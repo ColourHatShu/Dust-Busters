@@ -111,15 +111,15 @@ export default function MessagePanel({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur">
-      <div className="border-b border-white/10 bg-white/[0.02] px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-200">Messages</h2>
+    <div className="card flex flex-col gap-0 p-0 overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <h2 className="font-semibold text-slate-800 text-sm">Messages</h2>
       </div>
 
       {/* Message thread */}
-      <div className="flex max-h-72 min-h-32 flex-col gap-3 overflow-y-auto p-4">
+      <div className="flex flex-col gap-3 p-4 overflow-y-auto max-h-72 min-h-32">
         {messages.length === 0 && (
-          <p className="my-4 text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-slate-400 my-4">
             No messages yet. Say hello to your cleaner!
           </p>
         )}
@@ -130,15 +130,15 @@ export default function MessagePanel({
               key={msg.id}
               className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}
             >
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 {isOwn ? "You" : msg.profiles?.name ?? "Cleaner"}
                 {mounted && <> &middot; {formatTime(msg.created_at)}</>}
               </span>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed ${
                   isOwn
-                    ? "rounded-tr-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-                    : "rounded-tl-sm border border-white/10 bg-white/[0.06] text-slate-200"
+                    ? "rounded-tr-sm bg-accent text-white"
+                    : "rounded-tl-sm bg-slate-100 text-slate-800"
                 }`}
               >
                 {msg.body}
@@ -152,11 +152,11 @@ export default function MessagePanel({
       {/* Input */}
       <form
         onSubmit={handleSend}
-        className="flex items-center gap-2 border-t border-white/10 px-4 py-3"
+        className="flex items-center gap-2 border-t border-slate-200 px-4 py-3"
       >
         <input
-          className="input-dark flex-1"
-          placeholder="Type a message…"
+          className="input-modern flex-1"
+          placeholder="Type a message..."
           value={body}
           onChange={(e) => setBody(e.target.value)}
           disabled={sending}
@@ -165,13 +165,15 @@ export default function MessagePanel({
         <button
           type="submit"
           disabled={sending || !body.trim()}
-          className="btn-base btn-glow px-3 py-2 disabled:opacity-50"
+          className="btn-base btn-primary px-3 py-2 disabled:opacity-50"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" strokeWidth={2} />
         </button>
       </form>
-      {error && <p className="px-4 pb-3 text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="px-4 pb-3 text-xs text-red-600">{error}</p>
+      )}
     </div>
   );
 }

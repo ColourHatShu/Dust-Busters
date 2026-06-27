@@ -20,7 +20,7 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
 
   if (left <= 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-red-400/30 bg-red-400/10 px-2 py-0.5 text-xs font-medium text-red-300">
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
         <Timer className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
         Expired
       </span>
@@ -44,10 +44,8 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
-        urgent
-          ? "border-red-400/30 bg-red-400/10 text-red-300"
-          : "border-amber-400/30 bg-amber-400/10 text-amber-300"
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+        urgent ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700"
       }`}
     >
       <Timer className="h-3 w-3" strokeWidth={2} aria-hidden="true" />

@@ -1,18 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ClipboardList,
-  Users,
-  Sparkles,
-  AlertTriangle,
-  Settings,
-  CalendarCheck,
-  Wallet,
-  ShieldAlert,
-  ShieldCheck,
-  ArrowRight,
-  ArrowUpRight,
-} from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -86,18 +73,17 @@ export default async function AdminHomePage() {
     .limit(10);
 
   // Real booking_status enum values (no 'pending'/'confirmed' exist).
-  // Map each status to a futuristic-dark pill variant (presentation only).
   const statusColor: Record<string, string> = {
-    broadcasting: "pill-info",
-    accepted: "pill-warning",
-    deposit_paid: "pill-success",
-    in_progress: "pill-accent",
-    completed: "pill-warning",
-    balance_paid: "pill-success",
-    closed: "pill-neutral",
-    cancelled: "pill-danger",
-    no_cleaner_found: "pill-danger",
-    disputed: "pill-danger",
+    broadcasting: "bg-blue-100 text-blue-800",
+    accepted: "bg-yellow-100 text-yellow-800",
+    deposit_paid: "bg-green-100 text-green-800",
+    in_progress: "bg-indigo-100 text-indigo-800",
+    completed: "bg-orange-100 text-orange-800",
+    balance_paid: "bg-green-100 text-green-800",
+    closed: "bg-gray-100 text-gray-700",
+    cancelled: "bg-red-100 text-red-800",
+    no_cleaner_found: "bg-red-100 text-red-800",
+    disputed: "bg-purple-100 text-purple-800",
   };
 
   // "Active" = bookings still in flight (not completed/closed/cancelled/etc.).
@@ -107,270 +93,209 @@ export default async function AdminHomePage() {
   );
 
   const navCards = [
-    { href: "/admin/bookings", label: "Bookings", Icon: ClipboardList, desc: "Manage all bookings" },
-    { href: "/admin/customers", label: "Customers", Icon: Users, desc: "View customer accounts" },
-    { href: "/admin/cleaners", label: "Cleaners", Icon: Sparkles, desc: "Manage cleaner roster" },
-    { href: "/admin/disputes", label: "Disputes", Icon: AlertTriangle, desc: "Resolve open disputes" },
-    { href: "/admin/settings", label: "Settings", Icon: Settings, desc: "App configuration" },
+    { href: "/admin/bookings", label: "Bookings", icon: "📋", desc: "Manage all bookings" },
+    { href: "/admin/customers", label: "Customers", icon: "👥", desc: "View customer accounts" },
+    { href: "/admin/cleaners", label: "Cleaners", icon: "🧹", desc: "Manage cleaner roster" },
+    { href: "/admin/disputes", label: "Disputes", icon: "⚠️", desc: "Resolve open disputes" },
+    { href: "/admin/settings", label: "Settings", icon: "⚙️", desc: "App configuration" },
   ];
 
-  const hasDisputes = (openDisputes ?? 0) > 0;
-  const chipBase =
-    "inline-flex h-11 w-11 items-center justify-center rounded-xl border";
-  const chipAccent =
-    "border-teal-300/20 bg-gradient-to-br from-emerald-500/20 to-sky-500/10 text-teal-300";
-
   return (
-    <main className="app-shell relative min-h-screen overflow-hidden pb-16 pt-10 sm:pt-12">
-      {/* Ambient aurora glows */}
-      <span aria-hidden className="section-glow absolute -top-24 left-1/4 h-72 w-72" />
-      <span aria-hidden className="section-glow section-glow--sky absolute -top-12 right-6 h-64 w-64" />
+    <main className="mx-auto max-w-6xl p-6 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Welcome back, {profile?.name ?? "Admin"} — here&apos;s your overview
+          </p>
+        </div>
+        <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent-light uppercase tracking-wide">
+          Admin
+        </span>
+      </div>
 
-      <div className="app-container relative space-y-10">
-        {/* Header */}
-        <header className="page-header">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-2">
-              <span className="page-eyebrow">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                Admin Console
-              </span>
-              <h1 className="page-title text-gradient-on-dark">Admin Dashboard</h1>
-              <p className="page-subtitle">
-                Welcome back, {profile?.name ?? "Admin"} — here&apos;s your overview
-              </p>
-            </div>
-            <span className="pill pill-accent uppercase tracking-wide">
-              <span className="pill-dot" />
-              Admin
-            </span>
-          </div>
-        </header>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Total Bookings
+          </p>
+          <p className="text-3xl font-bold text-gray-900">{totalBookings ?? 0}</p>
+          <p className="text-xs text-gray-400">
+            {activeCount} active ·{" "}
+            {statusCounts["completed"] ?? 0} completed
+          </p>
+        </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {/* Total Bookings */}
-          <div className="surface-card surface-card-interactive">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-dim">
-                Total Bookings
-              </p>
-              <span className={`${chipBase} ${chipAccent}`}>
-                <CalendarCheck className="h-5 w-5" aria-hidden />
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Revenue (CAD)
+          </p>
+          <p className="text-3xl font-bold text-gradient">
+            ${money(totalRevenue)}
+          </p>
+          <p className="text-xs text-gray-400">from paid payments</p>
+          <div className="mt-1 space-y-0.5 border-t border-slate-100 pt-1.5">
+            <p className="flex justify-between text-xs text-gray-500">
+              <span>Platform (commission)</span>
+              <span className="font-medium text-emerald-700">
+                ${money(platformRevenue)}
               </span>
-            </div>
-            <p className="mt-4 text-3xl font-bold text-white">{totalBookings ?? 0}</p>
-            <p className="mt-1 text-xs text-faint">
-              {activeCount} active · {statusCounts["completed"] ?? 0} completed
             </p>
-          </div>
-
-          {/* Revenue */}
-          <div className="surface-card surface-card-interactive">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-dim">
-                Revenue (CAD)
-              </p>
-              <span className={`${chipBase} ${chipAccent}`}>
-                <Wallet className="h-5 w-5" aria-hidden />
+            <p className="flex justify-between text-xs text-gray-500">
+              <span>Cleaner payouts</span>
+              <span className="font-medium text-slate-700">
+                ${money(cleanerPayouts)}
               </span>
-            </div>
-            <p className="mt-4 text-3xl font-bold text-gradient-on-dark">
-              ${money(totalRevenue)}
-            </p>
-            <p className="mt-1 text-xs text-faint">from paid payments</p>
-            <div className="mt-4 space-y-1.5 border-t border-white/5 pt-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-dim">Platform (commission)</span>
-                <span className="font-semibold text-emerald-300">
-                  ${money(platformRevenue)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-dim">Cleaner payouts</span>
-                <span className="font-semibold text-slate-200">
-                  ${money(cleanerPayouts)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Cleaners */}
-          <div className="surface-card surface-card-interactive">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-dim">
-                Active Cleaners
-              </p>
-              <span className={`${chipBase} ${chipAccent}`}>
-                <Sparkles className="h-5 w-5" aria-hidden />
-              </span>
-            </div>
-            <p className="mt-4 text-3xl font-bold text-white">{activeCleaners ?? 0}</p>
-            <p className="mt-1 text-xs text-faint">available for dispatch</p>
-          </div>
-
-          {/* Open Disputes */}
-          <div className="surface-card surface-card-interactive">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-dim">
-                Open Disputes
-              </p>
-              <span
-                className={`${chipBase} ${
-                  hasDisputes
-                    ? "border-red-400/30 bg-red-500/15 text-red-300"
-                    : chipAccent
-                }`}
-              >
-                <ShieldAlert className="h-5 w-5" aria-hidden />
-              </span>
-            </div>
-            <p
-              className={`mt-4 text-3xl font-bold ${
-                hasDisputes ? "text-red-400" : "text-white"
-              }`}
-            >
-              {openDisputes ?? 0}
-            </p>
-            <p className="mt-1 text-xs text-faint">
-              {hasDisputes ? "requires attention" : "all clear"}
             </p>
           </div>
         </div>
 
-        {/* Booking Status Breakdown */}
-        {Object.keys(statusCounts).length > 0 && (
-          <div className="surface-card">
-            <h2 className="text-sm font-semibold text-slate-200">
-              Booking Status Breakdown
-            </h2>
-            <div className="mt-4 flex flex-wrap gap-2.5">
-              {Object.entries(statusCounts).map(([status, count]) => (
-                <span
-                  key={status}
-                  className={`pill ${statusColor[status] ?? "pill-neutral"}`}
-                >
-                  <span className="pill-dot" />
-                  {status.replace("_", " ")}
-                  <span className="font-bold">{count}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Active Cleaners
+          </p>
+          <p className="text-3xl font-bold text-gray-900">{activeCleaners ?? 0}</p>
+          <p className="text-xs text-gray-400">available for dispatch</p>
+        </div>
 
-        {/* Nav Cards */}
-        <section>
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-faint">
-            Manage
-          </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {navCards.map(({ href, label, Icon, desc }) => (
-              <Link
-                key={href}
-                href={href}
-                className="surface-card surface-card-interactive group flex flex-col items-center gap-3 text-center"
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Open Disputes
+          </p>
+          <p className={`text-3xl font-bold ${(openDisputes ?? 0) > 0 ? "text-red-600" : "text-gray-900"}`}>
+            {openDisputes ?? 0}
+          </p>
+          <p className="text-xs text-gray-400">
+            {(openDisputes ?? 0) > 0 ? "requires attention" : "all clear"}
+          </p>
+        </div>
+      </div>
+
+      {/* Booking Status Breakdown */}
+      {Object.keys(statusCounts).length > 0 && (
+        <div className="card p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Booking Status Breakdown</h2>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(statusCounts).map(([status, count]) => (
+              <span
+                key={status}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${statusColor[status] ?? "bg-gray-100 text-gray-700"}`}
               >
-                <span className={`${chipBase} ${chipAccent} transition-transform group-hover:scale-105`}>
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <span className="text-sm font-semibold text-slate-100 transition-colors group-hover:text-teal-300">
-                  {label}
-                </span>
-                <span className="hidden text-xs text-faint sm:block">{desc}</span>
-              </Link>
+                {status.replace("_", " ")}
+                <span className="font-bold">{count}</span>
+              </span>
             ))}
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* Recent Bookings */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Recent Bookings</h2>
+      {/* Nav Cards */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Manage
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {navCards.map(({ href, label, icon, desc }) => (
             <Link
-              href="/admin/bookings"
-              className="link-accent inline-flex items-center gap-1 text-sm font-medium"
+              key={href}
+              href={href}
+              className="card p-4 flex flex-col items-center text-center gap-2 hover:shadow-lg transition-shadow group"
             >
-              View all
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <span className="text-2xl">{icon}</span>
+              <span className="text-sm font-semibold text-gray-800 group-hover:text-accent-light transition-colors">
+                {label}
+              </span>
+              <span className="text-xs text-gray-400 hidden sm:block">{desc}</span>
             </Link>
-          </div>
-          <div className="table-wrap">
-            <div className="overflow-x-auto">
-              <table className="table-dark">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Customer</th>
-                    <th>Status</th>
-                    <th>Area</th>
-                    <th>Scheduled</th>
-                    <th>Hrs</th>
-                    <th>Total</th>
-                    <th></th>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Bookings */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
+          <Link
+            href="/admin/bookings"
+            className="text-sm font-medium text-accent-light hover:underline"
+          >
+            View all →
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-gray-400">
+                <th className="pb-3 pr-4 font-medium">ID</th>
+                <th className="pb-3 pr-4 font-medium">Customer</th>
+                <th className="pb-3 pr-4 font-medium">Status</th>
+                <th className="pb-3 pr-4 font-medium">Area</th>
+                <th className="pb-3 pr-4 font-medium">Scheduled</th>
+                <th className="pb-3 pr-4 font-medium">Hrs</th>
+                <th className="pb-3 pr-4 font-medium">Total</th>
+                <th className="pb-3 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {(recentBookings ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-6 text-center text-gray-400 text-sm">
+                    No bookings yet
+                  </td>
+                </tr>
+              )}
+              {(recentBookings ?? []).map((b) => {
+                const customer = Array.isArray(b.profiles)
+                  ? b.profiles[0]
+                  : b.profiles;
+                return (
+                  <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-3 pr-4 font-mono text-xs text-gray-400">
+                      {String(b.id).slice(0, 8)}
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-gray-700">
+                      {customer?.name ?? "—"}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
+                      >
+                        {b.status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600">{b.area ?? "—"}</td>
+                    <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">
+                      {b.scheduled_at
+                        ? new Date(b.scheduled_at).toLocaleString("en-CA", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                        : "—"}
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600">
+                      {b.hours != null ? `${b.hours}h` : "—"}
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-gray-800">
+                      {b.total_amount != null
+                        ? `$${Number(b.total_amount).toFixed(2)}`
+                        : "—"}
+                    </td>
+                    <td className="py-3">
+                      <Link
+                        href={`/admin/bookings/${b.id}`}
+                        className="text-xs font-medium text-accent-light hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {(recentBookings ?? []).length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="py-10 text-center text-sm text-faint">
-                        No bookings yet
-                      </td>
-                    </tr>
-                  )}
-                  {(recentBookings ?? []).map((b) => {
-                    const customer = Array.isArray(b.profiles)
-                      ? b.profiles[0]
-                      : b.profiles;
-                    return (
-                      <tr key={b.id}>
-                        <td className="font-mono text-xs text-faint">
-                          {String(b.id).slice(0, 8)}
-                        </td>
-                        <td className="font-medium text-slate-100">
-                          {customer?.name ?? "—"}
-                        </td>
-                        <td>
-                          <span
-                            className={`pill ${statusColor[b.status] ?? "pill-neutral"}`}
-                          >
-                            {b.status.replace("_", " ")}
-                          </span>
-                        </td>
-                        <td className="text-dim">{b.area ?? "—"}</td>
-                        <td className="whitespace-nowrap text-dim">
-                          {b.scheduled_at
-                            ? new Date(b.scheduled_at).toLocaleString("en-CA", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })
-                            : "—"}
-                        </td>
-                        <td className="text-dim">
-                          {b.hours != null ? `${b.hours}h` : "—"}
-                        </td>
-                        <td className="font-semibold text-slate-100">
-                          {b.total_amount != null
-                            ? `$${Number(b.total_amount).toFixed(2)}`
-                            : "—"}
-                        </td>
-                        <td>
-                          <Link
-                            href={`/admin/bookings/${b.id}`}
-                            className="link-accent inline-flex items-center gap-1 text-xs font-medium"
-                          >
-                            View
-                            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   );
