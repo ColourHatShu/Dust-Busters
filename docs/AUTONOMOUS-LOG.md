@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: README + .env.example
+
+- **Item:** P2 deploy-readiness docs. The README was one line ("Dust Buster! Lets
+  GO!!!!") and there was no env template. Added:
+  - `.env.example` — every required var (Supabase URL/anon/service-role, Stripe
+    secret/publishable/webhook, NEXT_PUBLIC_BASE_URL) with placeholders + notes,
+    no secrets. Added a `!.env.example` exception to `.gitignore` (which ignores
+    `.env*`) so the template is tracked.
+  - `README.md` — stack, prerequisites, setup, run scripts, migrations (incl. the
+    pooler caveat), first-admin SQL, booking status flow, Vercel deploy steps, and
+    a docs index.
+- **Verify:** `git check-ignore` confirms `.env.example` is tracked · `tsc` clean ·
+  `next build` 27/27. ✅
+- **Next:** mark-notification-read-on-click, "Book again" prefill, payment receipts.
+
+---
+
 ## 2026-06-27 — Knight iteration: star-rating review UI
 
 - **Item:** P2. The review form was off-brand (plain select + textarea + blue
