@@ -28,3 +28,36 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath("/account");
 }
+
+export async function addAddress(formData: FormData) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+
+  const label = (formData.get("label") as string)?.trim() || null;
+  const fullAddress = (formData.get("full_address") as string)?.trim();
+  if (!fullAddress || fullAddress.length < 5) {
+    throw new Error("Please enter a full address.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("saved_addresses")
+    .insert({ customer_id: user.id, label, full_address: fullAddress });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/account");
+}
+
+export async function deleteAddress(id: string) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+
+  const supabase = await createClient();
+  await supabase
+    .from("saved_addresses")
+    .delete()
+    .eq("id", id)
+    .eq("customer_id", user.id);
+
+  revalidatePath("/account");
+}

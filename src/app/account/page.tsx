@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateProfile } from "./actions";
+import { updateProfile, addAddress, deleteAddress } from "./actions";
 import Link from "next/link";
 import {
   User,
@@ -11,6 +11,8 @@ import {
   ClipboardList,
   Bell,
   ChevronRight,
+  MapPin,
+  Trash2,
 } from "lucide-react";
 
 export default async function AccountPage() {
@@ -24,6 +26,14 @@ export default async function AccountPage() {
     .select("name, phone")
     .eq("id", user.id)
     .single();
+
+  const { data: addresses } = await supabase
+    .from("saved_addresses")
+    .select("id, label, full_address")
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: true })
+    .returns<{ id: string; label: string | null; full_address: string }[]>();
+  const savedAddresses = addresses ?? [];
 
   const name = fullProfile?.name ?? profile?.name ?? "";
   const phone = fullProfile?.phone ?? "";
@@ -117,6 +127,61 @@ export default async function AccountPage() {
 
           <button type="submit" className="w-full btn-base btn-primary">
             Save changes
+          </button>
+        </form>
+      </div>
+
+      {/* Saved addresses */}
+      <div className="card space-y-4">
+        <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
+          <MapPin className="h-4 w-4 text-accent" strokeWidth={1.5} />
+          Saved addresses
+        </h2>
+
+        {savedAddresses.length > 0 ? (
+          <ul className="divide-y divide-slate-100">
+            {savedAddresses.map((a) => (
+              <li key={a.id} className="flex items-start justify-between gap-3 py-2.5">
+                <div className="min-w-0">
+                  {a.label && (
+                    <p className="text-sm font-medium text-slate-800">{a.label}</p>
+                  )}
+                  <p className="truncate text-sm text-slate-600">{a.full_address}</p>
+                </div>
+                <form action={deleteAddress.bind(null, a.id)}>
+                  <button
+                    type="submit"
+                    aria-label="Delete address"
+                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-slate-400">
+            No saved addresses yet. Add one to book faster next time.
+          </p>
+        )}
+
+        <form action={addAddress} className="space-y-2 border-t border-slate-100 pt-4">
+          <input
+            name="label"
+            placeholder="Label (e.g. Home, Office) — optional"
+            maxLength={40}
+            className="input-modern"
+          />
+          <input
+            name="full_address"
+            placeholder="Street, unit, city"
+            required
+            maxLength={200}
+            className="input-modern"
+          />
+          <button type="submit" className="btn-base btn-secondary text-sm">
+            Add address
           </button>
         </form>
       </div>

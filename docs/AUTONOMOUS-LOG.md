@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: saved addresses
+
+- **Item:** P2 (from ideation). Customers re-typed their address every booking.
+  Migration `0018` adds a `saved_addresses` table (RLS-scoped select/insert/delete
+  to the owner). Account page gets a "Saved addresses" card (add with optional
+  label, delete). `/book` gets a JS-free `<datalist>` autocomplete on the address
+  field sourced from the customer's saved addresses.
+- **DB:** 0018 applied via pooler, verified (table + 3 policies).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** Favorites phase 2 (list + book-a-favorite); reschedule.
+
+---
+
 ## 2026-06-27 — Knight iteration: cleaner "Today" schedule grouping
 
 - **Item:** P2 (from ideation). The cleaner's "My jobs" list was a flat list.

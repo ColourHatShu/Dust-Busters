@@ -40,6 +40,13 @@ export default async function BookPage({
   const rate = Number(settings?.hourly_rate ?? 20);
   const currency = settings?.currency ?? "CAD";
   const depositPercent = Number(settings?.deposit_percent ?? 60);
+
+  // The customer's saved addresses (for the address autocomplete).
+  const { data: savedAddresses } = await supabase
+    .from("saved_addresses")
+    .select("id, label, full_address")
+    .eq("customer_id", user.id)
+    .returns<{ id: string; label: string | null; full_address: string }[]>();
   // Soft min for the date picker (today); the server action enforces the real
   // future-date check.
   const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
@@ -111,7 +118,17 @@ export default async function BookPage({
             required
             placeholder="Street, unit, city"
             className="input-modern"
+            list="saved-addresses"
           />
+          {(savedAddresses ?? []).length > 0 && (
+            <datalist id="saved-addresses">
+              {(savedAddresses ?? []).map((a) => (
+                <option key={a.id} value={a.full_address}>
+                  {a.label ?? a.full_address}
+                </option>
+              ))}
+            </datalist>
+          )}
           <div className="flex items-start gap-2 text-xs text-slate-500">
             <Lock className="h-4 w-4 mt-0.5 flex-shrink-0 text-accent" strokeWidth={1.5} />
             <span>Your address stays hidden from cleaners until you've paid the deposit.</span>
