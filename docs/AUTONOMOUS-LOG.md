@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: favorite cleaners (phase 1) + ideation
+
+- **Ideation pass** (backlog was thin on high-value items): added Batch 1 to
+  `docs/IDEAS.md` (favorites phase-2, reschedule, saved addresses, cleaner Today
+  view, in-app tip, two-way reviews) and promoted 4 into the plan.
+- **Shipped:** activated the **stranded `customer_favorites` table** (full
+  schema + RLS existed, zero src usage). Added a heart toggle on the booking
+  detail page's cleaner card (`toggleFavorite` action — RLS-scoped insert/delete);
+  filled rose heart when favorited, with aria-label/aria-pressed.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** Favorites phase 2 (list + book-a-favorite), saved addresses, cleaner
+  Today view.
+
+---
+
 ## 2026-06-27 — Knight iteration: offer-card countdown + take-home + 📊 milestone
 
 **This iteration:** open-offer cards now show the cleaner's **take-home**

@@ -9,6 +9,28 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 1 — ideation (2026-06-27, backlog refresh)
+
+1. **Favorite cleaners — phase 2: a Favorites list + book-a-favorite** · *value:* let
+   customers see their saved cleaners and request one directly (priority offer) ·
+   *medium* · why: phase 1 (the heart toggle) just shipped; the payoff is reusing it.
+2. **Reschedule a booking** (date/time) before deposit, or re-broadcast for a new
+   time after · *value:* recover bookings that would otherwise be cancelled ·
+   *medium* · why: "life happens" is the #1 reason people cancel.
+3. **Saved addresses** on the account, prefilled at /book · *value:* faster repeat
+   booking, fewer typos · *small* · why: most customers book the same home.
+4. **Cleaner schedule / "Today" view** grouping won jobs by day with the address &
+   ETA · *value:* cleaners plan their day · *small* · why: the data exists; just a
+   grouped view of my-jobs.
+5. **In-app tip after completion** (Stripe) · *value:* cleaner take-home up, zero
+   platform cost · *small–medium* · why: standard gig expectation. (Founder note:
+   touches the payment path — wire carefully + test-mode first.)
+6. **Two-way reviews** — cleaner rates the customer/property after a job · *value:*
+   safety signal + symmetry · *small* · why: reviews table is one-directional today.
+
+> Promoted to AUTONOMOUS-PLAN.md (P2): saved addresses, cleaner "Today" view,
+> reschedule, favorites phase-2.
+
 ## Batch 0 — seed ideas (2026-06-26)
 
 1. **Room-by-room cleaning checklist on a booking** · *value:* customer sets scope

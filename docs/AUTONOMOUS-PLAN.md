@@ -103,6 +103,13 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] **"Book again" prefill** — the existing Book-again button now passes `?hours=&area=` and `/book` prefills the estimator hours + area select (validated; address never in the URL). ✅
 - [ ] Cleaner payout system (Stripe Connect) — LARGE; founder decision (log rationale; needs Stripe Connect setup → likely partly [blocked]).
 
+## P2 — From ideation (2026-06-27 backlog refresh)
+- [x] **Favorite cleaners — phase 1**: heart toggle on the booking page activates the stranded `customer_favorites` table (RLS-scoped insert/delete). ✅
+- [ ] **Favorites — phase 2**: a customer Favorites list (account/bookings) + book-a-favorite (priority offer to a saved cleaner).
+- [ ] **Saved addresses**: store on the account, prefill at `/book` (needs a small table or a `profiles` JSON column).
+- [ ] **Cleaner "Today"/schedule view**: group won jobs by day with address + time (data already fetched).
+- [ ] **Reschedule a booking** before deposit (change date/time + refresh broadcast window).
+
 ## P3 — Polish / nice-to-have
 - [x] **Skip-to-content link** in the layout (sr-only until focused → jumps to `#main-content`). ✅
 - [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.

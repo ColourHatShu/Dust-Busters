@@ -6,6 +6,7 @@ import MessagePanel from "./MessagePanel";
 import { payDeposit, payBalance } from "./payment-actions";
 import { cancelBooking } from "./cancel-actions";
 import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
+import { toggleFavorite } from "./favorite-actions";
 import {
   Calendar,
   Clock,
@@ -19,6 +20,7 @@ import {
   MessageSquare,
   RefreshCw,
   Receipt,
+  Heart,
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
@@ -121,11 +123,20 @@ export default async function BookingStatusPage({
 
   let cleaner: { name: string; id_verified: boolean; jobs_completed: number } | null =
     null;
+  let isFavorite = false;
   if (booking.cleaner_id) {
     const { data } = await supabase.rpc("get_cleaner_card", {
       p_cleaner: booking.cleaner_id,
     });
     cleaner = Array.isArray(data) ? data[0] : data;
+
+    const { data: fav } = await supabase
+      .from("customer_favorites")
+      .select("cleaner_id")
+      .eq("customer_id", user.id)
+      .eq("cleaner_id", booking.cleaner_id)
+      .maybeSingle();
+    isFavorite = !!fav;
   }
 
   const { data: address } = await supabase
@@ -250,7 +261,7 @@ export default async function BookingStatusPage({
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark shadow-elevation-md text-xl font-bold text-white">
             {cleaner.name?.charAt(0).toUpperCase() || "C"}
           </div>
-          <div>
+          <div className="flex-1">
             <div className="font-semibold text-slate-900">
               {cleaner.name || "Your cleaner"}
             </div>
@@ -265,6 +276,34 @@ export default async function BookingStatusPage({
               <span>{cleaner.jobs_completed} jobs completed</span>
             </div>
           </div>
+          {booking.cleaner_id && (
+            <form
+              action={toggleFavorite.bind(
+                null,
+                id,
+                booking.cleaner_id,
+                isFavorite,
+              )}
+            >
+              <button
+                type="submit"
+                aria-label={
+                  isFavorite ? "Remove from favorites" : "Add to favorites"
+                }
+                aria-pressed={isFavorite}
+                className="rounded-full p-2 transition hover:bg-slate-100"
+              >
+                <Heart
+                  className={`h-6 w-6 ${
+                    isFavorite
+                      ? "fill-rose-500 text-rose-500"
+                      : "text-slate-300 hover:text-rose-400"
+                  }`}
+                  strokeWidth={1.75}
+                />
+              </button>
+            </form>
+          )}
         </div>
       )}
 
