@@ -109,7 +109,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] **Favorites — phase 2b**: book-a-favorite (priority/direct offer to a saved cleaner).
 - [x] **Saved addresses**: `saved_addresses` table (migration `0018`, RLS-scoped, applied + verified) + account CRUD (add/delete, optional label) + a JS-free `<datalist>` autocomplete on the `/book` address field. ✅
 - [x] **Cleaner "Today"/schedule view**: my-jobs now grouped into Today / Upcoming / Earlier (by `scheduled_at`) with per-group counts. ✅
-- [x] **Two-way reviews**: `customer_reviews` table + `get_customer_rating` RPC (migration `0020`, applied + verified). The assigned cleaner can rate the customer/property after a finished job (reuses the StarRating UI); the customer's overall rating shows on the job. ✅
+- [x] **Two-way reviews**: `customer_reviews` table + `get_customer_rating` RPC (migration `0020`, applied + verified). The assigned cleaner can rate the customer/property after a finished job (reuses the StarRating UI); the customer's overall rating shows on the job. **Admin customer profile** now shows the customer's rating + the reviews cleaners left (also fixed its stale `pending`/`confirmed` status-color map). ✅
 - [ ] **Reschedule a booking** before deposit (change date/time + refresh broadcast window).
 
 ## P3 — Polish / nice-to-have

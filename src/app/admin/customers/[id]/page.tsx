@@ -2,12 +2,18 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+// Real booking_status enum values (no pending/confirmed).
 const statusColor: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
+  broadcasting: "bg-blue-100 text-blue-800",
+  accepted: "bg-yellow-100 text-yellow-800",
+  deposit_paid: "bg-green-100 text-green-800",
   in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-green-100 text-green-800",
+  completed: "bg-orange-100 text-orange-800",
+  balance_paid: "bg-green-100 text-green-800",
+  closed: "bg-gray-100 text-gray-700",
   cancelled: "bg-red-100 text-red-800",
+  no_cleaner_found: "bg-red-100 text-red-800",
+  disputed: "bg-purple-100 text-purple-800",
 };
 
 export default async function AdminCustomerDetailPage({
@@ -50,6 +56,22 @@ export default async function AdminCustomerDetailPage({
     .filter((b) => b.status === "completed")
     .reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0);
 
+  // Two-way reviews: this customer's rating + the reviews cleaners left.
+  const { data: ratingData } = await supabase.rpc("get_customer_rating", {
+    p_customer: id,
+  });
+  const rating = (Array.isArray(ratingData) ? ratingData[0] : ratingData) as
+    | { avg_rating: number | null; review_count: number }
+    | null;
+  const { data: customerReviews } = await supabase
+    .from("customer_reviews")
+    .select("id, rating, comment, created_at")
+    .eq("customer_id", id)
+    .order("created_at", { ascending: false })
+    .returns<
+      { id: string; rating: number; comment: string | null; created_at: string }[]
+    >();
+
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -83,7 +105,37 @@ export default async function AdminCustomerDetailPage({
           <p className="text-xs text-gray-500">Total Spent (completed)</p>
           <p className="font-semibold text-gray-900">${totalSpent.toFixed(2)}</p>
         </div>
+        <div>
+          <p className="text-xs text-gray-500">Rating (from cleaners)</p>
+          <p className="font-semibold text-gray-900">
+            {rating?.avg_rating != null
+              ? `★ ${rating.avg_rating} (${rating.review_count})`
+              : "—"}
+          </p>
+        </div>
       </div>
+
+      {/* Reviews from cleaners */}
+      {(customerReviews ?? []).length > 0 && (
+        <div className="card p-6">
+          <h2 className="mb-4 font-semibold text-gray-900">Reviews from cleaners</h2>
+          <ul className="divide-y divide-gray-100">
+            {(customerReviews ?? []).map((r) => (
+              <li key={r.id} className="py-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">{r.rating}/5</span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(r.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                {r.comment && (
+                  <p className="mt-1 text-sm text-gray-600">{r.comment}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Booking History */}
       <div className="card p-6">

@@ -5,6 +5,18 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: customer rating on the admin profile
+
+- **Item:** complete the two-way-review payoff. The admin customer profile now
+  shows the customer's overall rating (`get_customer_rating`) and a "Reviews from
+  cleaners" card (rating + comment + date, read via the admin RLS path). Also
+  fixed this page's stale `pending`/`confirmed` status-color map → real
+  `booking_status` values (the last copy of that bug).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** favorites 2b (book-a-favorite); P3 polish (aria-live, vercel.json).
+
+---
+
 ## 2026-06-27 — Knight iteration: two-way reviews
 
 - **Item:** trust & safety. Reviews were customer→cleaner only. Migration `0020`
