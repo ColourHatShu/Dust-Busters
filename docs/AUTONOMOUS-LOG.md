@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Audit 🔴 #1: double-charge guard (money integrity)
+
+- **Item:** the audit found a deposit/balance could be charged twice — the webhook
+  records on `stripe_session_id`, so a rapid second click during the webhook-lag
+  window (before the page advances) creates a *new* session and charges again.
+  Two-part fix in `payment-actions.ts`: (1) before creating a checkout, bail if a
+  `paid` payment of that `(booking_id, type)` already exists; (2) pass a Stripe
+  **idempotency key** (`checkout_<booking>_<type>_<10min-bucket>`) so duplicate
+  session-creates dedupe at the source instead of double-charging. The 10-minute
+  bucket keeps dedup tight but avoids a stale-session lockout on a genuine retry.
+  No migration / no refund-flow changes.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** audit 🔴 — refund net-paid math, `disputed` status maps, the RLS
+  migrations, timezone parse; then the post-accept page.
+
+---
+
 ## 2026-06-28 — 🎨 Futuristic dark redesign of the whole app (multi-agent)
 
 - **Founder request:** make every page modern/futuristic via multi-agent (one

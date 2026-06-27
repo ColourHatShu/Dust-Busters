@@ -40,6 +40,26 @@ async function startCheckout(bookingId: string, type: PayType) {
     return;
   }
 
+  // Double-charge guard: if a payment of this type is already recorded as paid
+  // (e.g. the webhook landed but the page hadn't advanced yet), don't start a new
+  // checkout. (The idempotency key below additionally dedupes rapid double-clicks
+  // before the webhook records anything.)
+  const { data: existingPaid } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("booking_id", bookingId)
+    .eq("type", type)
+    .eq("status", "paid")
+    .maybeSingle();
+  if (existingPaid) {
+    payError(
+      type === "deposit"
+        ? "Your deposit has already been paid."
+        : "The balance has already been paid.",
+    );
+    return;
+  }
+
   const amount = type === "deposit" ? booking.deposit_amount : booking.balance_amount;
   const label =
     type === "deposit"
@@ -63,6 +83,12 @@ async function startCheckout(bookingId: string, type: PayType) {
       metadata: { booking_id: booking.id, type },
       success_url: `${baseUrl()}/bookings/${booking.id}?paid=1`,
       cancel_url: `${baseUrl()}/bookings/${booking.id}`,
+    }, {
+      // Dedupe rapid duplicate creates (the webhook-lag double-click): Stripe
+      // returns the same session for the same key instead of charging twice. The
+      // 10-minute bucket keeps the dedup tight while still letting a genuine retry
+      // later get a fresh session (avoids a stale-session lockout).
+      idempotencyKey: `checkout_${booking.id}_${type}_${Math.floor(Date.now() / 600_000)}`,
     });
     url = session.url;
   } catch (e) {
