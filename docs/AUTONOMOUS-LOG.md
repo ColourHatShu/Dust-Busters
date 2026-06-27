@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: re-broadcast on no_cleaner_found
+
+- **Item:** flagship flow completion. A booking that ended `no_cleaner_found` was
+  a dead end. Migration `0017` adds `rebroadcast_booking(booking_id)` (SECURITY
+  DEFINER, owner/admin only): clears the stale offers, re-rings every matching
+  available/verified cleaner, and reopens the search (status→broadcasting +
+  fresh broadcast window); stays no_cleaner_found if still nobody. Added a
+  "Search again" button on the map's no-cleaner state (`rebroadcast-actions.ts`).
+- **DB:** 0017 applied via pooler, verified. (Note: had to re-add the `pg` dev
+  dep with `npm i pg --no-save` — the earlier leaflet install pruned it; logged
+  so future firings know.)
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next:** SVG fallback basemap on tile failure, then P2 (OG metadata, admin
+  search/filter, receipts, star-rating review UI, README/.env.example).
+
+---
+
 ## 2026-06-27 — Council fix: unified, consistent landing background
 
 - **Founder report:** homepage background looked inconsistent (patchy / banded /

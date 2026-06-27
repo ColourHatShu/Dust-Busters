@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Loader2, Radar, CheckCircle, Star, ShieldCheck, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cancelBooking } from "../cancel-actions";
+import { rebroadcastBooking } from "./rebroadcast-actions";
 
 export type MatchingData = {
   status: string;
@@ -135,6 +136,17 @@ export default function MatchingMap({
           </div>
         )}
       </div>
+
+      {/* Re-broadcast (no cleaner found) */}
+      {noCleaner && (
+        <div className="border-t border-slate-700 px-5 py-4 text-center">
+          <form action={rebroadcastBooking.bind(null, bookingId)}>
+            <button className="btn-base btn-glow px-6 py-2.5 text-sm">
+              Search again
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Cancel the search (broadcasting only) */}
       {broadcasting && (
