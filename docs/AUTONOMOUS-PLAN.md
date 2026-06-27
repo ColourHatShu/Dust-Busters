@@ -106,7 +106,7 @@ payment_type); `bookings` has NO `updated_at`.
 ## P3 — Polish / nice-to-have
 - [x] **Skip-to-content link** in the layout (sr-only until focused → jumps to `#main-content`). ✅
 - [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.
-- [ ] Offer card: expiry countdown + cleaner take-home (net) amount.
+- [x] Offer card: live **expiry countdown** (`Countdown` client component, from `broadcast_expires_at`) + the cleaner's **take-home** (`cleaner_payout`) shown as the headline amount with the gross as subtext. ✅
 - [x] **CI workflow** (`.github/workflows/ci.yml`) — typecheck + unit tests + production build on push/PR (dummy env so build needs no secrets); pinned Node `engines` (>=20). ✅
 - [ ] Expand meaningful test coverage (currently 3 lib tests + DB tests).
 - [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage.

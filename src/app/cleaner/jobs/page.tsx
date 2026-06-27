@@ -9,6 +9,7 @@ import {
   setAvailability,
 } from "../actions";
 import JobsLive from "./JobsLive";
+import Countdown from "./Countdown";
 import Link from "next/link";
 import {
   MapPin,
@@ -67,7 +68,7 @@ export default async function CleanerJobsPage({
   const { data: offers } = await supabase
     .from("booking_offers")
     .select(
-      "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount)"
+      "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount, cleaner_payout, broadcast_expires_at)"
     )
     .eq("cleaner_id", user.id)
     .eq("state", "rung");
@@ -210,12 +211,18 @@ export default async function CleanerJobsPage({
                         <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
                         {new Date(b.scheduled_at).toLocaleString()}
                       </div>
+                      <div className="mt-2">
+                        <Countdown expiresAt={b.broadcast_expires_at ?? null} />
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-teal-700">
-                        ${Number(b.total_amount).toFixed(2)}
+                        ${Number(b.cleaner_payout ?? b.total_amount).toFixed(2)}
                       </div>
-                      <div className="text-xs text-slate-400">gross</div>
+                      <div className="text-xs text-slate-400">your take-home</div>
+                      <div className="mt-0.5 text-xs text-slate-400">
+                        ${Number(b.total_amount).toFixed(2)} total
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2">

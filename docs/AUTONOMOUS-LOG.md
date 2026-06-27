@@ -5,6 +5,31 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: offer-card countdown + take-home + 📊 milestone
+
+**This iteration:** open-offer cards now show the cleaner's **take-home**
+(`cleaner_payout`) as the headline amount (gross as subtext) and a live
+**"Expires in m:ss"** countdown (`Countdown` client component, fed by
+`broadcast_expires_at`; renders nothing until mounted to avoid hydration
+mismatch; turns red under 1 min). Verify: tsc clean · vitest 3/3 · next build 27/27.
+
+### 📊 Milestone summary (~10 items since the last milestone)
+P2 fully cleared + into P3, all verified (+ founder UI requests):
+- OG/social metadata + branded OG image · admin list search/filter · star-rating
+  review UI · README + .env.example · mark-notification-read-on-click · "Book
+  again" prefill · payment receipt on the booking page · skip-to-content (a11y) ·
+  CI workflow + Node engines · offer-card countdown + take-home.
+- Founder visual requests: how-it-works equal-height cards · dark/futuristic login ·
+  founder-spec landing background.
+
+**Remaining:** P3 — aria-hidden on remaining decorative icons + aria-live;
+`vercel.json`; image `remotePatterns`; static-gen for marketing; expand test
+coverage. **Founder-gated (unchanged):** dispatch cron, real ID verification,
+transactional email/SMS keys, Stripe live keys/webhook, NEXT_PUBLIC_BASE_URL,
+Vercel deploy, rotate service-role key + DB password.
+
+---
+
 ## 2026-06-27 — Knight iteration: CI workflow + Node engines
 
 - **Item:** P3 dev quality. Added `.github/workflows/ci.yml` — on push to
