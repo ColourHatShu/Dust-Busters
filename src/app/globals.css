@@ -602,6 +602,10 @@ p {
   overflow: hidden;
   margin-top: 1.5rem;
   width: 100%;
+  /* Fill the (grid-stretched) column so all three cards are the same height. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   padding: 1.75rem;
   border-radius: 1rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
@@ -610,6 +614,11 @@ p {
   backdrop-filter: blur(10px);
   box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+/* Push the last row (the accent tags) to the bottom so they line up across the
+   three unequal-content cards. */
+.hiw-card > div:last-child {
+  margin-top: auto;
 }
 .hiw-card:hover {
   transform: translateY(-6px);
@@ -1711,3 +1720,37 @@ p {
   100% { opacity: 0; transform: scale(1.8); }
 }
 @media (prefers-reduced-motion: reduce) { .svgpin-ring { animation: none; } }
+
+
+/* === Auth (login) — dark, futuristic ============================== */
+.auth-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(120% 100% at 50% -10%, #112826 0%, #0b1220 45%, #070b14 100%);
+  color: #e2e8f0;
+}
+.auth-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+}
+.input-dark {
+  width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  color: #f1f5f9;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-dark::placeholder { color: #64748b; }
+.input-dark:focus {
+  outline: none;
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}

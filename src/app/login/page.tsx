@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -82,112 +83,139 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-8 p-6">
-      <div className="space-y-3 text-center">
-        <h1>{mode === "login" ? "Welcome back" : "Join us"}</h1>
-        <p className="text-slate-600">
-          {mode === "login"
-            ? "Log in to book your next cleaning"
-            : "Create an account to get started"}
-        </p>
+    <main className="auth-shell relative flex min-h-screen w-full items-center justify-center overflow-hidden px-6 py-16">
+      {/* Aurora backdrop */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
+        <span className="absolute -left-20 -top-24 h-80 w-80 rounded-full bg-emerald-500/20 blur-[90px]" />
+        <span className="absolute -bottom-28 -right-16 h-80 w-80 rounded-full bg-sky-500/20 blur-[90px]" />
+        <span className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-teal-400/10 blur-[80px]" />
       </div>
 
-      <form onSubmit={submit} className="card flex flex-col gap-6">
-        {mode === "signup" && (
+      <div className="w-full max-w-sm">
+        {/* Brand + heading */}
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-sky-500 shadow-[0_0_22px_-4px_rgba(16,185,129,0.7)]" />
+            <span className="text-gradient-on-dark text-2xl font-bold">
+              Dust Busters
+            </span>
+          </Link>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-white">
+              {mode === "login" ? "Welcome back" : "Create your account"}
+            </h1>
+            <p className="text-sm text-slate-400">
+              {mode === "login"
+                ? "Log in to book your next cleaning"
+                : "Join Dust Busters in under a minute"}
+            </p>
+          </div>
+        </div>
+
+        {/* Glass auth card */}
+        <form
+          onSubmit={submit}
+          className="auth-card mt-7 flex flex-col gap-5 rounded-2xl p-7"
+        >
+          {mode === "signup" && (
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-slate-300">Full name</span>
+              <input
+                className="input-dark"
+                placeholder="John Doe"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+          )}
+
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-slate-900">Full name</span>
+            <span className="text-sm font-medium text-slate-300">Email</span>
             <input
-              className="input-modern"
-              placeholder="John Doe"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              className="input-dark"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </label>
-        )}
 
-        <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-slate-900">Email</span>
-          <input
-            className="input-modern"
-            type="email"
-            placeholder="you@example.com"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-
-        <label className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-900">Password</span>
-            {mode === "login" && (
+          <label className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-300">Password</span>
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={forgotPassword}
+                  className="text-xs font-medium text-emerald-300 transition hover:text-emerald-200"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                className="input-dark pr-11"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <button
                 type="button"
-                onClick={forgotPassword}
-                className="text-xs font-medium text-accent transition hover:text-accent-dark"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-200"
               >
-                Forgot password?
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" strokeWidth={1.5} />
+                ) : (
+                  <Eye className="h-5 w-5" strokeWidth={1.5} />
+                )}
               </button>
-            )}
-          </div>
-          <div className="relative">
-            <input
-              className="input-modern pr-11"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5" strokeWidth={1.5} />
-              ) : (
-                <Eye className="h-5 w-5" strokeWidth={1.5} />
-              )}
-            </button>
-          </div>
-        </label>
+            </div>
+          </label>
 
-        {notice && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-elevation-sm">
-            {notice}
-          </div>
-        )}
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-elevation-sm">
-            {error}
-          </div>
-        )}
+          {notice && (
+            <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 p-3.5 text-sm text-emerald-200">
+              {notice}
+            </div>
+          )}
+          {error && (
+            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3.5 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
-        <button className="btn-base btn-primary mt-2" disabled={busy}>
-          {busy
-            ? "Please wait…"
-            : mode === "login"
-              ? "Log in"
-              : "Create account"}
-        </button>
-      </form>
+          <button className="btn-base btn-glow mt-1" disabled={busy}>
+            {busy
+              ? "Please wait…"
+              : mode === "login"
+                ? "Log in"
+                : "Create account"}
+          </button>
+        </form>
 
-      <div className="text-center">
-        <button
-          className="text-sm font-medium text-accent transition hover:text-accent-dark"
-          onClick={switchMode}
-        >
-          {mode === "login"
-            ? "Need an account? Sign up"
-            : "Already have an account? Log in"}
-        </button>
+        <div className="mt-6 text-center">
+          <button
+            className="text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
+            onClick={switchMode}
+          >
+            {mode === "login"
+              ? "Need an account? Sign up"
+              : "Already have an account? Log in"}
+          </button>
+        </div>
       </div>
     </main>
   );

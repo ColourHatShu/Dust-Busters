@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Founder fixes: How-it-works card alignment + login redesign
+
+1. **How-it-works cards unaligned** (founder screenshot): cards had unequal
+   heights and the bottom chips didn't line up. CSS-only fix: `.hiw-card` now
+   `flex: 1` + flex-column so all three fill the grid-stretched column (equal
+   height), and `.hiw-card > div:last-child { margin-top: auto }` pushes the
+   accent tags to a common baseline.
+2. **Login page redesign** (founder: "looks 90s — make it modern/futuristic, on
+   theme"): replaced the plain white card with the dark Dust Busters theme — an
+   `.auth-shell` (teal→navy radial) with aurora glows, a glassmorphic `.auth-card`,
+   dark `.input-dark` fields, the gradient brand mark, and the glowing CTA button.
+   All auth logic (signup/confirm, show-password, forgot-password, autocomplete)
+   preserved.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-27 — Knight iteration: README + .env.example
 
 - **Item:** P2 deploy-readiness docs. The README was one line ("Dust Buster! Lets
