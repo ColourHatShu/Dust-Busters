@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: error boundaries + custom 404
+
+- **Item:** P1 resilience. There was no error boundary or custom 404 anywhere, so
+  an uncaught render error or bad URL showed a raw Next.js error. Added:
+  - `app/error.tsx` — route-segment boundary with Try-again (`reset()`) + Go-home,
+    logs the error (Sentry hook point later).
+  - `app/global-error.tsx` — root boundary (inline-styled since it replaces the
+    layout / global CSS isn't guaranteed), shows the digest ref.
+  - `app/not-found.tsx` — branded 404 with a back-home CTA.
+- Code-only (no migration).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25 (`/_not-found`
+  generated). ✅
+- **Next up:** security headers (CSP/HSTS/X-Frame-Options/Referrer-Policy) in
+  `next.config.ts`; then P2 (loading skeletons, OG metadata, admin search/filter).
+
+---
+
 ## 2026-06-27 — Knight iteration: admin schema-mismatch bug cluster
 
 - **Item:** P1 admin correctness — three pages were querying columns/tables that

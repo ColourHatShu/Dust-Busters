@@ -69,7 +69,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Add nav link to cleaner profile page. (`Nav.tsx`)
 
 ### Resilience / security hardening
-- [ ] Add `app/error.tsx` + `app/global-error.tsx` error boundaries. (none exist)
+- [x] Added `app/error.tsx` (route boundary with Try-again/Go-home + console.error), `app/global-error.tsx` (inline-styled root boundary), and `app/not-found.tsx` (branded 404). ✅
 - [ ] Add security headers (CSP/HSTS/X-Frame-Options/Referrer-Policy) in `next.config.ts`. (empty config)
 - [ ] `mark-read` POST has no origin/CSRF check — add same-origin guard.
 
