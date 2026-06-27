@@ -17,6 +17,12 @@ export async function submitCustomerReview(
   const rating = Number(formData.get("rating"));
   const comment = String(formData.get("comment") ?? "").trim() || null;
 
+  // No star picked — just re-show the form rather than hitting a check violation.
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    revalidatePath(`/cleaner/jobs/${bookingId}`);
+    return;
+  }
+
   const supabase = await createClient();
   // RLS verifies the caller is the booking's cleaner and the job is finished.
   const { error } = await supabase.from("customer_reviews").insert({
@@ -26,7 +32,9 @@ export async function submitCustomerReview(
     rating,
     comment,
   });
-  if (error) throw new Error(error.message);
+  // A duplicate (already rated) or other error shouldn't crash — revalidate so the
+  // page reflects the real state ("you've rated this customer").
+  if (error) console.error("submitCustomerReview failed:", error.message);
 
   revalidatePath(`/cleaner/jobs/${bookingId}`);
 }

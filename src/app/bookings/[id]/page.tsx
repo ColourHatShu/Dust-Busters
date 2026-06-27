@@ -68,10 +68,14 @@ export default async function BookingStatusPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ cancelled?: string; payError?: string }>;
+  searchParams: Promise<{
+    cancelled?: string;
+    payError?: string;
+    reviewError?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { cancelled, payError } = await searchParams;
+  const { cancelled, payError, reviewError } = await searchParams;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
 
@@ -192,9 +196,9 @@ export default async function BookingStatusPage({
         <MatchingMap bookingId={booking.id} initial={matching} />
       )}
 
-      {payError && (
+      {(payError || reviewError) && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {payError}
+          {payError || reviewError}
         </div>
       )}
       {cancelled === "refunded" && (

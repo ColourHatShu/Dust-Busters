@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Crash-hardening sweep (cont.): review submissions
+
+- **Item:** the throw-crash pattern on the next lifecycle step. `submitReview`
+  (customer→cleaner) and `submitCustomerReview` (cleaner→customer) both threw on a
+  **duplicate review** (one-per-booking unique constraint) or a missing/invalid
+  star rating → crash. Made both: validate the rating (1–5) and bail gracefully if
+  none picked; on insert error (incl. duplicate) **log + return to the page** which
+  reflects the real "already reviewed" state instead of crashing. Added a
+  `reviewError` banner on the booking page (shares the payError slot).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** harden cancel / dispute / report actions + surface start_job /
+  complete_job errors (still the same sweep).
+
+---
+
 ## 2026-06-28 — 🐛 "no jobs in cleaner account" — broadcast window too short
 
 - **Founder-reported:** verified the cleaner, but no jobs showed. **Diagnosed via
