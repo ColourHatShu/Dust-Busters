@@ -3,7 +3,8 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
 import { submitBooking } from "./actions";
-import { Calendar, Clock, MapPin, Home, Lock, CheckCircle } from "lucide-react";
+import PriceEstimator from "./PriceEstimator";
+import { Calendar, MapPin, Home, Lock, CheckCircle } from "lucide-react";
 
 export default async function BookPage() {
   const { user } = await getSessionProfile();
@@ -18,6 +19,9 @@ export default async function BookPage() {
   const rate = Number(settings?.hourly_rate ?? 20);
   const currency = settings?.currency ?? "CAD";
   const depositPercent = Number(settings?.deposit_percent ?? 60);
+  // Soft min for the date picker (today); the server action enforces the real
+  // future-date check.
+  const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
 
   return (
     <main className="mx-auto max-w-lg space-y-10 p-6">
@@ -49,43 +53,16 @@ export default async function BookPage() {
             type="datetime-local"
             name="scheduled_at"
             required
+            min={minDate}
             className="input-modern"
           />
         </label>
 
-        <label className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-slate-900">How many hours?</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              name="hours"
-              min={1}
-              max={12}
-              step={1}
-              defaultValue={3}
-              required
-              className="input-modern w-24 text-center"
-            />
-            <span className="text-slate-600">hours</span>
-          </div>
-          {/* Pricing preview: shown via CSS only — no JS required */}
-          <p className="text-sm text-slate-500">
-            Estimated total:{" "}
-            <span className="font-semibold text-slate-800">
-              {currency} ${rate * 3}
-            </span>{" "}
-            for 3 hrs &mdash; adjust hours above.
-            <br />
-            Deposit due today:{" "}
-            <span className="font-semibold text-slate-800">
-              {currency} ${Math.round((rate * 3 * depositPercent) / 100)}
-            </span>{" "}
-            ({depositPercent}%)
-          </p>
-        </label>
+        <PriceEstimator
+          rate={rate}
+          depositPercent={depositPercent}
+          currency={currency}
+        />
 
         <label className="flex flex-col gap-3">
           <div className="flex items-center gap-2">

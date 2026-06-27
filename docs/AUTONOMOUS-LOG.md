@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: /book live estimate + date/input validation
+
+- **Item:** P1 customer-facing booking-form fixes. The price estimate was
+  hardcoded to "3 hrs" regardless of input, and past dates were accepted.
+  - Added a `PriceEstimator` client component: the hours input now drives a live
+    estimated total + deposit-due-today.
+  - Date input gets a soft `min` (today); the `submitBooking` server action now
+    does authoritative validation — valid + ≥15 min in the future, hours a whole
+    1–12, area in the whitelist, address non-empty (no more silent bad bookings).
+- Code-only (no migration).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** admin schema-mismatch bugs (cleaner acceptance-rate `offers` table,
+  cleaner-profile `created_by`, dashboard status map), then P2 polish.
+
+---
+
 ## 2026-06-26 — 📊 Milestone summary (8 knight items shipped)
 
 **Shipped + applied live, all verified (tsc + build + tests), on `dustbusters-autonomous`:**

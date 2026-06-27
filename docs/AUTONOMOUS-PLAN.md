@@ -51,8 +51,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Admin dashboard status color map + 'pending' stat use statuses not in the enum. (`admin/page.tsx:58-64,97`)
 
 ### Booking / flow correctness
-- [ ] Live price estimate on `/book` hardcoded to 3 hrs — make it update with the hours input (client component). (`book/page.tsx:74-87`)
-- [ ] Booking allows past dates — add `min` on input + server-side validation. (`book/page.tsx`, `book/actions.ts:13-23`)
+- [x] Live price estimate on `/book` now reactive via a `PriceEstimator` client component (total + deposit update with the hours input). ✅
+- [x] Booking past-date prevention: `min` on the date input + authoritative server-side validation (future ≥15min, hours 1–12 int, area whitelist, non-empty address). ✅
 - [ ] Booking time stored in server TZ not customer's Pacific — fix tz handling. (`book/actions.ts:13-19`)
 - [ ] `deposit_deadline` never set; unpaid `accepted` bookings never auto-expire. Set it in `accept_offer` + enforce. (`0003:145`, `0008:7`)
 - [ ] No notification when cleaner accepts/completes (the two transitions that require customer payment). (`cleaner/actions.ts`, `0003`)
