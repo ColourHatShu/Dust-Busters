@@ -5,6 +5,28 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — UI reverted to light + RLS security holes closed (0028)
+
+- **Founder asked for a white UI** (the dark redesign also broke the admin layout):
+  reverted commit `920c067` → back to the clean light theme across all interior
+  pages (re-applied the local MessagePanel hydration fix). Landing/login stay dark
+  (separate earlier redesign). The session's audit logic fixes are saved in
+  `docs/AUDIT-FIXES-TODO.md` to re-apply on light.
+- **Audit 🔴 — RLS security (migration `0028`, applied + verified):**
+  `booking_messages`/`disputes` INSERT now require booking participation (were
+  REST-bypassable); the verification trigger now pins `active` so a suspended
+  cleaner can't self-reactivate via REST; added the missing `cleaner_update` WITH
+  CHECK. Kept the 0026 `service_role` guard. Confirmed live policy names matched
+  before applying (permissive policies OR — a mismatch would've left the hole).
+  No app-code change (legit flows use SECURITY DEFINER RPCs).
+- **Commits now authored as Utsav Kampanwala <kampanwalautsav55@gmail.com>** (per
+  founder; saved to memory).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** re-apply refund-math, timezone, admin-dispute, cleaner-ux, admin-rating
+  on light; re-add `disputed` to the status maps.
+
+---
+
 ## 2026-06-28 — Audit 🔴 #1: double-charge guard (money integrity)
 
 - **Item:** the audit found a deposit/balance could be charged twice — the webhook
