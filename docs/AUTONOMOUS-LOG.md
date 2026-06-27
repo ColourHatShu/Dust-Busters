@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: instant winner reveal (map realtime)
+
+- **Item:** flagship map polish round 2a. The map caught a cleaner accepting only
+  on its 2.5s poll (the rest of the page already updates instantly via
+  `StatusLive`'s realtime `router.refresh()`). Added a Supabase realtime channel
+  in `MatchingMap` that refetches `get_booking_matching` the instant THIS booking
+  row updates → **immediate winner reveal**. The 2.5s poll is kept for the ambient
+  notified/deciding counts + pins (booking_offers isn't customer-readable via
+  realtime — RLS — so it can't push those). Channel cleaned up on unmount.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next:** SVG fallback basemap on tile failure + re-broadcast CTA on
+  no_cleaner_found, then back to the P2/P3 backlog.
+
+---
+
 ## 2026-06-27 — Knight iteration: map polish (dark theme + cancel search)
 
 - **Item:** flagship map polish round 1 (founder asked for "modern graphics").

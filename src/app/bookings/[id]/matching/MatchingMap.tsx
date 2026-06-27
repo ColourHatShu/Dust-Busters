@@ -45,25 +45,47 @@ export default function MatchingMap({
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
 
-    const tick = async () => {
+    const refetch = async () => {
       const { data: d } = await supabase.rpc("get_booking_matching", {
         p_booking_id: bookingId,
       });
-      if (!alive) return;
-      if (d) {
-        setData(d as MatchingData);
-        statusRef.current = (d as MatchingData).status;
-      }
-      // Keep polling only while the match is live; refresh the page when the
-      // booking advances past 'accepted' (deposit step) so this view unmounts.
-      if (statusRef.current && ACTIVE.has(statusRef.current)) {
-        timer = setTimeout(tick, 2500);
+      if (!alive || !d) return;
+      setData(d as MatchingData);
+      statusRef.current = (d as MatchingData).status;
+    };
+
+    // Poll for the ambient counts/pins (booking_offers isn't readable by the
+    // customer via realtime — RLS — so it can't push those).
+    const poll = async () => {
+      await refetch();
+      if (alive && statusRef.current && ACTIVE.has(statusRef.current)) {
+        timer = setTimeout(poll, 2500);
       }
     };
-    tick();
+    poll();
+
+    // Realtime: refetch instantly when THIS booking row changes (e.g. a cleaner
+    // accepts → status='accepted'), so the winner reveal is immediate.
+    const channel = supabase
+      .channel(`match-${bookingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bookings",
+          filter: `id=eq.${bookingId}`,
+        },
+        () => {
+          refetch();
+        },
+      )
+      .subscribe();
+
     return () => {
       alive = false;
       clearTimeout(timer);
+      supabase.removeChannel(channel);
     };
   }, [bookingId]);
 

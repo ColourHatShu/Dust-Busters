@@ -82,7 +82,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] **Map library** `react-leaflet@5` + `leaflet@1.9` + OSM tiles (no API key), SSR-safe via `dynamic(ssr:false)`, `L.divIcon` CSS markers. ✅ (build passes, no window/SSR error)
 - [x] **`MatchingMap`** on `/bookings/[id]` while `status ∈ {broadcasting, accepted, no_cleaner_found}`: area-centered OSM map, fuzzed pulsing cleaner pins, radar "finding your cleaner" sweep, notified/deciding counts, winner reveal → cleaner card, no-cleaner state. Fed by the `get_booking_matching` RPC + server-rendered initial data. ✅
 - [x] Map polish round 1: **dark CARTO basemap** (matches the app's theme, no API key) + **"Cancel search" CTA** during broadcasting. ✅
-- [ ] Polish round 2: Supabase **realtime** subscription on `bookings` status (instant winner reveal; keep poll fallback for pins/counts), **SVG fallback basemap** on tile failure, re-broadcast on `no_cleaner_found`.
+- [x] Polish round 2a: Supabase **realtime** on the booking row in `MatchingMap` → instant winner reveal when a cleaner accepts (poll kept for the RLS-restricted offer counts/pins). ✅
+- [ ] Polish round 2b: **SVG fallback basemap** on tile failure, **re-broadcast** CTA on `no_cleaner_found`.
 > Full UX + technical spec is being finalized from the brainstorm into
 > `docs/specs/uber-cleaner-map.md`; refine these sub-items from it.
 
