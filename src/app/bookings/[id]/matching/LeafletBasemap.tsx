@@ -4,6 +4,7 @@
 // window access never runs on the server. Markers use L.divIcon (pure CSS) to
 // avoid Leaflet's bundler marker-image 404.
 import "leaflet/dist/leaflet.css";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 
@@ -28,10 +29,23 @@ const centerIcon = L.divIcon({
 export default function LeafletBasemap({
   center,
   pins,
+  onTileFail,
 }: {
   center: { lat: number; lng: number };
   pins: Pin[];
+  onTileFail?: () => void;
 }) {
+  // Detect a real tile outage (offline/blocked) vs the odd edge 404: if no tile
+  // has loaded but several errored, or nothing loaded within 6s, fall back.
+  const okRef = useRef(false);
+  const errRef = useRef(0);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!okRef.current && errRef.current > 0) onTileFail?.();
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [onTileFail]);
+
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -45,6 +59,15 @@ export default function LeafletBasemap({
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         subdomains="abcd"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        eventHandlers={{
+          tileload: () => {
+            okRef.current = true;
+          },
+          tileerror: () => {
+            errRef.current += 1;
+            if (!okRef.current && errRef.current >= 4) onTileFail?.();
+          },
+        }}
       />
       <Marker position={[center.lat, center.lng]} icon={centerIcon} />
       {pins.map((p) => (

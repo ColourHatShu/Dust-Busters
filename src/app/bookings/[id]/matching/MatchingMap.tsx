@@ -28,6 +28,7 @@ const LeafletBasemap = dynamic(() => import("./LeafletBasemap"), {
   ssr: false,
   loading: () => <div className="matching-map matching-map-skeleton" />,
 });
+const SvgBasemap = dynamic(() => import("./SvgBasemap"), { ssr: false });
 
 const ACTIVE = new Set(["broadcasting", "accepted"]);
 
@@ -39,6 +40,7 @@ export default function MatchingMap({
   initial: MatchingData | null;
 }) {
   const [data, setData] = useState<MatchingData | null>(initial);
+  const [tilesFailed, setTilesFailed] = useState(false);
   const statusRef = useRef<string | undefined>(initial?.status);
 
   useEffect(() => {
@@ -127,7 +129,15 @@ export default function MatchingMap({
 
       {/* Map */}
       <div className="matching-wrap">
-        <LeafletBasemap center={data.center} pins={data.pins} />
+        {tilesFailed ? (
+          <SvgBasemap center={data.center} pins={data.pins} />
+        ) : (
+          <LeafletBasemap
+            center={data.center}
+            pins={data.pins}
+            onTileFail={() => setTilesFailed(true)}
+          />
+        )}
         {broadcasting && (
           <div className="matching-radar" aria-hidden="true">
             <span />

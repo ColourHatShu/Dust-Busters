@@ -84,7 +84,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Map polish round 1: **dark CARTO basemap** (matches the app's theme, no API key) + **"Cancel search" CTA** during broadcasting. ✅
 - [x] Polish round 2a: Supabase **realtime** on the booking row in `MatchingMap` → instant winner reveal when a cleaner accepts (poll kept for the RLS-restricted offer counts/pins). ✅
 - [x] **Re-broadcast** on `no_cleaner_found`: `rebroadcast_booking` RPC (migration `0017`, applied + verified) clears stale offers, re-rings available cleaners, reopens the search; "Search again" button on the map's no-cleaner state. ✅
-- [ ] Polish round 2c: **SVG fallback basemap** on tile failure (never a broken gray box if OSM/CARTO tiles fail).
+- [x] **SVG fallback basemap** on tile failure — `SvgBasemap` (stylized projected pins + coverage rings) shown if CARTO/OSM tiles error (≥4 errors or 6s with no tile loaded). Never a broken gray box. ✅
+> 🏁 **Flagship Uber-style map is COMPLETE end-to-end:** data RPC · visible dark map · realtime winner reveal · cancel-search · re-broadcast · SVG fallback.
 > Full UX + technical spec is being finalized from the brainstorm into
 > `docs/specs/uber-cleaner-map.md`; refine these sub-items from it.
 

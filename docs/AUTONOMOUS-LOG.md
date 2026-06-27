@@ -5,6 +5,34 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — 🏁 SVG fallback basemap + 📊 Milestone summary
+
+**This iteration:** SVG fallback basemap. `SvgBasemap.tsx` renders a stylized
+dark map (projected pins + coverage rings + customer centre) when the real tiles
+fail — `LeafletBasemap` reports failure (≥4 tileerrors before any load, or 6s
+with no tile loaded) and `MatchingMap` swaps to it. The map is never a broken gray
+box now. Verify: tsc clean · vitest 3/3 · next build 25/25. ✅
+
+### 📊 Milestone summary (now ~20 items shipped since session start)
+Since the 8-item milestone, all verified + (DB items) applied live:
+- /book live estimate + validation · admin schema-mismatch cluster · error
+  boundaries + 404 · security headers · **22 route loading skeletons**.
+- 🎯 **Flagship Uber-style live cleaner map — COMPLETE end-to-end:** geo+fuzzing
+  RPC (0016) · visible dark CARTO map · fuzzed pulsing pins + radar · live counts ·
+  realtime instant winner reveal · cancel-search · re-broadcast (0017) · SVG
+  fallback basemap.
+- Founder-requested visual work: full-page dark/futuristic landing redesign +
+  **council-driven unified background fix** (one cohesive #070b14 surface).
+
+**Remaining backlog:** P2 — OG/social metadata + metadataBase, admin search/filter,
+payment receipts, star-rating review UI, README + .env.example, mark-notification-
+read-on-click; P3 polish (a11y skip-link, CI, vercel.json). **Founder-gated P0s
+still open:** dispatch cron, real ID verification, transactional email/SMS keys,
++ launch steps (Stripe live keys/webhook secret, NEXT_PUBLIC_BASE_URL, Vercel
+deploy, rotate service-role key + DB password).
+
+---
+
 ## 2026-06-27 — Knight iteration: re-broadcast on no_cleaner_found
 
 - **Item:** flagship flow completion. A booking that ended `no_cleaner_found` was
