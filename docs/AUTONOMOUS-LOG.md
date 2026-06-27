@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: admin list search/filter
+
+- **Item:** P2 admin usability. The customers/cleaners/bookings lists had no way
+  to find a record. Added a shared JS-free `AdminSearch` (GET form): customers +
+  cleaners search by name/phone (`.or(name.ilike, phone.ilike)`); bookings search
+  by area + a **status filter dropdown** (real enum values). Filters are
+  shareable/bookmarkable via `?q=`/`?status=`.
+- Also fixed the **bookings list's stale `pending`/`confirmed` status-color map**
+  → real `booking_status` values (same bug previously fixed on the dashboard, in
+  this separate file).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** payment receipts / star-rating review UI / README + .env.example /
+  mark-notification-read-on-click.
+
+---
+
 ## 2026-06-27 — Knight iteration: Open Graph / social metadata
 
 - **Item:** P2 SEO/sharing. The app had only a bare title/description and the

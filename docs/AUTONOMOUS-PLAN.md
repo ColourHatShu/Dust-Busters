@@ -94,7 +94,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Terms of Service + Privacy Policy pages (legal/trust for a payments marketplace).
 - [ ] `.env.example` documenting all required env vars; real `README.md` (setup/env/migrate/deploy).
 - [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
-- [ ] Search/filter on bookings, customers, cleaners admin lists.
+- [x] Search/filter on admin lists via a shared JS-free `AdminSearch` (GET): customers + cleaners by name/phone (`.or ilike`), bookings by area + a status dropdown. Also fixed the bookings list's stale `pending`/`confirmed` status-color map → real enum values. ✅
 - [ ] Payment receipts/invoices (view/download).
 - [ ] `no_cleaner_found` retry / re-broadcast path + customer notification.
 - [ ] Rate limiting on booking broadcast, messaging, checkout, auth.

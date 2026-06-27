@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import AdminSearch from "../AdminSearch";
 
-export default async function AdminCustomersPage() {
+export default async function AdminCustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,11 +22,15 @@ export default async function AdminCustomersPage() {
     .single();
   if (me?.role !== "admin") redirect("/");
 
-  const { data: customers } = await supabase
+  let customersQuery = supabase
     .from("profiles")
     .select("id, name, phone, created_at")
     .eq("role", "customer")
     .order("created_at", { ascending: false });
+  if (q) {
+    customersQuery = customersQuery.or(`name.ilike.%${q}%,phone.ilike.%${q}%`);
+  }
+  const { data: customers } = await customersQuery;
 
   // Get booking counts and total spend per customer
   const { data: bookingStats } = await supabase
@@ -44,6 +54,7 @@ export default async function AdminCustomersPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
       </div>
+      <AdminSearch placeholder="Search customers by name or phone" defaultValue={q} />
       <div className="card p-0 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

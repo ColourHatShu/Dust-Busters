@@ -1,16 +1,29 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import AdminSearch from "../AdminSearch";
 
+// Real booking_status enum values (no 'pending'/'confirmed').
 const statusColor: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
+  broadcasting: "bg-blue-100 text-blue-800",
+  accepted: "bg-yellow-100 text-yellow-800",
+  deposit_paid: "bg-green-100 text-green-800",
   in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-green-100 text-green-800",
+  completed: "bg-orange-100 text-orange-800",
+  balance_paid: "bg-green-100 text-green-800",
+  closed: "bg-gray-100 text-gray-700",
   cancelled: "bg-red-100 text-red-800",
+  no_cleaner_found: "bg-red-100 text-red-800",
+  disputed: "bg-purple-100 text-purple-800",
 };
+const STATUSES = Object.keys(statusColor);
 
-export default async function AdminBookingsPage() {
+export default async function AdminBookingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const { q, status } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,7 +37,7 @@ export default async function AdminBookingsPage() {
     .single();
   if (me?.role !== "admin") redirect("/");
 
-  const { data: bookings } = await supabase
+  let bookingsQuery = supabase
     .from("bookings")
     .select(
       `id, status, area, scheduled_at, hours, total_amount, created_at,
@@ -32,6 +45,11 @@ export default async function AdminBookingsPage() {
        cleaner:profiles!bookings_cleaner_id_fkey(name)`
     )
     .order("created_at", { ascending: false });
+  if (q) bookingsQuery = bookingsQuery.ilike("area", `%${q}%`);
+  if (status && STATUSES.includes(status)) {
+    bookingsQuery = bookingsQuery.eq("status", status);
+  }
+  const { data: bookings } = await bookingsQuery;
 
   return (
     <main className="mx-auto max-w-6xl p-6">
@@ -41,6 +59,16 @@ export default async function AdminBookingsPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
       </div>
+      <AdminSearch placeholder="Search bookings by area" defaultValue={q}>
+        <select name="status" defaultValue={status ?? ""} className="input-modern w-auto" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+      </AdminSearch>
       <div className="card p-0 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
