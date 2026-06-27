@@ -47,9 +47,9 @@ const DEPOSIT_PAID_AND_LATER = new Set([
 export default async function CleanerJobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; actionError?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, actionError } = await searchParams;
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
@@ -217,6 +217,11 @@ export default async function CleanerJobsPage({
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           That job overlaps with another job you&apos;ve already accepted. Finish or
           free up that time slot before taking this one.
+        </div>
+      )}
+      {actionError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {actionError}
         </div>
       )}
 

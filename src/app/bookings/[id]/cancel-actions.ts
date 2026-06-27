@@ -22,6 +22,13 @@ export async function cancelBooking(bookingId: string, reason: string) {
   if (!user) redirect("/login");
 
   const supabase = await createClient();
+
+  // Send the customer back to the booking with a friendly message rather than
+  // crashing to the error boundary. (redirect() throws NEXT_REDIRECT, so these
+  // calls must stay OUT of any try/catch around the Stripe/DB work below.)
+  const cancelError = (msg: string) =>
+    redirect(`/bookings/${bookingId}?cancelError=${encodeURIComponent(msg)}`);
+
   const { data: booking } = await supabase
     .from("bookings")
     .select("id, customer_id, cleaner_id, status, scheduled_at, deposit_amount")
@@ -29,7 +36,8 @@ export async function cancelBooking(bookingId: string, reason: string) {
     .single();
 
   if (!booking || booking.customer_id !== user.id) {
-    throw new Error("Booking not found or access denied.");
+    cancelError("We couldn't find that booking, or you don't have access to it.");
+    return;
   }
 
   // Decide the refund outcome BEFORE cancelling. A deposit only exists once the
@@ -50,29 +58,46 @@ export async function cancelBooking(bookingId: string, reason: string) {
         .maybeSingle();
 
       if (deposit?.stripe_payment_intent_id) {
-        const refund = await stripe.refunds.create({
-          payment_intent: deposit.stripe_payment_intent_id,
-          reason: "requested_by_customer",
-        });
-        const { error: recErr } = await svc.from("payments").insert({
-          booking_id: bookingId,
-          type: "refund",
-          amount: -Math.abs(Number(deposit.amount)),
-          status: "paid",
-          paid_at: new Date().toISOString(),
-          stripe_payment_intent_id: refund.id,
-          notes: `Cancellation refund (>=${FREE_CANCEL_HOURS}h): ${reason}`,
-        });
-        if (recErr) {
-          throw new Error(
-            `Refund issued in Stripe but DB record failed: ${recErr.message}`,
-          );
+        let refundFailed = false;
+        try {
+          const refund = await stripe.refunds.create({
+            payment_intent: deposit.stripe_payment_intent_id,
+            reason: "requested_by_customer",
+          });
+          const { error: recErr } = await svc.from("payments").insert({
+            booking_id: bookingId,
+            type: "refund",
+            amount: -Math.abs(Number(deposit.amount)),
+            status: "paid",
+            paid_at: new Date().toISOString(),
+            stripe_payment_intent_id: refund.id,
+            notes: `Cancellation refund (>=${FREE_CANCEL_HOURS}h): ${reason}`,
+          });
+          // The refund already succeeded in Stripe, so the money is back
+          // regardless. If the bookkeeping insert fails, log it but don't crash
+          // the cancellation — the customer has still been refunded.
+          if (recErr) {
+            console.error(
+              "Refund issued in Stripe but DB record failed:",
+              recErr.message,
+            );
+          }
+          await svc
+            .from("payments")
+            .update({ status: "refunded" })
+            .eq("id", deposit.id);
+          outcome = "refunded";
+        } catch (e) {
+          console.error("Cancellation refund failed:", e);
+          refundFailed = true;
         }
-        await svc
-          .from("payments")
-          .update({ status: "refunded" })
-          .eq("id", deposit.id);
-        outcome = "refunded";
+        // The refund never went through — leave the booking untouched and tell
+        // the customer. (redirect throws NEXT_REDIRECT, so it stays out of the
+        // try/catch above.)
+        if (refundFailed) {
+          cancelError("We couldn't process your refund just now. Please try again.");
+          return;
+        }
       } else {
         // Deposit paid but no payment-intent on file — can't auto-refund.
         outcome = "forfeit";
@@ -87,7 +112,16 @@ export async function cancelBooking(bookingId: string, reason: string) {
     p_reason: reason,
     p_by: "customer",
   });
-  if (error) throw new Error(error.message);
+  // Edge/duplicate states (e.g. the booking already moved on or was cancelled)
+  // surface here — return to the booking with a friendly message rather than
+  // crashing the page.
+  if (error) {
+    console.error("cancel_booking failed:", error.message);
+    cancelError(
+      "We couldn't cancel this booking just now. It may have already changed.",
+    );
+    return;
+  }
 
   // Let the assigned cleaner know their job was cancelled.
   if (booking.cleaner_id) {

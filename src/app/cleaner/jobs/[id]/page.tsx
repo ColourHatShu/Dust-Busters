@@ -57,10 +57,10 @@ export default async function CleanerJobDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ reported?: string }>;
+  searchParams: Promise<{ reported?: string; reportError?: string }>;
 }) {
   const { id } = await params;
-  const { reported } = await searchParams;
+  const { reported, reportError } = await searchParams;
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
@@ -291,6 +291,11 @@ export default async function CleanerJobDetailPage({
       {reported === "1" && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
           Thanks — your report was submitted. Our team will review it and follow up.
+        </div>
+      )}
+      {reportError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {reportError}
         </div>
       )}
       {DISPUTABLE.has(booking.status) && (
