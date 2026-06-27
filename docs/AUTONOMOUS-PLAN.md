@@ -107,7 +107,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] **Skip-to-content link** in the layout (sr-only until focused → jumps to `#main-content`). ✅
 - [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.
 - [ ] Offer card: expiry countdown + cleaner take-home (net) amount.
-- [ ] CI workflow + meaningful test coverage; pin Node `engines`.
+- [x] **CI workflow** (`.github/workflows/ci.yml`) — typecheck + unit tests + production build on push/PR (dummy env so build needs no secrets); pinned Node `engines` (>=20). ✅
+- [ ] Expand meaningful test coverage (currently 3 lib tests + DB tests).
 - [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage.
 - [ ] Static generation/revalidation for marketing pages.
 

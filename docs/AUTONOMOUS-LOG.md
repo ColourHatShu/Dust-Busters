@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: CI workflow + Node engines
+
+- **Item:** P3 dev quality. Added `.github/workflows/ci.yml` — on push to
+  main/dustbusters-autonomous + PRs, runs `npm ci` → typecheck → unit tests →
+  production build on Node 20. Uses dummy env vars so the build needs no secrets
+  (verified: all routes are dynamic and sitemap/robots/OG don't touch Supabase, so
+  nothing hits the network at build). Pinned `engines.node >= 20` in package.json.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27 · package.json
+  valid. ✅
+- **Next:** aria-hidden on remaining decorative icons + aria-live; offer-card
+  expiry countdown; `vercel.json`; then more ideation per the loop.
+
+---
+
 ## 2026-06-27 — Knight iteration: skip-to-content link (a11y)
 
 - **Item:** P3 a11y. Keyboard/screen-reader users had no way to bypass the nav.
