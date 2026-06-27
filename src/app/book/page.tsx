@@ -12,9 +12,24 @@ export const metadata = {
     "Book a verified local cleaner in the Comox Valley in minutes — pick your date, hours, and area.",
 };
 
-export default async function BookPage() {
+export default async function BookPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ hours?: string; area?: string }>;
+}) {
+  const { hours: hoursParam, area: areaParam } = await searchParams;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
+
+  // "Book again" prefill (validated; address is never passed in the URL).
+  const prefillHours =
+    hoursParam && Number.isInteger(Number(hoursParam)) &&
+    Number(hoursParam) >= 1 && Number(hoursParam) <= 12
+      ? Number(hoursParam)
+      : 3;
+  const prefillArea = (AREAS as readonly string[]).includes(areaParam ?? "")
+    ? areaParam
+    : undefined;
 
   const supabase = await createClient();
   const { data: settings } = await supabase
@@ -68,6 +83,7 @@ export default async function BookPage() {
           rate={rate}
           depositPercent={depositPercent}
           currency={currency}
+          defaultHours={prefillHours}
         />
 
         <label className="flex flex-col gap-3">
@@ -75,7 +91,7 @@ export default async function BookPage() {
             <MapPin className="h-5 w-5 text-accent" strokeWidth={1.5} />
             <span className="text-sm font-medium text-slate-900">Area</span>
           </div>
-          <select name="area" required className="input-modern">
+          <select name="area" required className="input-modern" defaultValue={prefillArea}>
             {AREAS.map((a) => (
               <option key={a} value={a}>
                 {a}

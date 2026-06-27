@@ -100,7 +100,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Rate limiting on booking broadcast, messaging, checkout, auth.
 - [x] **Star-rating UI** for the review form — interactive `StarRating` (hover preview + labels) + a fully rebranded review page (card, back link, branded button). ✅
 - [x] **Mark-notification-read-on-click** — each notification is now a clickable row (`markRead` action) that clears its unread state and opens its booking if it has one. ✅
-- [ ] "Book again" prefill on a past booking.
+- [x] **"Book again" prefill** — the existing Book-again button now passes `?hours=&area=` and `/book` prefills the estimator hours + area select (validated; address never in the URL). ✅
 - [ ] Cleaner payout system (Stripe Connect) — LARGE; founder decision (log rationale; needs Stripe Connect setup → likely partly [blocked]).
 
 ## P3 — Polish / nice-to-have

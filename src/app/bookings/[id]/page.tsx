@@ -409,7 +409,10 @@ export default async function BookingStatusPage({
             <RefreshCw className="h-5 w-5 text-accent" strokeWidth={1.5} />
             <p className="font-medium text-slate-900">Need another clean?</p>
           </div>
-          <Link href="/book" className="btn-base btn-primary whitespace-nowrap">
+          <Link
+            href={`/book?hours=${booking.hours}&area=${encodeURIComponent(booking.area)}`}
+            className="btn-base btn-primary whitespace-nowrap"
+          >
             Book Again
           </Link>
         </div>

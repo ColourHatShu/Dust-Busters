@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: "Book again" prefill
+
+- **Item:** P2. A "Book Again" button already existed on finished bookings but
+  linked to a blank `/book`. Now it passes `?hours=<n>&area=<area>`, and `/book`
+  reads + validates those params (hours 1–12, area in the whitelist) to prefill
+  the `PriceEstimator` hours and the area `<select>`. Address is deliberately NOT
+  passed in the URL (privacy). One-tap re-book of a prior cleaning.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** payment receipts, then P3 polish (a11y skip-link, CI, vercel.json) and
+  continued ideation per the loop.
+
+---
+
 ## 2026-06-27 — Knight iteration: mark-notification-read-on-click
 
 - **Item:** P2. Notifications could only be cleared via bulk "Mark all read".
