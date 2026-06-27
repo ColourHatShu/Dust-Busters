@@ -106,7 +106,8 @@ payment_type); `bookings` has NO `updated_at`.
 ## P2 — From ideation (2026-06-27 backlog refresh)
 - [x] **Favorite cleaners — phase 1**: heart toggle on the booking page activates the stranded `customer_favorites` table (RLS-scoped insert/delete). ✅
 - [x] **Favorites — phase 2a**: a "Favorite cleaners" list on the account page (name · ⭐rating · verified · jobs) with a one-tap remove (`removeFavorite`). ✅
-- [ ] **Favorites — phase 2b**: book-a-favorite (priority/direct offer to a saved cleaner).
+- [x] **Favorites — phase 2b: book-a-favorite**: `request_booking` gains an optional `p_preferred_cleaner` (migration `0021`, applied + verified) — rings only that favorite if eligible, else broadcasts. `/book` shows a "Cleaner" select (favorites) when the customer has any. ✅
+- [x] **Booking-form crash fix**: validation failures now show inline (the form is a client `BookingForm` with `useActionState`) instead of throwing to the error boundary; inputs preserved, pending state on submit. ✅
 - [x] **Saved addresses**: `saved_addresses` table (migration `0018`, RLS-scoped, applied + verified) + account CRUD (add/delete, optional label) + a JS-free `<datalist>` autocomplete on the `/book` address field. ✅
 - [x] **Cleaner "Today"/schedule view**: my-jobs now grouped into Today / Upcoming / Earlier (by `scheduled_at`) with per-group counts. ✅
 - [x] **Two-way reviews**: `customer_reviews` table + `get_customer_rating` RPC (migration `0020`, applied + verified). The assigned cleaner can rate the customer/property after a finished job (reuses the StarRating UI); the customer's overall rating shows on the job. **Admin customer profile** now shows the customer's rating + the reviews cleaners left (also fixed its stale `pending`/`confirmed` status-color map). ✅

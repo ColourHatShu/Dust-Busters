@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
-import { submitBooking } from "./actions";
-import PriceEstimator from "./PriceEstimator";
-import { Calendar, MapPin, Home, Lock, CheckCircle } from "lucide-react";
+import BookingForm from "./BookingForm";
+import { CheckCircle } from "lucide-react";
 
 export const metadata = {
   title: "Book a cleaning",
@@ -23,8 +22,10 @@ export default async function BookPage({
 
   // "Book again" prefill (validated; address is never passed in the URL).
   const prefillHours =
-    hoursParam && Number.isInteger(Number(hoursParam)) &&
-    Number(hoursParam) >= 1 && Number(hoursParam) <= 12
+    hoursParam &&
+    Number.isInteger(Number(hoursParam)) &&
+    Number(hoursParam) >= 1 &&
+    Number(hoursParam) <= 12
       ? Number(hoursParam)
       : 3;
   const prefillArea = (AREAS as readonly string[]).includes(areaParam ?? "")
@@ -41,14 +42,31 @@ export default async function BookPage({
   const currency = settings?.currency ?? "CAD";
   const depositPercent = Number(settings?.deposit_percent ?? 60);
 
-  // The customer's saved addresses (for the address autocomplete).
   const { data: savedAddresses } = await supabase
     .from("saved_addresses")
     .select("id, label, full_address")
     .eq("customer_id", user.id)
     .returns<{ id: string; label: string | null; full_address: string }[]>();
-  // Soft min for the date picker (today); the server action enforces the real
-  // future-date check.
+
+  // Favorite cleaners (for "book a favorite directly").
+  const { data: favRows } = await supabase
+    .from("customer_favorites")
+    .select("cleaner_id")
+    .eq("customer_id", user.id)
+    .returns<{ cleaner_id: string }[]>();
+  const favorites = await Promise.all(
+    (favRows ?? []).map(async (f) => {
+      const { data } = await supabase.rpc("get_cleaner_card", {
+        p_cleaner: f.cleaner_id,
+      });
+      const card = (Array.isArray(data) ? data[0] : data) as
+        | { name?: string }
+        | null;
+      return { id: f.cleaner_id, name: card?.name ?? "Cleaner" };
+    }),
+  );
+
+  // Soft min for the date picker (today); the action enforces the real check.
   const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
 
   return (
@@ -59,9 +77,11 @@ export default async function BookPage({
         <p className="text-slate-600">
           <span className="font-semibold text-accent">
             From {currency} ${rate}/hr
-          </span>
-          {" "}•{" "}
-          <span className="font-semibold text-accent">{depositPercent}% deposit</span>{" "}
+          </span>{" "}
+          •{" "}
+          <span className="font-semibold text-accent">
+            {depositPercent}% deposit
+          </span>{" "}
           to confirm
           <br />
           <span className="text-sm">
@@ -70,73 +90,17 @@ export default async function BookPage({
         </p>
       </div>
 
-      {/* Booking form */}
-      <form action={submitBooking} className="card flex flex-col gap-8">
-        <label className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-slate-900">Date and time</span>
-          </div>
-          <input
-            type="datetime-local"
-            name="scheduled_at"
-            required
-            min={minDate}
-            className="input-modern"
-          />
-        </label>
-
-        <PriceEstimator
-          rate={rate}
-          depositPercent={depositPercent}
-          currency={currency}
-          defaultHours={prefillHours}
-        />
-
-        <label className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-slate-900">Area</span>
-          </div>
-          <select name="area" required className="input-modern" defaultValue={prefillArea}>
-            {AREAS.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Home className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-slate-900">Full address</span>
-          </div>
-          <input
-            type="text"
-            name="full_address"
-            required
-            placeholder="Street, unit, city"
-            className="input-modern"
-            list="saved-addresses"
-          />
-          {(savedAddresses ?? []).length > 0 && (
-            <datalist id="saved-addresses">
-              {(savedAddresses ?? []).map((a) => (
-                <option key={a.id} value={a.full_address}>
-                  {a.label ?? a.full_address}
-                </option>
-              ))}
-            </datalist>
-          )}
-          <div className="flex items-start gap-2 text-xs text-slate-500">
-            <Lock className="h-4 w-4 mt-0.5 flex-shrink-0 text-accent" strokeWidth={1.5} />
-            <span>Your address stays hidden from cleaners until you've paid the deposit.</span>
-          </div>
-        </label>
-
-        <button className="btn-base btn-primary mt-6">Find a cleaner</button>
-      </form>
+      <BookingForm
+        rate={rate}
+        currency={currency}
+        depositPercent={depositPercent}
+        minDate={minDate}
+        areas={AREAS}
+        prefillHours={prefillHours}
+        prefillArea={prefillArea}
+        savedAddresses={savedAddresses ?? []}
+        favorites={favorites}
+      />
 
       {/* How it works */}
       <section className="space-y-4">
@@ -147,7 +111,7 @@ export default async function BookPage({
               step: 1,
               title: "Book",
               description:
-                "Fill in your details and we'll find you a vetted local cleaner. No account needed to browse.",
+                "Fill in your details and we'll find you a vetted local cleaner.",
             },
             {
               step: 2,

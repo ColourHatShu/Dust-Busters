@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Bugfix + feature: booking form crash + book-a-favorite
+
+- **🐛 Founder-reported crash:** picking a too-soon date (or any invalid input) on
+  /book threw `new Error(...)` from the server action → crashed to the global
+  error boundary ("Something went wrong"). Fixed: the booking form is now a client
+  `BookingForm` using `useActionState`; `submitBooking` returns `{error}` (shown
+  inline) instead of throwing, inputs are preserved, and the submit button shows a
+  pending state.
+- **✅ Favorites 2b — book-a-favorite:** migration `0021` adds an optional
+  `p_preferred_cleaner` to `request_booking` (drops the old 4-arg, recreates the
+  0015 body + a branch: ring only the requested cleaner if eligible, else
+  broadcast). `/book` shows a "Cleaner" select listing the customer's favorites
+  when they have any. Applied + verified (single 5-arg signature).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-27 — Knight iteration: customer rating on the admin profile
 
 - **Item:** complete the two-way-review payoff. The admin customer profile now
