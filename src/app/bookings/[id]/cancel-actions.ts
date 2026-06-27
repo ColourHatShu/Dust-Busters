@@ -7,10 +7,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 import { createNotification } from "@/lib/notifications";
-
-// Customers may cancel free up to this many hours before the appointment; within
-// the window the deposit is non-refundable.
-const FREE_CANCEL_HOURS = 24;
+import { FREE_CANCEL_HOURS, isDepositRefundable } from "@/lib/booking";
 
 function serviceClient() {
   return createServiceClient(
@@ -40,10 +37,9 @@ export async function cancelBooking(bookingId: string, reason: string) {
   let outcome: "refunded" | "forfeit" | "1" = "1";
 
   if (booking.status === "deposit_paid") {
-    const hoursUntil =
-      (new Date(booking.scheduled_at).getTime() - Date.now()) / 3_600_000;
-
-    if (hoursUntil >= FREE_CANCEL_HOURS) {
+    if (
+      isDepositRefundable(new Date(booking.scheduled_at).getTime(), Date.now())
+    ) {
       const svc = serviceClient();
       const { data: deposit } = await svc
         .from("payments")

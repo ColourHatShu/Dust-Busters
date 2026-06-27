@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: testable refund-window logic
+
+- **Item:** expand test coverage (the CI gate now runs `npm test`, so tests guard
+  every change). Extracted the **money-path cancellation refund-window logic** —
+  previously inline + untested in `cancel-actions.ts` — into a pure
+  `src/lib/booking.ts` (`hoursUntil`, `isDepositRefundable`, `FREE_CANCEL_HOURS`),
+  refactored the cancel action to use it, and added boundary tests (exact 24h,
+  within window, past, custom window). Suite is now **9 tests / 2 files**.
+- **Verify:** `tsc` clean · `npm test` 9/9 · `next build` 27/27. ✅
+- **Next:** extract + test the booking input validation; favorites 2b; two-way
+  reviews.
+
+---
+
 ## 2026-06-27 — Knight iteration: lazy broadcast expiry (closes the timeout loop)
 
 - **Item:** `broadcast_expires_at` + the offer countdown existed, but nothing
