@@ -5,6 +5,17 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: cleaner "Today" schedule grouping
+
+- **Item:** P2 (from ideation). The cleaner's "My jobs" list was a flat list.
+  Grouped it by day — **Today / Upcoming / Earlier** (by `scheduled_at`) with a
+  count per group — so a cleaner can see what's on for today at a glance. Pure
+  presentational (data already fetched); the job-card markup is unchanged.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** saved addresses, Favorites phase 2 (list + book-a-favorite).
+
+---
+
 ## 2026-06-27 — Knight iteration: favorite cleaners (phase 1) + ideation
 
 - **Ideation pass** (backlog was thin on high-value items): added Batch 1 to

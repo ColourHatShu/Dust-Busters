@@ -126,6 +126,24 @@ export default async function CleanerJobsPage({
     };
   });
 
+  // Group won jobs by day so a cleaner can plan: Today / Upcoming / Earlier.
+  const dayGroup = (iso: string): "Today" | "Upcoming" | "Earlier" => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(todayStart.getTime() + 86_400_000);
+    const d = new Date(iso);
+    if (d >= tomorrowStart) return "Upcoming";
+    if (d >= todayStart) return "Today";
+    return "Earlier";
+  };
+  const jobGroups: Record<"Today" | "Upcoming" | "Earlier", MyJob[]> = {
+    Today: [],
+    Upcoming: [],
+    Earlier: [],
+  };
+  for (const j of myJobs) jobGroups[dayGroup(j.scheduled_at)].push(j);
+  const jobGroupOrder = ["Today", "Upcoming", "Earlier"] as const;
+
   return (
     <main className="mx-auto max-w-2xl space-y-10 p-6">
       <JobsLive cleanerId={user.id} />
@@ -263,9 +281,16 @@ export default async function CleanerJobsPage({
             No jobs yet. Accept an offer above to get started!
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            {myJobs.map((b) => (
-              <div key={b.id} className="card space-y-3">
+          <div className="space-y-6">
+            {jobGroupOrder.map((g) =>
+              jobGroups[g].length === 0 ? null : (
+                <div key={g} className="space-y-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    {g} ({jobGroups[g].length})
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                    {jobGroups[g].map((b) => (
+                      <div key={b.id} className="card space-y-3">
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -353,8 +378,12 @@ export default async function CleanerJobsPage({
                     View details
                   </Link>
                 </div>
-              </div>
-            ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         )}
       </section>
