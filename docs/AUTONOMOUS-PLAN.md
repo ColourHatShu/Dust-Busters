@@ -79,9 +79,9 @@ payment_type); `bookings` has NO `updated_at`.
   (set via insert trigger), deterministic `fuzz_pin()` (verified stable + per-booking), and the
   authorising/fuzzing `get_booking_matching(booking_id)` RPC — the ONLY path map data reaches the
   client (no cleaner_id / real coords ever cross the wire).
-- [ ] Map library: `react-leaflet@5` + `leaflet@1.9` + OSM tiles (no API key), SSR-safe `dynamic(ssr:false)`; `L.divIcon` CSS markers.
-- [ ] `MatchingMap` client on `/bookings/[id]` while `status ∈ {broadcasting, accepted, no_cleaner_found}`: area-centered map, fuzzed pulsing cleaner pins, radar "finding your cleaner" sweep, notified/deciding counts, cancel-search, winner reveal → cleaner card; SVG fallback basemap.
-- [ ] Realtime wiring (subscribe to this booking's offers/status; poll fallback) + edge cases (zero cleaners, all decline, timeout, mid-search cancel, tile failure).
+- [x] **Map library** `react-leaflet@5` + `leaflet@1.9` + OSM tiles (no API key), SSR-safe via `dynamic(ssr:false)`, `L.divIcon` CSS markers. ✅ (build passes, no window/SSR error)
+- [x] **`MatchingMap`** on `/bookings/[id]` while `status ∈ {broadcasting, accepted, no_cleaner_found}`: area-centered OSM map, fuzzed pulsing cleaner pins, radar "finding your cleaner" sweep, notified/deciding counts, winner reveal → cleaner card, no-cleaner state. Fed by the `get_booking_matching` RPC + server-rendered initial data. ✅
+- [ ] Polish: Supabase **realtime** subscription (currently 2.5s polling — works), **SVG fallback basemap** on tile failure, and remaining edge cases (mid-search cancel CTA, re-broadcast on no_cleaner_found).
 > Full UX + technical spec is being finalized from the brainstorm into
 > `docs/specs/uber-cleaner-map.md`; refine these sub-items from it.
 

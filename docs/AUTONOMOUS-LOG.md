@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — 🎯🗺️ FLAGSHIP: the live cleaner map is VISIBLE
+
+The Uber-style map now renders on `/bookings/[id]` during the live search.
+
+- Installed `leaflet@1.9` + `react-leaflet@5` (+ types) — no API key, OSM tiles.
+- `matching/LeafletBasemap.tsx` — client-only Leaflet map (imported via
+  `dynamic(ssr:false)`, so no server `window` access), `L.divIcon` CSS markers.
+- `matching/MatchingMap.tsx` — orchestrator: server-rendered initial data from the
+  `get_booking_matching` RPC, then polls every 2.5s; renders the area-centered
+  map, fuzzed **pulsing cleaner pins**, a **radar sweep** at the customer centre,
+  live "N notified · M deciding" counts, and on accept a **winner reveal** card
+  (name, rating, verified). `no_cleaner_found` shows an honest empty state.
+- Wired into the booking page (renders while status ∈ broadcasting/accepted/
+  no_cleaner_found), above the status header. Added pin/radar/map CSS.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25 — crucially **no
+  SSR `window is not defined`** (the dynamic import is correct).
+- **Next:** swap polling → Supabase realtime, add an SVG fallback basemap for tile
+  failure, and a mid-search cancel CTA / re-broadcast on no_cleaner_found.
+
+---
+
 ## 2026-06-27 — 🎯 FLAGSHIP kickoff: Uber map data foundation (migration 0016)
 
 Founder set the live cleaner map as the active priority ("see available cleaners

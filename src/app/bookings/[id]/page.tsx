@@ -5,6 +5,7 @@ import StatusLive from "./StatusLive";
 import MessagePanel from "./MessagePanel";
 import { payDeposit, payBalance } from "./payment-actions";
 import { cancelBooking } from "./cancel-actions";
+import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import {
   Calendar,
   Clock,
@@ -82,6 +83,20 @@ export default async function BookingStatusPage({
     .single();
   if (!booking) notFound();
 
+  // Live matching map data (only while the search/match is active).
+  const ACTIVE_MATCH = new Set([
+    "broadcasting",
+    "accepted",
+    "no_cleaner_found",
+  ]);
+  let matching: MatchingData | null = null;
+  if (ACTIVE_MATCH.has(booking.status)) {
+    const { data: m } = await supabase.rpc("get_booking_matching", {
+      p_booking_id: id,
+    });
+    matching = (m as MatchingData) ?? null;
+  }
+
   let cleaner: { name: string; id_verified: boolean; jobs_completed: number } | null =
     null;
   if (booking.cleaner_id) {
@@ -136,6 +151,10 @@ export default async function BookingStatusPage({
   return (
     <main className="mx-auto max-w-lg space-y-6 p-6">
       <StatusLive bookingId={booking.id} />
+
+      {ACTIVE_MATCH.has(booking.status) && (
+        <MatchingMap bookingId={booking.id} initial={matching} />
+      )}
 
       {cancelled === "refunded" && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">

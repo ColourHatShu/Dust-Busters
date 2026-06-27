@@ -1579,3 +1579,55 @@ p {
 .cta-shell {
   background: radial-gradient(125% 140% at 50% 120%, rgba(16, 185, 129, 0.10), transparent 55%);
 }
+
+
+/* === Live cleaner matching map ===================================== */
+.matching-wrap { position: relative; }
+.matching-map { height: 340px; width: 100%; background: #0b1220; z-index: 0; }
+.matching-map-skeleton {
+  height: 340px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(60% 60% at 50% 40%, rgba(16,185,129,0.12), transparent 70%), #0b1220;
+}
+.matching-map-skeleton::after { content: "Loading map…"; color: #64748b; font-size: 0.85rem; }
+
+/* Cleaner pins (L.divIcon inner span) */
+.map-pin, .map-pin-won {
+  display: block; width: 18px; height: 18px; border-radius: 9999px; position: relative;
+}
+.map-pin { background: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.22); }
+.map-pin::after {
+  content: ""; position: absolute; inset: 0; border-radius: 9999px;
+  animation: pinPulse 1.8s ease-out infinite;
+}
+@keyframes pinPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+  70% { box-shadow: 0 0 0 13px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+.map-pin-won { background: #22d3ee; box-shadow: 0 0 0 6px rgba(34,211,238,0.35); }
+.map-center {
+  display: block; width: 16px; height: 16px; border-radius: 9999px;
+  background: #0ea5e9; border: 3px solid #fff; box-shadow: 0 0 0 2px #0ea5e9;
+}
+
+/* Radar sweep over the map centre (customer location) */
+.matching-radar {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 40px; height: 40px; pointer-events: none; z-index: 500;
+}
+.matching-radar span {
+  position: absolute; inset: 0; border-radius: 9999px;
+  border: 1px solid rgba(45,212,191,0.6); animation: radarPing 2.4s ease-out infinite;
+}
+.matching-radar span:nth-child(2) { animation-delay: 0.8s; }
+.matching-radar span:nth-child(3) { animation-delay: 1.6s; }
+@keyframes radarPing {
+  0% { transform: scale(0.2); opacity: 0.85; }
+  100% { transform: scale(6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-pin::after, .matching-radar span { animation: none; }
+}

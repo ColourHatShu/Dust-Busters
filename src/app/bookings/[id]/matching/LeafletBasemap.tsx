@@ -1,0 +1,52 @@
+"use client";
+
+// Client-only Leaflet map — imported via next/dynamic(ssr:false) so Leaflet's
+// window access never runs on the server. Markers use L.divIcon (pure CSS) to
+// avoid Leaflet's bundler marker-image 404.
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+
+export type Pin = { k: string; lat: number; lng: number; state: string };
+
+function pinIcon(state: string) {
+  return L.divIcon({
+    className: "map-pin-wrap",
+    html: `<span class="${state === "accepted" ? "map-pin map-pin-won" : "map-pin"}"></span>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
+const centerIcon = L.divIcon({
+  className: "map-pin-wrap",
+  html: `<span class="map-center"></span>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+export default function LeafletBasemap({
+  center,
+  pins,
+}: {
+  center: { lat: number; lng: number };
+  pins: Pin[];
+}) {
+  return (
+    <MapContainer
+      center={[center.lat, center.lng]}
+      zoom={13}
+      scrollWheelZoom={false}
+      className="matching-map"
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      />
+      <Marker position={[center.lat, center.lng]} icon={centerIcon} />
+      {pins.map((p) => (
+        <Marker key={p.k} position={[p.lat, p.lng]} icon={pinIcon(p.state)} />
+      ))}
+    </MapContainer>
+  );
+}
