@@ -5,6 +5,26 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Founder-spec landing background refinement
+
+The earlier council fix flattened everything to transparent; the founder wanted
+the opposite — tasteful per-section ambience with smooth transitions. Implemented
+their exact spec (replaces the "unified transparent" block):
+1. **Pricing:** `.price-section { overflow: hidden }`; auras pulled inside the card
+   — repositioned to top-left 10%/20% and top-right 90%/20%, sized 40%, opacity
+   0.35, animation off (no more hard color blocks on raw dark bg).
+2. **Hero→next fade:** `.hero-shell` keeps a soft teal radial + a `::after`
+   `linear-gradient(transparent 70%, #070b14)` 200px bottom fade (clean blend).
+3. **Mid sections:** subtle centered radial glows on hiw/trust/assure/area
+   (rgba ~0.03–0.04) so they're not flat voids.
+4. **CTA:** glow flipped to fire from the top (`at 50% -20%`, emerald 0.12) so it
+   connects to the flow above.
+5. **Grain overlay:** page-wide `feTurbulence` SVG noise at 4% on `<main>`
+   (`.landing-grain::before`, fixed, pointer-events none) to unify boundaries.
+- **Verify:** `tsc` clean · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-27 — Knight iteration: admin list search/filter
 
 - **Item:** P2 admin usability. The customers/cleaners/bookings lists had no way

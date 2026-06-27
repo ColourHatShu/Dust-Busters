@@ -15,7 +15,7 @@ export default async function Home() {
   const isCustomer = user?.role === "customer";
 
   return (
-    <main className="flex w-full flex-col bg-[#070b14]">
+    <main className="landing-grain flex w-full flex-col bg-[#070b14]">
       {/* ── Hero ── */}
       <section className="hero-shell flex w-full flex-col items-center px-6 pb-28 pt-24 text-center sm:pt-28">
         <HeroBackdrop />

@@ -1561,39 +1561,93 @@ p {
 }
 
 
-/* === Unified landing background (council fix) =======================
-   The landing is ONE surface: <main> paints #070b14 and EVERY region base
-   (including the hero) is transparent over it. Previously the hero kept an
-   opaque off-palette teal (#122) base and Pricing/CTA re-introduced emerald
-   washes at different opacities, so regions read as different hues/brightness.
-   We also normalize all ambient glows to a single opacity and alternate their
-   sides so the accent field is even instead of a left-edge ladder. */
-.hero-shell,
-.hiw-section,
-.trust-section,
-.area-section,
-.assure-section,
-.price-section,
-.cta-shell {
-  background: transparent;
+/* === Landing background (founder spec) ==============================
+   <main> paints #070b14. The hero keeps a soft teal radial that fades cleanly
+   into the page via a bottom ::after; mid sections get a very subtle centered
+   ambient glow (depth, no flat voids); Pricing constrains its auras inside the
+   card; the CTA glow comes from the top so it connects to the flow above; and a
+   page-wide grain overlay unifies every gradient boundary. */
+
+/* Hero: soft teal radial + clean bottom fade into #070b14 */
+.hero-shell {
+  background: radial-gradient(120% 120% at 50% -10%, #112826 0%, #0b1220 45%, #070b14 100%);
+}
+.hero-shell::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 200px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 70%, #070b14 100%);
 }
 
-/* One shared ambient-glow opacity across every region (was 0.4–0.5). */
+/* Mid sections: subtle centered ambient glow (no flat voids) */
+.hiw-section {
+  background: radial-gradient(80% 60% at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
+}
+.trust-section {
+  background: radial-gradient(70% 50% at 50% 40%, rgba(14, 165, 233, 0.04) 0%, transparent 70%);
+}
+.assure-section {
+  background: radial-gradient(70% 60% at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
+}
+.area-section {
+  background: radial-gradient(80% 60% at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
+}
+
+/* Pricing: keep the auras INSIDE the card so they blend softly */
+.price-section {
+  background: transparent;
+  overflow: hidden;
+}
+.price-aura-1,
+.price-aura-2 {
+  width: 40%;
+  height: 40%;
+  right: auto;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  animation: none; /* hold the centered position; drift made hard blocks */
+}
+.price-aura-1 { top: 20%; left: 10%; }
+.price-aura-2 { top: 20%; left: 90%; }
+
+/* CTA: glow from the top so it connects to the flow above */
+.cta-shell {
+  background: radial-gradient(125% 140% at 50% -20%, rgba(16, 185, 129, 0.12), transparent 60%);
+}
+
+/* Even ambient corner glows (single opacity + alternating sides) */
 .aurora,
 .hiw-aurora,
 .trust-glow,
-.price-aura,
 .area-glow,
 .cta-aurora {
   opacity: 0.3;
 }
-
-/* Alternate the corner glows (were all emerald top-left / sky bottom-right,
-   which piled up into a diagonal left-edge band at every section seam). */
+.price-aura { opacity: 0.35; }
 .trust-glow-a { left: auto; right: -10rem; }
 .trust-glow-b { right: auto; left: -8rem; }
 .area-glow--a { left: auto; right: -6rem; }
 .area-glow--b { right: auto; left: -8rem; }
+
+/* Page-wide grain overlay — unifies every gradient boundary */
+.landing-grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .price-aura-1, .price-aura-2 { animation: none; }
+}
 
 
 /* === Live cleaner matching map ===================================== */
