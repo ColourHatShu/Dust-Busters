@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: payment receipt on the booking page
+
+- **Item:** P2. Customers had no record of what they'd paid. Added a "Payments"
+  receipt section to the booking detail page: an itemized list of each payment
+  (Deposit / Balance / Refund) with date, status, and amount (refunds shown
+  negative), plus a **Net paid** total. Fetched from the `payments` table (RLS
+  scopes it to the customer's own booking); only shown when payments exist.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** P3 polish — a11y skip-to-content link, decorative-icon aria-hidden,
+  offer-card expiry countdown + net take-home; CI workflow; vercel.json.
+
+---
+
 ## 2026-06-27 — Knight iteration: "Book again" prefill
 
 - **Item:** P2. A "Book Again" button already existed on finished bookings but

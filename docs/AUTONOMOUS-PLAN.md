@@ -95,7 +95,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] `.env.example` (all required env vars, no secrets; gitignore exception so it's tracked) + a real `README.md` (stack, setup, run, migrations, first-admin, status flow, Vercel deploy, doc index). ✅
 - [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
 - [x] Search/filter on admin lists via a shared JS-free `AdminSearch` (GET): customers + cleaners by name/phone (`.or ilike`), bookings by area + a status dropdown. Also fixed the bookings list's stale `pending`/`confirmed` status-color map → real enum values. ✅
-- [ ] Payment receipts/invoices (view/download).
+- [x] **Payment receipt** on the booking page — itemized deposit / balance / refund rows (date · status · amount) with a "Net paid" total; RLS-scoped to the customer's own booking. ✅
 - [ ] `no_cleaner_found` retry / re-broadcast path + customer notification.
 - [ ] Rate limiting on booking broadcast, messaging, checkout, auth.
 - [x] **Star-rating UI** for the review form — interactive `StarRating` (hover preview + labels) + a fully rebranded review page (card, back link, branded button). ✅

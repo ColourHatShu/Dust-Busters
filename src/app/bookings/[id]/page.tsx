@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   MessageSquare,
   RefreshCw,
+  Receipt,
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
@@ -96,6 +97,27 @@ export default async function BookingStatusPage({
     });
     matching = (m as MatchingData) ?? null;
   }
+
+  // Payment history / receipt (RLS scopes this to the customer's own booking).
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("id, type, amount, status, paid_at, created_at")
+    .eq("booking_id", id)
+    .order("created_at", { ascending: true })
+    .returns<
+      {
+        id: string;
+        type: string;
+        amount: number;
+        status: string;
+        paid_at: string | null;
+        created_at: string;
+      }[]
+    >();
+  const paymentRows = payments ?? [];
+  const netPaid = paymentRows
+    .filter((p) => p.status === "paid")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   let cleaner: { name: string; id_verified: boolean; jobs_completed: number } | null =
     null;
@@ -400,6 +422,54 @@ export default async function BookingStatusPage({
             </form>
           </div>
         </details>
+      )}
+
+      {/* Payment receipt */}
+      {paymentRows.length > 0 && (
+        <section className="card space-y-3">
+          <div className="flex items-center gap-2">
+            <Receipt className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <h2 className="text-lg font-semibold text-slate-900">Payments</h2>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {paymentRows.map((p) => {
+              const label =
+                p.type === "deposit"
+                  ? "Deposit"
+                  : p.type === "balance"
+                    ? "Balance"
+                    : p.type === "refund"
+                      ? "Refund"
+                      : p.type;
+              const when = p.paid_at ?? p.created_at;
+              return (
+                <li key={p.id} className="flex items-center justify-between py-2.5">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{label}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(when).toLocaleDateString()} ·{" "}
+                      <span className="capitalize">{p.status}</span>
+                    </p>
+                  </div>
+                  <span
+                    className={`text-sm font-semibold ${
+                      Number(p.amount) < 0 ? "text-amber-600" : "text-slate-900"
+                    }`}
+                  >
+                    {Number(p.amount) < 0 ? "−" : ""}$
+                    {Math.abs(Number(p.amount)).toFixed(2)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+            <span className="text-sm font-medium text-slate-600">Net paid</span>
+            <span className="text-base font-bold text-slate-900">
+              ${netPaid.toFixed(2)}
+            </span>
+          </div>
+        </section>
       )}
 
       {/* Book again */}
