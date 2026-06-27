@@ -34,6 +34,23 @@ export default async function AdminHomePage() {
     0
   );
 
+  // Realized platform commission vs cleaner payouts (from fully-settled bookings).
+  const { data: settled } = await supabase
+    .from("bookings")
+    .select("platform_fee, cleaner_payout, status")
+    .in("status", ["balance_paid", "closed"]);
+  let platformRevenue = 0;
+  let cleanerPayouts = 0;
+  for (const b of settled ?? []) {
+    platformRevenue += Number(b.platform_fee ?? 0);
+    cleanerPayouts += Number(b.cleaner_payout ?? 0);
+  }
+  const money = (n: number) =>
+    n.toLocaleString("en-CA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   // 4. Active cleaners: profiles with role='cleaner' joined cleaner_details where active=true
   const { count: activeCleaners } = await supabase
     .from("cleaner_details")
@@ -116,9 +133,23 @@ export default async function AdminHomePage() {
             Revenue (CAD)
           </p>
           <p className="text-3xl font-bold text-gradient">
-            ${totalRevenue.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ${money(totalRevenue)}
           </p>
           <p className="text-xs text-gray-400">from paid payments</p>
+          <div className="mt-1 space-y-0.5 border-t border-slate-100 pt-1.5">
+            <p className="flex justify-between text-xs text-gray-500">
+              <span>Platform (commission)</span>
+              <span className="font-medium text-emerald-700">
+                ${money(platformRevenue)}
+              </span>
+            </p>
+            <p className="flex justify-between text-xs text-gray-500">
+              <span>Cleaner payouts</span>
+              <span className="font-medium text-slate-700">
+                ${money(cleanerPayouts)}
+              </span>
+            </p>
+          </div>
         </div>
 
         <div className="card p-5 space-y-1">
