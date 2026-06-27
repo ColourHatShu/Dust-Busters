@@ -105,7 +105,8 @@ payment_type); `bookings` has NO `updated_at`.
 
 ## P2 — From ideation (2026-06-27 backlog refresh)
 - [x] **Favorite cleaners — phase 1**: heart toggle on the booking page activates the stranded `customer_favorites` table (RLS-scoped insert/delete). ✅
-- [ ] **Favorites — phase 2**: a customer Favorites list (account/bookings) + book-a-favorite (priority offer to a saved cleaner).
+- [x] **Favorites — phase 2a**: a "Favorite cleaners" list on the account page (name · ⭐rating · verified · jobs) with a one-tap remove (`removeFavorite`). ✅
+- [ ] **Favorites — phase 2b**: book-a-favorite (priority/direct offer to a saved cleaner).
 - [x] **Saved addresses**: `saved_addresses` table (migration `0018`, RLS-scoped, applied + verified) + account CRUD (add/delete, optional label) + a JS-free `<datalist>` autocomplete on the `/book` address field. ✅
 - [x] **Cleaner "Today"/schedule view**: my-jobs now grouped into Today / Upcoming / Earlier (by `scheduled_at`) with per-group counts. ✅
 - [ ] **Reschedule a booking** before deposit (change date/time + refresh broadcast window).

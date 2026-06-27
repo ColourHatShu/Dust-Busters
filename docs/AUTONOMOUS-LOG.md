@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: favorites list (phase 2a)
+
+- **Item:** P2. The favorite toggle (phase 1) had no payoff surface. Added a
+  "Favorite cleaners" card to the account page — each favorite shows the cleaner's
+  card (name · ⭐avg_rating · verified · jobs completed, via `get_cleaner_card`)
+  with a one-tap remove (`removeFavorite` action). Only shown when the customer
+  has favorites.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** phase 2b — book-a-favorite (direct/priority offer to a saved cleaner);
+  reschedule.
+
+---
+
 ## 2026-06-27 — Knight iteration: saved addresses
 
 - **Item:** P2 (from ideation). Customers re-typed their address every booking.

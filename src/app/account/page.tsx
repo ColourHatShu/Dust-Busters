@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateProfile, addAddress, deleteAddress } from "./actions";
+import {
+  updateProfile,
+  addAddress,
+  deleteAddress,
+  removeFavorite,
+} from "./actions";
 import Link from "next/link";
 import {
   User,
@@ -13,7 +18,18 @@ import {
   ChevronRight,
   MapPin,
   Trash2,
+  Heart,
+  ShieldCheck,
+  Star,
 } from "lucide-react";
+
+type FavCard = {
+  cleanerId: string;
+  name: string | null;
+  id_verified: boolean | null;
+  jobs_completed: number | null;
+  avg_rating: number | null;
+};
 
 export default async function AccountPage() {
   const { user, profile } = await getSessionProfile();
@@ -34,6 +50,30 @@ export default async function AccountPage() {
     .order("created_at", { ascending: true })
     .returns<{ id: string; label: string | null; full_address: string }[]>();
   const savedAddresses = addresses ?? [];
+
+  // Favorite cleaners (with their public card).
+  const { data: favRows } = await supabase
+    .from("customer_favorites")
+    .select("cleaner_id")
+    .eq("customer_id", user.id)
+    .returns<{ cleaner_id: string }[]>();
+  const favorites: FavCard[] = await Promise.all(
+    (favRows ?? []).map(async (f) => {
+      const { data } = await supabase.rpc("get_cleaner_card", {
+        p_cleaner: f.cleaner_id,
+      });
+      const card = (Array.isArray(data) ? data[0] : data) as
+        | Omit<FavCard, "cleanerId">
+        | null;
+      return {
+        cleanerId: f.cleaner_id,
+        name: card?.name ?? null,
+        id_verified: card?.id_verified ?? null,
+        jobs_completed: card?.jobs_completed ?? null,
+        avg_rating: card?.avg_rating ?? null,
+      };
+    }),
+  );
 
   const name = fullProfile?.name ?? profile?.name ?? "";
   const phone = fullProfile?.phone ?? "";
@@ -130,6 +170,59 @@ export default async function AccountPage() {
           </button>
         </form>
       </div>
+
+      {/* Favorite cleaners */}
+      {favorites.length > 0 && (
+        <div className="card space-y-4">
+          <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
+            <Heart className="h-4 w-4 fill-rose-500 text-rose-500" strokeWidth={1.5} />
+            Favorite cleaners
+          </h2>
+          <ul className="divide-y divide-slate-100">
+            {favorites.map((f) => (
+              <li
+                key={f.cleanerId}
+                className="flex items-center justify-between gap-3 py-2.5"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-sm font-bold text-white">
+                    {f.name?.charAt(0).toUpperCase() ?? "C"}
+                  </div>
+                  <div>
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
+                      {f.name ?? "Cleaner"}
+                      {f.id_verified && (
+                        <ShieldCheck
+                          className="h-3.5 w-3.5 text-green-600"
+                          strokeWidth={2}
+                        />
+                      )}
+                    </p>
+                    <p className="flex items-center gap-2 text-xs text-slate-500">
+                      {f.avg_rating != null && (
+                        <span className="flex items-center gap-0.5">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          {f.avg_rating}
+                        </span>
+                      )}
+                      <span>{f.jobs_completed ?? 0} jobs</span>
+                    </p>
+                  </div>
+                </div>
+                <form action={removeFavorite.bind(null, f.cleanerId)}>
+                  <button
+                    type="submit"
+                    aria-label="Remove favorite"
+                    className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  >
+                    <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Saved addresses */}
       <div className="card space-y-4">

@@ -61,3 +61,17 @@ export async function deleteAddress(id: string) {
 
   revalidatePath("/account");
 }
+
+export async function removeFavorite(cleanerId: string) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+
+  const supabase = await createClient();
+  await supabase
+    .from("customer_favorites")
+    .delete()
+    .eq("customer_id", user.id)
+    .eq("cleaner_id", cleanerId);
+
+  revalidatePath("/account");
+}
