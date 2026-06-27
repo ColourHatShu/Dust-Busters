@@ -3,7 +3,15 @@
 import { useActionState } from "react";
 import PriceEstimator from "./PriceEstimator";
 import { submitBooking, type BookingFormState } from "./actions";
-import { Calendar, MapPin, Home, Lock, AlertTriangle, Heart } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Home,
+  Lock,
+  AlertTriangle,
+  Heart,
+  ClipboardList,
+} from "lucide-react";
 
 type Fav = { id: string; name: string };
 
@@ -131,6 +139,26 @@ export default function BookingForm({
             deposit.
           </span>
         </div>
+      </label>
+
+      <label className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-accent" strokeWidth={1.5} />
+          <span className="text-sm font-medium text-slate-900">
+            Special instructions{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
+          </span>
+        </div>
+        <textarea
+          name="notes"
+          rows={3}
+          maxLength={1000}
+          placeholder="e.g. focus on the kitchen and bathrooms, pets inside, parking out front…"
+          className="input-modern"
+        />
+        <span className="text-xs text-slate-500">
+          Shared with your cleaner after you pay the deposit.
+        </span>
       </label>
 
       <button className="btn-base btn-primary mt-6" disabled={pending}>

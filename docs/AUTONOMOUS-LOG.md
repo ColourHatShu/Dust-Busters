@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Knight iteration: booking special instructions
+
+- **Item:** customer scope/instructions on a booking ("focus on the kitchen",
+  "pets inside", access notes). Migration `0022` adds `bookings.notes` + a 6th
+  `request_booking` param `p_notes` (recreates the 0021 body; trims/nulls empty).
+  `/book` gets an optional "Special instructions" textarea; the cleaner sees it on
+  the job page **after the deposit is paid** (same privacy gate as the address).
+- **DB:** 0022 applied via pooler, verified (notes column + 6-arg signature).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** reschedule; aria-live; or fresh ideation.
+
+---
+
 ## 2026-06-28 — Bugfix + feature: booking form crash + book-a-favorite
 
 - **🐛 Founder-reported crash:** picking a too-soon date (or any invalid input) on

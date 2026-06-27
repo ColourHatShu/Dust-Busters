@@ -104,6 +104,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Cleaner payout system (Stripe Connect) — LARGE; founder decision (log rationale; needs Stripe Connect setup → likely partly [blocked]).
 
 ## P2 — From ideation (2026-06-27 backlog refresh)
+- [x] **Booking special instructions**: `bookings.notes` + `request_booking` `p_notes` (migration `0022`, applied + verified). Optional textarea on `/book`; shown to the cleaner on the job page after the deposit is paid (same gate as the address). ✅
 - [x] **Favorite cleaners — phase 1**: heart toggle on the booking page activates the stranded `customer_favorites` table (RLS-scoped insert/delete). ✅
 - [x] **Favorites — phase 2a**: a "Favorite cleaners" list on the account page (name · ⭐rating · verified · jobs) with a one-tap remove (`removeFavorite`). ✅
 - [x] **Favorites — phase 2b: book-a-favorite**: `request_booking` gains an optional `p_preferred_cleaner` (migration `0021`, applied + verified) — rings only that favorite if eligible, else broadcasts. `/book` shows a "Cleaner" select (favorites) when the customer has any. ✅

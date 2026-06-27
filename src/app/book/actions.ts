@@ -35,12 +35,15 @@ export async function submitBooking(
   });
   if (!v.ok) return { error: v.error };
 
+  const notes = String(formData.get("notes") || "").trim() || null;
+
   const { data: bookingId, error } = await supabase.rpc("request_booking", {
     p_scheduled_at: v.scheduledISO,
     p_hours: Number(formData.get("hours")),
     p_area: area,
     p_full_address: fullAddress,
     p_preferred_cleaner: preferredCleaner,
+    p_notes: notes,
   });
 
   if (error) return { error: error.message };

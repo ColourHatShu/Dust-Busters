@@ -20,6 +20,7 @@ import {
   Lock,
   AlertTriangle,
   Star,
+  ClipboardList,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -71,7 +72,7 @@ export default async function CleanerJobDetailPage({
     .from("bookings")
     .select(
       `id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount,
-       cleaner_id, customer_id,
+       cleaner_id, customer_id, notes,
        profiles!bookings_customer_id_fkey(name),
        booking_addresses(full_address)`
     )
@@ -94,6 +95,9 @@ export default async function CleanerJobDetailPage({
     (customerProfile as { name: string } | null)?.name ?? "Customer";
   const address = DEPOSIT_PAID_AND_LATER.has(booking.status)
     ? (addrData as { full_address: string } | null)?.full_address ?? null
+    : null;
+  const notes = DEPOSIT_PAID_AND_LATER.has(booking.status)
+    ? (booking.notes as string | null)
     : null;
 
   // Load initial messages for MessagePanel
@@ -230,6 +234,21 @@ export default async function CleanerJobDetailPage({
               Service address
             </p>
             <p className="mt-0.5 text-slate-900">{address}</p>
+          </div>
+        </div>
+      )}
+
+      {notes && (
+        <div className="card flex items-start gap-3">
+          <ClipboardList
+            className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600"
+            strokeWidth={1.5}
+          />
+          <div>
+            <p className="text-sm font-medium text-slate-700">
+              Customer instructions
+            </p>
+            <p className="mt-0.5 whitespace-pre-wrap text-slate-900">{notes}</p>
           </div>
         </div>
       )}
