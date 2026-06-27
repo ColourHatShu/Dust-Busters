@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — 🐛 "no jobs in cleaner account" — broadcast window too short
+
+- **Founder-reported:** verified the cleaner, but no jobs showed. **Diagnosed via
+  live data:** the cleaner ("cleaner") was correctly verified/active/accepting and
+  serves Courtenay; the booking had 2 rung offers — **but its
+  `broadcast_expires_at` was a day old**, so the search window had expired and the
+  cleaner-side view (correctly) hides expired-window offers. Root cause: the
+  broadcast TTL was **5 minutes**, far too short for a scheduled-cleaning
+  marketplace — offers vanished before a cleaner realistically saw them.
+- **Fix:** migration `0027` bumps `broadcast_ttl_mins` (default + live row) to
+  **1440 min (24h)** so a search stays open. Updated `Countdown` to format long
+  windows readably ("2d 3h" / "5h 12m" / "4:09"; red only in the final 5 min).
+  Applied + verified (`broadcast_ttl_mins = 1440`).
+- **⚠️ For the founder's stuck booking `815ba8ca`:** the *new* TTL only applies to
+  new/re-broadcast searches. Open that booking (lazy-expiry flips it to
+  no_cleaner_found) → **Search again** → the verified cleaner gets a fresh 24h
+  offer and appears in the cleaner account.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-28 — Harden the payment flow against crashes (money path)
 
 - **Item:** the recurring throw-crash pattern, applied to the highest-risk

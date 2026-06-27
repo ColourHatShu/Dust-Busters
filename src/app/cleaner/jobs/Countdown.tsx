@@ -28,9 +28,19 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
   }
 
   const totalSec = Math.floor(left / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  const urgent = left < 60_000;
+  const days = Math.floor(totalSec / 86_400);
+  const hours = Math.floor((totalSec % 86_400) / 3_600);
+  const mins = Math.floor((totalSec % 3_600) / 60);
+  const secs = totalSec % 60;
+
+  // Format readably for any window: "2d 3h" / "5h 12m" / "4:09".
+  const label =
+    days > 0
+      ? `${days}d ${hours}h`
+      : hours > 0
+        ? `${hours}h ${mins}m`
+        : `${mins}:${String(secs).padStart(2, "0")}`;
+  const urgent = left < 5 * 60_000; // red only in the final 5 minutes
 
   return (
     <span
@@ -39,7 +49,7 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
       }`}
     >
       <Timer className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-      Expires in {m}:{String(s).padStart(2, "0")}
+      Expires in {label}
     </span>
   );
 }
