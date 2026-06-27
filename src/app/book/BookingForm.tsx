@@ -60,7 +60,14 @@ export default function BookingForm({
           name="scheduled_at"
           required
           min={minDate}
-          className="input-modern"
+          className="input-modern cursor-pointer"
+          onClick={(e) => {
+            // Open the native picker when the whole field is clicked, not just
+            // the calendar icon. (No-op if the browser disallows/lacks it.)
+            try {
+              e.currentTarget.showPicker();
+            } catch {}
+          }}
         />
       </label>
 
