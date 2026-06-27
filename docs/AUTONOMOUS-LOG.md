@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: lazy broadcast expiry (closes the timeout loop)
+
+- **Item:** `broadcast_expires_at` + the offer countdown existed, but nothing
+  enforced the timeout — a booking sat in `broadcasting` forever, and the
+  "Search again" / re-broadcast flow never triggered on its own. Without a cron,
+  added `expire_booking_if_stale(booking_id)` (migration `0019`, applied +
+  verified): flips a past-window `broadcasting` booking to `no_cleaner_found` and
+  expires its still-`rung` offers. The booking page calls it on read, so the map's
+  no-cleaner state + "Search again" now appear automatically when the window ends.
+  Safe to call by anyone (only ever enforces the real timeout).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** call expiry on the cleaner side too (drop stale open offers);
+  favorites phase 2b (book-a-favorite). The full proactive `dispatch_tick` cron
+  (+ deposit_deadline enforcement) still needs founder cron setup.
+
+---
+
 ## 2026-06-27 — Knight iteration: favorites list (phase 2a)
 
 - **Item:** P2. The favorite toggle (phase 1) had no payoff surface. Added a

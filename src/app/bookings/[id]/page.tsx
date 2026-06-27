@@ -76,6 +76,9 @@ export default async function BookingStatusPage({
   if (!user) redirect("/login");
 
   const supabase = await createClient();
+  // Self-healing timeout: flip a broadcast that's past its window to
+  // no_cleaner_found before we read it (no cron needed).
+  await supabase.rpc("expire_booking_if_stale", { p_booking_id: id });
   const { data: booking } = await supabase
     .from("bookings")
     .select(
