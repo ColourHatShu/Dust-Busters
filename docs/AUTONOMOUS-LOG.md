@@ -5,6 +5,18 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: skip-to-content link (a11y)
+
+- **Item:** P3 a11y. Keyboard/screen-reader users had no way to bypass the nav.
+  Added a "Skip to content" link as the first focusable element in the layout
+  (`sr-only` until focused, then a visible pill) that jumps to `#main-content`
+  (added to the children wrapper).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27. ✅
+- **Next:** aria-hidden on remaining decorative icons + aria-live for live status;
+  offer-card expiry countdown; CI workflow; vercel.json.
+
+---
+
 ## 2026-06-27 — Knight iteration: payment receipt on the booking page
 
 - **Item:** P2. Customers had no record of what they'd paid. Added a "Payments"

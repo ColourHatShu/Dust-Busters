@@ -104,7 +104,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Cleaner payout system (Stripe Connect) — LARGE; founder decision (log rationale; needs Stripe Connect setup → likely partly [blocked]).
 
 ## P3 — Polish / nice-to-have
-- [ ] Skip-to-content link; hide decorative icons from SR (`aria-hidden`); aria-live for status updates.
+- [x] **Skip-to-content link** in the layout (sr-only until focused → jumps to `#main-content`). ✅
+- [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.
 - [ ] Offer card: expiry countdown + cleaner take-home (net) amount.
 - [ ] CI workflow + meaningful test coverage; pin Node `engines`.
 - [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage.
