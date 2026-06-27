@@ -70,7 +70,7 @@ payment_type); `bookings` has NO `updated_at`.
 
 ### Resilience / security hardening
 - [x] Added `app/error.tsx` (route boundary with Try-again/Go-home + console.error), `app/global-error.tsx` (inline-styled root boundary), and `app/not-found.tsx` (branded 404). ✅
-- [ ] Add security headers (CSP/HSTS/X-Frame-Options/Referrer-Policy) in `next.config.ts`. (empty config)
+- [x] Security headers in `next.config.ts`: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (always) + a Stripe/Supabase-aware CSP (production-only, so dev HMR isn't broken). ✅
 - [ ] `mark-read` POST has no origin/CSRF check — add same-origin guard.
 
 ## P-FLAGSHIP — Uber-style live cleaner map  ⭐ (see docs/specs/uber-cleaner-map.md)

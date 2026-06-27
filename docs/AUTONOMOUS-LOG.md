@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: security headers
+
+- **Item:** P1 security. `next.config.ts` was empty (no headers). Added a
+  `headers()` policy on all routes: HSTS, X-Frame-Options=SAMEORIGIN,
+  X-Content-Type-Options=nosniff, Referrer-Policy=strict-origin-when-cross-origin,
+  Permissions-Policy (camera/mic off). A Content-Security-Policy is applied
+  **production-only** (allows self + Supabase REST/wss + Stripe.js/checkout) so it
+  doesn't break the dev server's HMR/eval. Note: CSP can't be runtime-verified
+  from here — the founder should sanity-check the deployed app's console for CSP
+  violations after first deploy and widen origins if needed.
+- Code-only (no migration).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** P2 — route-level `loading.tsx` skeletons, then OG/social metadata
+  (`metadataBase` + per-page titles), then admin search/filter.
+
+---
+
 ## 2026-06-27 — Knight iteration: error boundaries + custom 404
 
 - **Item:** P1 resilience. There was no error boundary or custom 404 anywhere, so
