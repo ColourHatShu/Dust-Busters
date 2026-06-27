@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Loader2, Radar, CheckCircle, Star, ShieldCheck, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { cancelBooking } from "../cancel-actions";
 
 export type MatchingData = {
   status: string;
@@ -112,6 +113,17 @@ export default function MatchingMap({
           </div>
         )}
       </div>
+
+      {/* Cancel the search (broadcasting only) */}
+      {broadcasting && (
+        <div className="border-t border-slate-700 px-5 py-3 text-center">
+          <form action={cancelBooking.bind(null, bookingId, "Cancelled the search")}>
+            <button className="text-sm font-medium text-slate-400 transition hover:text-red-300">
+              Cancel search
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Winner card */}
       {accepted && data.winner && (

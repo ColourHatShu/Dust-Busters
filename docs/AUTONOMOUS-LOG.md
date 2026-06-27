@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: map polish (dark theme + cancel search)
+
+- **Item:** flagship map polish round 1 (founder asked for "modern graphics").
+  - Swapped the basemap to **CARTO Dark Matter** tiles (free, no API key) so the
+    map matches the app's dark/futuristic theme — emerald pins + radar pop on the
+    dark map. CSP-safe (tiles are https `img-src`).
+  - Added a **"Cancel search"** CTA on the map during `broadcasting` (reuses the
+    `cancelBooking` server action → cancels + redirects).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next:** realtime on `bookings` status (instant winner reveal), SVG fallback
+  basemap on tile failure, re-broadcast on no_cleaner_found.
+
+---
+
 ## 2026-06-27 — 🎯🗺️ FLAGSHIP: the live cleaner map is VISIBLE
 
 The Uber-style map now renders on `/bookings/[id]` during the live search.

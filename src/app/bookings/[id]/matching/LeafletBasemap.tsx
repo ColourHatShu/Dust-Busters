@@ -39,9 +39,12 @@ export default function LeafletBasemap({
       scrollWheelZoom={false}
       className="matching-map"
     >
+      {/* Dark basemap (CARTO Dark Matter) — free, no API key — to match the
+          app's dark/futuristic theme. */}
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
       <Marker position={[center.lat, center.lng]} icon={centerIcon} />
       {pins.map((p) => (
