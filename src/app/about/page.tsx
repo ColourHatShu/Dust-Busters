@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Dust Busters",
+  title: "About",
   description:
     "Dust Busters is a local Courtenay home-cleaning service connecting customers with vetted local cleaners.",
 };

@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: Open Graph / social metadata
+
+- **Item:** P2 SEO/sharing. The app had only a bare title/description and the
+  build warned that `metadataBase` was unset (OG/canonical URLs resolved to
+  localhost). Added in `layout.tsx`: `metadataBase` (from NEXT_PUBLIC_BASE_URL),
+  a title template `%s · Dust Busters`, keywords, and full Open Graph + Twitter
+  (`summary_large_image`) metadata. Added an **asset-free branded OG image** via
+  `next/og` `ImageResponse` (`opengraph-image.tsx`, reused by `twitter-image.tsx`)
+  — dark card with the brand + tagline. Per-page titles on /about and /book.
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 27/27 (the og/twitter
+  image routes added) — **no more metadataBase warning**. ✅
+- **Next:** admin search/filter on lists, then payment receipts / star-rating
+  review UI / README + .env.example.
+
+---
+
 ## 2026-06-27 — 🏁 SVG fallback basemap + 📊 Milestone summary
 
 **This iteration:** SVG fallback basemap. `SvgBasemap.tsx` renders a stylized

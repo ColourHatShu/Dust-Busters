@@ -6,6 +6,12 @@ import { submitBooking } from "./actions";
 import PriceEstimator from "./PriceEstimator";
 import { Calendar, MapPin, Home, Lock, CheckCircle } from "lucide-react";
 
+export const metadata = {
+  title: "Book a cleaning",
+  description:
+    "Book a verified local cleaner in the Comox Valley in minutes — pick your date, hours, and area.",
+};
+
 export default async function BookPage() {
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");

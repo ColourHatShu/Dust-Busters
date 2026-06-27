@@ -14,10 +14,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const siteName = "Dust Busters";
+const description =
+  "Book a trusted, ID-verified home cleaner in Courtenay, BC. Watch us match you with a cleaner in real time, pay securely, and pay the balance only when the job is done right.";
+
 export const metadata: Metadata = {
-  title: "Dust Busters — Home Cleaning in Courtenay, BC",
-  description:
-    "Book a trusted, ID-verified home cleaner in Courtenay, BC. Pay securely, pay the balance only when the job is done right.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Dust Busters — Home Cleaning in Courtenay, BC",
+    template: "%s · Dust Busters",
+  },
+  description,
+  applicationName: siteName,
+  keywords: [
+    "home cleaning",
+    "house cleaning",
+    "Courtenay",
+    "Comox Valley",
+    "cleaners",
+    "Comox",
+    "Cumberland",
+    "BC",
+  ],
+  openGraph: {
+    type: "website",
+    siteName,
+    title: "Dust Busters — Home Cleaning in Courtenay, BC",
+    description,
+    locale: "en_CA",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dust Busters — Home Cleaning in Courtenay, BC",
+    description,
+  },
 };
 
 export default function RootLayout({

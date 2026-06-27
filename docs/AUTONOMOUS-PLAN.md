@@ -90,7 +90,7 @@ payment_type); `bookings` has NO `updated_at`.
 > `docs/specs/uber-cleaner-map.md`; refine these sub-items from it.
 
 ## P2 — High-value features (finalize from docs/ROADMAP.md)
-- [ ] Open Graph / Twitter card metadata + `metadataBase` (per-page titles/descriptions).
+- [x] Open Graph / Twitter metadata + `metadataBase` (silences the build warning), a title template (`%s · Dust Busters`), and an asset-free branded OG image via `next/og` `ImageResponse` (`opengraph-image` + `twitter-image`). Per-page titles on about/book. ✅
 - [ ] Terms of Service + Privacy Policy pages (legal/trust for a payments marketplace).
 - [ ] `.env.example` documenting all required env vars; real `README.md` (setup/env/migrate/deploy).
 - [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
