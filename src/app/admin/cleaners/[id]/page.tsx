@@ -1,14 +1,31 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  ShieldCheck,
+  BadgeCheck,
+  Phone,
+  Calendar,
+  MapPin,
+  Star,
+  Power,
+  Ban,
+  Briefcase,
+  Percent,
+  CircleCheckBig,
+  ExternalLink,
+  MessageSquareText,
+  Sparkles,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { setCleanerVerified, setCleanerActive } from "../actions";
 
-const statusColor: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+const statusPill: Record<string, string> = {
+  pending: "pill pill-warning",
+  confirmed: "pill pill-info",
+  in_progress: "pill pill-accent",
+  completed: "pill pill-success",
+  cancelled: "pill pill-danger",
 };
 
 export default async function AdminCleanerDetailPage({
@@ -98,195 +115,323 @@ export default async function AdminCleanerDetailPage({
   const verified = d?.id_verified ?? false;
   const active = d?.active ?? false;
 
+  // --- presentation-only derivations (no behavior change) ---
+  const initial = (cleaner.name ?? "?").trim().charAt(0).toUpperCase() || "?";
+
+  const facts = [
+    { icon: Phone, label: "Phone", value: cleaner.phone ?? "—" },
+    {
+      icon: Calendar,
+      label: "Joined",
+      value: new Date(cleaner.created_at).toLocaleDateString(),
+    },
+    {
+      icon: MapPin,
+      label: "Areas Served",
+      value: (d?.areas_served ?? []).join(", ") || "—",
+    },
+    {
+      icon: BadgeCheck,
+      label: "Verified At",
+      value: d?.verified_at ? new Date(d.verified_at).toLocaleDateString() : "—",
+    },
+  ];
+
+  const metrics = [
+    {
+      icon: Briefcase,
+      value: String(completed),
+      label: "Jobs Completed",
+      chip: "from-emerald-500/15 to-sky-500/10 border-teal-400/25 text-teal-300",
+    },
+    {
+      icon: Star,
+      value: avgRating ?? "—",
+      label: "Avg Rating",
+      chip: "from-amber-500/15 to-orange-500/10 border-amber-400/25 text-amber-300",
+    },
+    {
+      icon: Percent,
+      value: `${cancelRate}%`,
+      label: "Cancel Rate",
+      chip: "from-rose-500/15 to-red-500/10 border-rose-400/25 text-rose-300",
+    },
+    {
+      icon: CircleCheckBig,
+      value: `${acceptRate}%`,
+      label: "Acceptance Rate",
+      chip: "from-sky-500/15 to-cyan-500/10 border-sky-400/25 text-sky-300",
+    },
+  ];
+
   return (
-    <main className="mx-auto max-w-4xl p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/cleaners" className="text-sm text-blue-600 hover:underline">
-          ← Cleaners
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Cleaner Profile</h1>
-      </div>
+    <main className="app-shell min-h-screen">
+      <span className="section-glow absolute -top-24 left-1/4 h-72 w-72" aria-hidden />
+      <span
+        className="section-glow section-glow--sky absolute right-0 top-32 h-64 w-64"
+        aria-hidden
+      />
 
-      {/* Profile + Actions */}
-      <div className="card p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-gray-500">Name</p>
-            <p className="text-xl font-semibold text-gray-900">{cleaner.name ?? "—"}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-500">Phone</p>
-              <p className="font-medium">{cleaner.phone ?? "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Joined</p>
-              <p className="font-medium">{new Date(cleaner.created_at).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Areas Served</p>
-              <p className="font-medium">{(d?.areas_served ?? []).join(", ") || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Verified At</p>
-              <p className="font-medium">
-                {d?.verified_at ? new Date(d.verified_at).toLocaleDateString() : "—"}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {verified ? (
-              <span className="status-badge bg-green-100 text-green-800">Verified</span>
-            ) : (
-              <span className="status-badge bg-gray-100 text-gray-500">Unverified</span>
-            )}
-            {active ? (
-              <span className="status-badge bg-blue-100 text-blue-800">Active</span>
-            ) : (
-              <span className="status-badge bg-red-100 text-red-700">Inactive</span>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 shrink-0">
-          <form
-            action={async () => {
-              "use server";
-              await setCleanerVerified(id, !verified);
-            }}
+      <div className="app-container relative z-10 space-y-8 py-10">
+        {/* Back + header */}
+        <div className="space-y-6">
+          <Link
+            href="/admin/cleaners"
+            className="link-accent inline-flex items-center gap-1.5 text-sm font-medium"
           >
-            <button className="btn-base btn-secondary w-full">
-              {verified ? "Unverify" : "Verify"}
-            </button>
-          </form>
-          <form
-            action={async () => {
-              "use server";
-              await setCleanerActive(id, !active);
-            }}
-          >
-            <button
-              className={`btn-base w-full ${
-                active
-                  ? "bg-red-100 text-red-700 hover:bg-red-200"
-                  : "bg-green-100 text-green-700 hover:bg-green-200"
-              }`}
-            >
-              {active ? "Deactivate" : "Activate"}
-            </button>
-          </form>
-        </div>
-      </div>
+            <ArrowLeft className="h-4 w-4" />
+            Cleaners
+          </Link>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{completed}</p>
-          <p className="text-xs text-gray-500 mt-1">Jobs Completed</p>
+          <header className="page-header">
+            <span className="page-eyebrow">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Cleaner Management
+            </span>
+            <h1 className="page-title text-gradient-on-dark">Cleaner Profile</h1>
+            <p className="page-subtitle">
+              Review verification, performance signals, booking history and customer
+              feedback for this provider.
+            </p>
+          </header>
         </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{avgRating ?? "—"}</p>
-          <p className="text-xs text-gray-500 mt-1">Avg Rating</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{cancelRate}%</p>
-          <p className="text-xs text-gray-500 mt-1">Cancel Rate</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{acceptRate}%</p>
-          <p className="text-xs text-gray-500 mt-1">Acceptance Rate</p>
-        </div>
-      </div>
 
-      {/* Booking History */}
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Booking History</h2>
-        {(bookings ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400">No bookings yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-gray-500">
-                  <th className="pb-2 pr-4 font-medium">ID</th>
-                  <th className="pb-2 pr-4 font-medium">Customer</th>
-                  <th className="pb-2 pr-4 font-medium">Status</th>
-                  <th className="pb-2 pr-4 font-medium">Area</th>
-                  <th className="pb-2 pr-4 font-medium">Scheduled</th>
-                  <th className="pb-2 font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(bookings ?? []).map((b) => {
-                  const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
-                  return (
-                    <tr key={b.id}>
-                      <td className="py-2 pr-4">
-                        <Link
-                          href={`/admin/bookings/${b.id}`}
-                          className="font-mono text-xs text-blue-600 hover:underline"
-                        >
-                          {String(b.id).slice(0, 8)}
-                        </Link>
-                      </td>
-                      <td className="py-2 pr-4">{customer?.name ?? "—"}</td>
-                      <td className="py-2 pr-4">
-                        <span
-                          className={`status-badge ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
-                        >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-4">{b.area ?? "—"}</td>
-                      <td className="py-2 pr-4 text-xs text-gray-500">
-                        {b.scheduled_at
-                          ? new Date(b.scheduled_at).toLocaleString()
-                          : "—"}
-                      </td>
-                      <td className="py-2">
-                        {b.total_amount != null
-                          ? `$${Number(b.total_amount).toFixed(2)}`
-                          : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Reviews */}
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">
-          Reviews ({(reviews ?? []).length})
-        </h2>
-        {(reviews ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400">No reviews yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {(reviews ?? []).map((r) => (
-              <div key={r.id} className="border-b pb-3 last:border-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-900">{r.rating}/5</span>
-                  <span className="text-xs text-gray-400">
-                    by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
-                    {new Date(r.created_at).toLocaleDateString()}
-                  </span>
-                  <Link
-                    href={`/admin/bookings/${r.booking_id}`}
-                    className="text-xs text-blue-600 hover:underline ml-auto"
-                  >
-                    Booking
-                  </Link>
+        {/* Profile + Actions */}
+        <section className="surface-card">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-teal-400/30 bg-gradient-to-br from-emerald-500/20 to-sky-500/15 text-xl font-bold text-teal-100">
+                  {initial}
                 </div>
-                {r.comment && (
-                  <p className="text-sm text-gray-700">{r.comment}</p>
-                )}
+                <div className="min-w-0">
+                  <p className="text-[0.7rem] uppercase tracking-[0.14em] text-faint">
+                    Name
+                  </p>
+                  <p className="truncate text-xl font-semibold text-slate-50">
+                    {cleaner.name ?? "—"}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {verified ? (
+                      <span className="pill pill-success">
+                        <span className="pill-dot" />
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="pill pill-neutral">
+                        <span className="pill-dot" />
+                        Unverified
+                      </span>
+                    )}
+                    {active ? (
+                      <span className="pill pill-info">
+                        <span className="pill-dot" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="pill pill-danger">
+                        <span className="pill-dot" />
+                        Inactive
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {facts.map(({ icon: Icon, label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3.5"
+                  >
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-teal-300">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[0.68rem] uppercase tracking-[0.12em] text-faint">
+                        {label}
+                      </p>
+                      <p className="truncate text-sm font-medium text-slate-200">
+                        {value}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-48">
+              <form
+                action={async () => {
+                  "use server";
+                  await setCleanerVerified(id, !verified);
+                }}
+              >
+                <button
+                  className={`btn-base w-full ${verified ? "btn-outline" : "btn-glow"}`}
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {verified ? "Unverify" : "Verify"}
+                </button>
+              </form>
+              <form
+                action={async () => {
+                  "use server";
+                  await setCleanerActive(id, !active);
+                }}
+              >
+                <button
+                  className={`btn-base w-full border ${
+                    active
+                      ? "border-red-500/30 bg-red-500/10 text-red-200 hover:border-red-500/50 hover:bg-red-500/20"
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:border-emerald-500/50 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  {active ? (
+                    <Ban className="h-4 w-4" />
+                  ) : (
+                    <Power className="h-4 w-4" />
+                  )}
+                  {active ? "Deactivate" : "Activate"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        {/* Performance Metrics */}
+        <section className="space-y-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-slate-300">
+            <Sparkles className="h-4 w-4 text-teal-300" />
+            Performance
+          </h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {metrics.map(({ icon: Icon, value, label, chip }) => (
+              <div
+                key={label}
+                className="surface-card surface-card-interactive flex flex-col items-center gap-2 text-center"
+              >
+                <span
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-gradient-to-br ${chip}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <p className="text-3xl font-bold text-gradient-on-dark">{value}</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-faint">{label}</p>
               </div>
             ))}
           </div>
-        )}
+        </section>
+
+        {/* Booking History */}
+        <section className="surface-card">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-50">
+              <Briefcase className="h-4 w-4 text-teal-300" />
+              Booking History
+            </h2>
+            <span className="pill pill-neutral">{totalJobs} total</span>
+          </div>
+          {(bookings ?? []).length === 0 ? (
+            <div className="surface-muted flex flex-col items-center gap-2 py-10 text-center">
+              <Briefcase className="h-6 w-6 text-slate-500" />
+              <p className="text-sm text-dim">No bookings yet.</p>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              <table className="table-dark">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Area</th>
+                    <th>Scheduled</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(bookings ?? []).map((b) => {
+                    const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
+                    return (
+                      <tr key={b.id}>
+                        <td>
+                          <Link
+                            href={`/admin/bookings/${b.id}`}
+                            className="link-accent font-mono text-xs"
+                          >
+                            {String(b.id).slice(0, 8)}
+                          </Link>
+                        </td>
+                        <td className="text-slate-200">{customer?.name ?? "—"}</td>
+                        <td>
+                          <span className={statusPill[b.status] ?? "pill pill-neutral"}>
+                            {String(b.status).replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td>{b.area ?? "—"}</td>
+                        <td className="text-xs text-faint">
+                          {b.scheduled_at
+                            ? new Date(b.scheduled_at).toLocaleString()
+                            : "—"}
+                        </td>
+                        <td className="font-medium text-slate-100">
+                          {b.total_amount != null
+                            ? `$${Number(b.total_amount).toFixed(2)}`
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Reviews */}
+        <section className="surface-card">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-50">
+              <MessageSquareText className="h-4 w-4 text-teal-300" />
+              Reviews
+            </h2>
+            <span className="pill pill-accent">{(reviews ?? []).length} total</span>
+          </div>
+          {(reviews ?? []).length === 0 ? (
+            <div className="surface-muted flex flex-col items-center gap-2 py-10 text-center">
+              <MessageSquareText className="h-6 w-6 text-slate-500" />
+              <p className="text-sm text-dim">No reviews yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(reviews ?? []).map((r) => (
+                <div key={r.id} className="surface-muted">
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/25 bg-amber-500/10 px-2.5 py-0.5 text-sm font-semibold text-amber-200">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      {r.rating}/5
+                    </span>
+                    <span className="text-xs text-faint">
+                      by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
+                      {new Date(r.created_at).toLocaleDateString()}
+                    </span>
+                    <Link
+                      href={`/admin/bookings/${r.booking_id}`}
+                      className="link-accent ml-auto inline-flex items-center gap-1 text-xs"
+                    >
+                      Booking
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                  {r.comment && (
+                    <p className="text-sm leading-relaxed text-slate-300">{r.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );

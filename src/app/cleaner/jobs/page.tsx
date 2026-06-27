@@ -20,6 +20,11 @@ import {
   Home,
   CheckCircle,
   PlayCircle,
+  AlertTriangle,
+  AlertCircle,
+  Inbox,
+  Briefcase,
+  Zap,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,11 +34,11 @@ const STATUS_LABEL: Record<string, string> = {
   completed: "Completed",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-blue-100 text-blue-700",
+const STATUS_PILL: Record<string, string> = {
+  accepted: "pill-warning",
+  deposit_paid: "pill-success",
+  in_progress: "pill-accent",
+  completed: "pill-info",
 };
 
 const DEPOSIT_PAID_AND_LATER = new Set([
@@ -169,195 +174,227 @@ export default async function CleanerJobsPage({
   const jobGroupOrder = ["Today", "Upcoming", "Earlier"] as const;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-10 p-6">
-      <JobsLive cleanerId={user.id} />
+    <main className="app-shell min-h-screen py-10 sm:py-14">
+      <span
+        className="section-glow section-glow--teal absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2"
+        aria-hidden
+      />
+      <span
+        className="section-glow section-glow--sky absolute top-40 -right-20 h-64 w-64"
+        aria-hidden
+      />
 
-      {/* Availability toggle (online / offline) */}
-      <div
-        className={`flex items-center justify-between rounded-xl border p-4 ${
-          accepting
-            ? "border-emerald-200 bg-emerald-50"
-            : "border-slate-200 bg-slate-50"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={`relative flex h-2.5 w-2.5 rounded-full ${
-              accepting ? "bg-emerald-500" : "bg-slate-400"
-            }`}
-          >
-            {accepting && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            )}
-          </span>
-          <div>
-            <p className="font-medium text-slate-900">
-              {accepting ? "Online" : "Offline"}
-            </p>
-            <p className="text-xs text-slate-500">
-              {accepting
-                ? "Receiving new job requests"
-                : "Paused — not receiving new requests"}
-            </p>
-          </div>
-        </div>
-        <form
-          action={async () => {
-            "use server";
-            await setAvailability(!accepting);
-          }}
+      <div className="app-container relative z-10 max-w-2xl space-y-10">
+        <JobsLive cleanerId={user.id} />
+
+        {/* Availability toggle (online / offline) */}
+        <div
+          className={`flex items-center justify-between rounded-2xl border p-4 ${
+            accepting
+              ? "border-emerald-400/30 bg-emerald-400/10"
+              : "border-white/10 bg-white/[0.03]"
+          }`}
         >
-          <button className="btn-base btn-secondary text-sm">
-            {accepting ? "Go offline" : "Go online"}
-          </button>
-        </form>
-      </div>
-
-      {notice === "conflict" && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          That job overlaps with another job you&apos;ve already accepted. Finish or
-          free up that time slot before taking this one.
-        </div>
-      )}
-      {actionError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {actionError}
-        </div>
-      )}
-
-      {/* Open Offers */}
-      <section>
-        <h1 className="mb-1 text-2xl font-bold text-slate-900">Job requests</h1>
-        <p className="mb-4 text-sm text-slate-500">
-          New requests appear here in real time. Accept within the offer window!
-        </p>
-
-        {openOffers.length === 0 ? (
-          <div className="card text-center text-sm text-slate-400">
-            No open requests right now. New jobs will appear here instantly.
+          <div className="flex items-center gap-3">
+            <span
+              className={`relative flex h-2.5 w-2.5 rounded-full ${
+                accepting ? "bg-emerald-400" : "bg-slate-500"
+              }`}
+            >
+              {accepting && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              )}
+            </span>
+            <div>
+              <p className="font-medium text-slate-100">
+                {accepting ? "Online" : "Offline"}
+              </p>
+              <p className="text-xs text-dim">
+                {accepting
+                  ? "Receiving new job requests"
+                  : "Paused — not receiving new requests"}
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {openOffers.map((o) => {
-              const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
-              if (!b) return null;
-              return (
-                <div
-                  key={o.booking_id}
-                  className="card border-l-4 border-l-teal-500"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div>
-                      <div className="font-semibold text-slate-900">
-                        {b.area}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                        <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {b.hours}h
-                        <span className="mx-1">&middot;</span>
-                        <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {new Date(b.scheduled_at).toLocaleString()}
-                      </div>
-                      <div className="mt-2">
-                        <Countdown expiresAt={b.broadcast_expires_at ?? null} />
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-teal-700">
-                        ${Number(b.cleaner_payout ?? b.total_amount).toFixed(2)}
-                      </div>
-                      <div className="text-xs text-slate-400">your take-home</div>
-                      <div className="mt-0.5 text-xs text-slate-400">
-                        ${Number(b.total_amount).toFixed(2)} total
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <form
-                      action={async () => {
-                        "use server";
-                        await acceptJob(b.id);
-                      }}
-                    >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
-                        <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
-                        Accept
-                      </button>
-                    </form>
-                    <form
-                      action={async () => {
-                        "use server";
-                        await declineJob(b.id);
-                      }}
-                    >
-                      <button className="btn-base btn-secondary text-sm">
-                        Decline
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              );
-            })}
+          <form
+            action={async () => {
+              "use server";
+              await setAvailability(!accepting);
+            }}
+          >
+            <button className="btn-base btn-outline text-sm">
+              {accepting ? "Go offline" : "Go online"}
+            </button>
+          </form>
+        </div>
+
+        {notice === "conflict" && (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-200">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400"
+              strokeWidth={2}
+            />
+            <span>
+              That job overlaps with another job you&apos;ve already accepted.
+              Finish or free up that time slot before taking this one.
+            </span>
           </div>
         )}
-      </section>
-
-      {/* My Jobs */}
-      <section>
-        <h2 className="mb-4 text-xl font-bold text-slate-900">My jobs</h2>
-        {myJobs.length === 0 ? (
-          <div className="card text-center text-sm text-slate-400">
-            No jobs yet. Accept an offer above to get started!
+        {actionError && (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
+            <AlertCircle
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400"
+              strokeWidth={2}
+            />
+            <span>{actionError}</span>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {jobGroupOrder.map((g) =>
-              jobGroups[g].length === 0 ? null : (
-                <div key={g} className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    {g} ({jobGroups[g].length})
-                  </h3>
-                  <div className="flex flex-col gap-4">
-                    {jobGroups[g].map((b) => (
-                      <div key={b.id} className="card space-y-3">
+        )}
+
+        {/* Open Offers */}
+        <section>
+          <header className="page-header">
+            <span className="page-eyebrow">
+              <Zap className="h-3.5 w-3.5" strokeWidth={2} />
+              Live requests
+            </span>
+            <h1 className="page-title">Job requests</h1>
+            <p className="page-subtitle">
+              New requests appear here in real time. Accept within the offer
+              window!
+            </p>
+          </header>
+
+          {openOffers.length === 0 ? (
+            <div className="surface-muted flex flex-col items-center gap-2 py-8 text-center">
+              <Inbox className="h-8 w-8 text-faint" strokeWidth={1.5} />
+              <p className="text-sm text-dim">
+                No open requests right now. New jobs will appear here instantly.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {openOffers.map((o) => {
+                const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
+                if (!b) return null;
+                return (
+                  <div
+                    key={o.booking_id}
+                    className="surface-card border-l-4 border-l-teal-400"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-semibold text-slate-100">
+                          {b.area}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-sm text-dim">
+                          <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {b.hours}h
+                          <span className="mx-1">&middot;</span>
+                          <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          {new Date(b.scheduled_at).toLocaleString()}
+                        </div>
+                        <div className="mt-2">
+                          <Countdown expiresAt={b.broadcast_expires_at ?? null} />
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-teal-300">
+                          ${Number(b.cleaner_payout ?? b.total_amount).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-faint">your take-home</div>
+                        <div className="mt-0.5 text-xs text-faint">
+                          ${Number(b.total_amount).toFixed(2)} total
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <form
+                        action={async () => {
+                          "use server";
+                          await acceptJob(b.id);
+                        }}
+                      >
+                        <button className="btn-base btn-glow flex items-center gap-1.5 text-sm">
+                          <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
+                          Accept
+                        </button>
+                      </form>
+                      <form
+                        action={async () => {
+                          "use server";
+                          await declineJob(b.id);
+                        }}
+                      >
+                        <button className="btn-base btn-outline text-sm">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* My Jobs */}
+        <section>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-100">
+            <Briefcase className="h-5 w-5 text-teal-300/80" strokeWidth={1.5} />
+            My jobs
+          </h2>
+          {myJobs.length === 0 ? (
+            <div className="surface-muted flex flex-col items-center gap-2 py-8 text-center">
+              <Inbox className="h-8 w-8 text-faint" strokeWidth={1.5} />
+              <p className="text-sm text-dim">
+                No jobs yet. Accept an offer above to get started!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {jobGroupOrder.map((g) =>
+                jobGroups[g].length === 0 ? null : (
+                  <div key={g} className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                      {g} ({jobGroups[g].length})
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                      {jobGroups[g].map((b) => (
+                        <div key={b.id} className="surface-card space-y-3">
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="font-semibold text-slate-900">{b.area}</div>
-                    <div className="mt-0.5 text-sm text-slate-500">
+                    <div className="font-semibold text-slate-100">{b.area}</div>
+                    <div className="mt-0.5 text-sm text-dim">
                       for {b.customerName}
                     </div>
                   </div>
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                      STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-600"
-                    }`}
-                  >
+                  <span className={`pill ${STATUS_PILL[b.status] ?? "pill-neutral"}`}>
                     {STATUS_LABEL[b.status] ?? b.status}
                   </span>
                 </div>
 
                 {/* Details row */}
-                <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                <div className="flex flex-wrap gap-4 text-sm text-slate-300">
                   <span className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                    <Calendar className="h-4 w-4 text-teal-300/70" strokeWidth={1.5} />
                     {new Date(b.scheduled_at).toLocaleString()}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                    <Clock className="h-4 w-4 text-teal-300/70" strokeWidth={1.5} />
                     {b.hours}h
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                    <DollarSign className="h-4 w-4 text-teal-300/70" strokeWidth={1.5} />
                     ${Number(b.total_amount).toFixed(2)}
                   </span>
                 </div>
 
                 {/* Address (shown when deposit_paid or later) */}
                 {b.address && (
-                  <div className="flex items-start gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+                  <div className="flex items-start gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
                     <Home
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600"
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-300"
                       strokeWidth={1.5}
                     />
                     <span>{b.address}</span>
@@ -365,7 +402,7 @@ export default async function CleanerJobsPage({
                 )}
 
                 {/* Actions row */}
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   {b.status === "deposit_paid" && (
                     <form
                       action={async () => {
@@ -373,7 +410,7 @@ export default async function CleanerJobsPage({
                         await startJob(b.id);
                       }}
                     >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                      <button className="btn-base btn-glow flex items-center gap-1.5 text-sm">
                         <PlayCircle className="h-4 w-4" strokeWidth={1.5} />
                         Start job
                       </button>
@@ -386,7 +423,7 @@ export default async function CleanerJobsPage({
                         await completeJob(b.id);
                       }}
                     >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                      <button className="btn-base btn-glow flex items-center gap-1.5 text-sm">
                         <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
                         Mark complete
                       </button>
@@ -394,28 +431,29 @@ export default async function CleanerJobsPage({
                   )}
                   <Link
                     href={`/cleaner/jobs/${b.id}`}
-                    className="btn-base btn-secondary flex items-center gap-1.5 text-sm"
+                    className="btn-base btn-outline flex items-center gap-1.5 text-sm"
                   >
                     <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
                     Message customer
                   </Link>
                   <Link
                     href={`/cleaner/jobs/${b.id}`}
-                    className="flex items-center gap-1.5 text-sm text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
+                    className="flex items-center gap-1.5 text-sm text-dim underline-offset-2 transition-colors hover:text-slate-200 hover:underline"
                   >
                     <MapPin className="h-4 w-4" strokeWidth={1.5} />
                     View details
                   </Link>
                 </div>
-                      </div>
-                    ))}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ),
-            )}
-          </div>
-        )}
-      </section>
+                ),
+              )}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

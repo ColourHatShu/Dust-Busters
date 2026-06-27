@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Star,
   ClipboardList,
+  ChevronDown,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,13 +33,13 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Closed",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-orange-100 text-orange-700",
-  balance_paid: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-700",
+const STATUS_PILL: Record<string, string> = {
+  accepted: "pill-warning",
+  deposit_paid: "pill-success",
+  in_progress: "pill-info",
+  completed: "pill-accent",
+  balance_paid: "pill-success",
+  closed: "pill-neutral",
 };
 
 const DEPOSIT_PAID_AND_LATER = new Set([
@@ -142,250 +143,304 @@ export default async function CleanerJobDetailPage({
   }
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-6">
-      {/* Back link */}
-      <Link
-        href="/cleaner/jobs"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
-        Back to jobs
-      </Link>
+    <main className="app-shell min-h-screen py-10 sm:py-14">
+      <span
+        className="section-glow section-glow--teal absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2"
+        aria-hidden
+      />
+      <span
+        className="section-glow section-glow--sky absolute top-40 -right-20 h-64 w-64"
+        aria-hidden
+      />
 
-      {/* Status badge */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Job details</h1>
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-            STATUS_COLOR[booking.status] ?? "bg-slate-100 text-slate-600"
-          }`}
+      <div className="app-container relative z-10 max-w-2xl">
+        {/* Back link */}
+        <Link
+          href="/cleaner/jobs"
+          className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-slate-200"
         >
-          {STATUS_LABEL[booking.status] ?? booking.status}
-        </span>
-      </div>
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+          Back to jobs
+        </Link>
 
-      {/* Booking detail card */}
-      <div className="card space-y-4">
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <Calendar className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Date & time</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
-            {new Date(booking.scheduled_at).toLocaleString()}
+        {/* Header + status badge */}
+        <header className="page-header mt-5">
+          <span className="page-eyebrow">
+            <ClipboardList className="h-3.5 w-3.5" strokeWidth={2} />
+            Cleaner workspace
           </span>
-        </div>
-
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <Clock className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Duration</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
-            {booking.hours} hours
-          </span>
-        </div>
-
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <MapPin className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Area</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
-            {booking.area}
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-slate-500">
-            <DollarSign className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Your gross</span>
-          </div>
-          <span className="text-sm font-bold text-teal-700">
-            ${Number(booking.total_amount).toFixed(2)}
-          </span>
-        </div>
-      </div>
-
-      {/* Customer card */}
-      <div className="card space-y-3">
-        <div className="flex items-center gap-2 text-slate-500">
-          <User className="h-4 w-4" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-700">Customer</span>
-        </div>
-        <p className="font-semibold text-slate-900">{customerName}</p>
-        {!DEPOSIT_PAID_AND_LATER.has(booking.status) && (
-          <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-400">
-            <Lock className="h-3.5 w-3.5" strokeWidth={1.5} />
-            <span>Full address revealed once the customer pays the deposit</span>
-          </div>
-        )}
-      </div>
-
-      {/* Address card (deposit_paid and later) */}
-      {address && (
-        <div className="card flex items-start gap-3">
-          <Home
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600"
-            strokeWidth={1.5}
-          />
-          <div>
-            <p className="text-sm font-medium text-slate-700">
-              Service address
-            </p>
-            <p className="mt-0.5 text-slate-900">{address}</p>
-          </div>
-        </div>
-      )}
-
-      {notes && (
-        <div className="card flex items-start gap-3">
-          <ClipboardList
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600"
-            strokeWidth={1.5}
-          />
-          <div>
-            <p className="text-sm font-medium text-slate-700">
-              Customer instructions
-            </p>
-            <p className="mt-0.5 whitespace-pre-wrap text-slate-900">{notes}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Cleaner action buttons */}
-      {(showStart || showComplete) && (
-        <div className="space-y-3">
-          {showStart && (
-            <form
-              action={async () => {
-                "use server";
-                await startJob(id);
-                redirect(`/cleaner/jobs/${id}`);
-              }}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="page-title">Job details</h1>
+            <span
+              className={`pill ${STATUS_PILL[booking.status] ?? "pill-neutral"}`}
             >
-              <button className="w-full btn-base btn-primary flex items-center justify-center gap-2">
-                <PlayCircle className="h-5 w-5" strokeWidth={1.5} />
-                Start this job
-              </button>
-            </form>
-          )}
-          {showComplete && (
-            <form
-              action={async () => {
-                "use server";
-                await completeJob(id);
-                redirect(`/cleaner/jobs/${id}`);
-              }}
-            >
-              <button className="w-full btn-base btn-primary flex items-center justify-center gap-2">
-                <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
-                Mark as complete
-              </button>
-            </form>
-          )}
-        </div>
-      )}
+              <span className="pill-dot" />
+              {STATUS_LABEL[booking.status] ?? booking.status}
+            </span>
+          </div>
+        </header>
 
-      {/* Report a problem (cleaner-side dispute) */}
-      {reported === "1" && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-          Thanks — your report was submitted. Our team will review it and follow up.
-        </div>
-      )}
-      {reportError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {reportError}
-        </div>
-      )}
-      {DISPUTABLE.has(booking.status) && (
-        <details className="card group">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-700">
-            <AlertTriangle
-              className="h-4 w-4 text-amber-500"
-              strokeWidth={1.5}
-            />
-            Report a problem with this job
-          </summary>
-          <form
-            action={reportProblem.bind(null, id)}
-            className="mt-4 flex flex-col gap-3"
-          >
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-slate-700">Issue</span>
-              <select name="category" className="input-modern" required>
-                <option value="no_show">Customer no-show / no access</option>
-                <option value="other">Unsafe or inappropriate conditions</option>
-                <option value="payment_issue">Payment issue</option>
-                <option value="other">Other</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-slate-700">
-                What happened?
-              </span>
-              <textarea
-                name="description"
-                required
-                rows={4}
-                className="input-modern"
-                placeholder="Describe the problem. For emergencies, contact local authorities first."
-              />
-            </label>
-            <button className="btn-base btn-secondary self-start text-sm">
-              Submit report
-            </button>
-          </form>
-        </details>
-      )}
+        <div className="space-y-6">
+          {/* Booking detail card */}
+          <div className="surface-card">
+            <dl className="divide-y divide-white/5">
+              <div className="flex items-center justify-between py-3 first:pt-0">
+                <dt className="flex items-center gap-2.5 text-sm text-dim">
+                  <Calendar
+                    className="h-4 w-4 text-teal-300/80"
+                    strokeWidth={1.5}
+                  />
+                  Date &amp; time
+                </dt>
+                <dd className="text-sm font-medium text-slate-100">
+                  {new Date(booking.scheduled_at).toLocaleString()}
+                </dd>
+              </div>
 
-      {/* Rate the customer (two-way reviews) */}
-      {canReviewCustomer && (
-        <div className="card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900">Rate the customer</h2>
-            {customerRating?.avg_rating != null && (
-              <span className="flex items-center gap-1 text-sm text-slate-500">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                {customerRating.avg_rating}
-                <span className="text-slate-400">
-                  ({customerRating.review_count})
+              <div className="flex items-center justify-between py-3">
+                <dt className="flex items-center gap-2.5 text-sm text-dim">
+                  <Clock className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+                  Duration
+                </dt>
+                <dd className="text-sm font-medium text-slate-100">
+                  {booking.hours} hours
+                </dd>
+              </div>
+
+              <div className="flex items-center justify-between py-3">
+                <dt className="flex items-center gap-2.5 text-sm text-dim">
+                  <MapPin className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+                  Area
+                </dt>
+                <dd className="text-sm font-medium text-slate-100">
+                  {booking.area}
+                </dd>
+              </div>
+
+              <div className="flex items-center justify-between py-3 last:pb-0">
+                <dt className="flex items-center gap-2.5 text-sm text-dim">
+                  <DollarSign
+                    className="h-4 w-4 text-teal-300/80"
+                    strokeWidth={1.5}
+                  />
+                  Your gross
+                </dt>
+                <dd className="text-lg font-bold text-gradient-on-dark">
+                  ${Number(booking.total_amount).toFixed(2)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Customer card */}
+          <div className="surface-card space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-dim">
+              <User className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+              Customer
+            </div>
+            <p className="text-lg font-semibold text-slate-100">{customerName}</p>
+            {!DEPOSIT_PAID_AND_LATER.has(booking.status) && (
+              <div className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-xs text-faint">
+                <Lock
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  strokeWidth={1.5}
+                />
+                <span>
+                  Full address revealed once the customer pays the deposit
                 </span>
-              </span>
+              </div>
             )}
           </div>
 
-          {alreadyReviewedCustomer ? (
-            <p className="flex items-center gap-1.5 text-sm text-slate-500">
-              <CheckCircle className="h-4 w-4 text-green-600" strokeWidth={2} />
-              Thanks — you&apos;ve rated this customer.
-            </p>
-          ) : (
-            <form
-              action={submitCustomerReview.bind(null, id, booking.customer_id)}
-              className="flex flex-col gap-4"
-            >
-              <StarRating />
-              <textarea
-                name="comment"
-                rows={3}
-                placeholder="Any notes about the property or visit (optional)"
-                className="input-modern"
-              />
-              <button className="btn-base btn-primary self-start text-sm">
-                Submit rating
-              </button>
-            </form>
+          {/* Address card (deposit_paid and later) */}
+          {address && (
+            <div className="surface-card flex items-start gap-3.5">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-teal-400/20 bg-teal-400/10 text-teal-300">
+                <Home className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  Service address
+                </p>
+                <p className="mt-1 text-slate-100">{address}</p>
+              </div>
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Messaging */}
-      <MessagePanel
-        bookingId={id}
-        currentUserId={user.id}
-        initialMessages={initialMessages}
-      />
+          {notes && (
+            <div className="surface-card flex items-start gap-3.5">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-teal-400/20 bg-teal-400/10 text-teal-300">
+                <ClipboardList className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  Customer instructions
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-slate-100">{notes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Cleaner action buttons */}
+          {(showStart || showComplete) && (
+            <div className="space-y-3">
+              {showStart && (
+                <form
+                  action={async () => {
+                    "use server";
+                    await startJob(id);
+                    redirect(`/cleaner/jobs/${id}`);
+                  }}
+                >
+                  <button className="btn-base btn-glow w-full">
+                    <PlayCircle className="h-5 w-5" strokeWidth={1.5} />
+                    Start this job
+                  </button>
+                </form>
+              )}
+              {showComplete && (
+                <form
+                  action={async () => {
+                    "use server";
+                    await completeJob(id);
+                    redirect(`/cleaner/jobs/${id}`);
+                  }}
+                >
+                  <button className="btn-base btn-glow w-full">
+                    <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
+                    Mark as complete
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Report a problem (cleaner-side dispute) */}
+          {reported === "1" && (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-200">
+              <CheckCircle
+                className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400"
+                strokeWidth={2}
+              />
+              <span>
+                Thanks — your report was submitted. Our team will review it and
+                follow up.
+              </span>
+            </div>
+          )}
+          {reportError && (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
+              <AlertTriangle
+                className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400"
+                strokeWidth={2}
+              />
+              <span>{reportError}</span>
+            </div>
+          )}
+          {DISPUTABLE.has(booking.status) && (
+            <details className="surface-card group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium text-slate-200">
+                <span className="flex items-center gap-2">
+                  <AlertTriangle
+                    className="h-4 w-4 text-amber-400"
+                    strokeWidth={1.5}
+                  />
+                  Report a problem with this job
+                </span>
+                <ChevronDown
+                  className="h-4 w-4 text-faint transition-transform duration-200 group-open:rotate-180"
+                  strokeWidth={1.5}
+                />
+              </summary>
+              <hr className="divider my-4" />
+              <form
+                action={reportProblem.bind(null, id)}
+                className="flex flex-col gap-4"
+              >
+                <label className="block">
+                  <span className="field-label">Issue</span>
+                  <select name="category" className="input-dark" required>
+                    <option value="no_show">Customer no-show / no access</option>
+                    <option value="other">
+                      Unsafe or inappropriate conditions
+                    </option>
+                    <option value="payment_issue">Payment issue</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="field-label">What happened?</span>
+                  <textarea
+                    name="description"
+                    required
+                    rows={4}
+                    className="input-dark"
+                    placeholder="Describe the problem. For emergencies, contact local authorities first."
+                  />
+                </label>
+                <button className="btn-base btn-outline self-start text-sm">
+                  Submit report
+                </button>
+              </form>
+            </details>
+          )}
+
+          {/* Rate the customer (two-way reviews) */}
+          {canReviewCustomer && (
+            <div className="surface-card space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-slate-100">
+                  Rate the customer
+                </h2>
+                {customerRating?.avg_rating != null && (
+                  <span className="pill pill-warning">
+                    <Star className="h-3.5 w-3.5 fill-current" />
+                    {customerRating.avg_rating}
+                    <span className="text-faint">
+                      ({customerRating.review_count})
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              {alreadyReviewedCustomer ? (
+                <p className="flex items-center gap-1.5 text-sm text-dim">
+                  <CheckCircle
+                    className="h-4 w-4 text-emerald-400"
+                    strokeWidth={2}
+                  />
+                  Thanks — you&apos;ve rated this customer.
+                </p>
+              ) : (
+                <form
+                  action={submitCustomerReview.bind(null, id, booking.customer_id)}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="surface-muted flex justify-center">
+                    <StarRating />
+                  </div>
+                  <textarea
+                    name="comment"
+                    rows={3}
+                    placeholder="Any notes about the property or visit (optional)"
+                    className="input-dark"
+                  />
+                  <button className="btn-base btn-glow self-start text-sm">
+                    Submit rating
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Messaging */}
+          <MessagePanel
+            bookingId={id}
+            currentUserId={user.id}
+            initialMessages={initialMessages}
+          />
+        </div>
+      </div>
     </main>
   );
 }

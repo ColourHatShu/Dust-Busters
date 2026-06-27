@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Calendar, Clock, ChevronRight, Sparkles } from "lucide-react";
+import { Calendar, Clock, ChevronRight, Sparkles, Plus } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -13,16 +13,17 @@ type Booking = {
   total_amount: number;
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  broadcasting: "bg-blue-100 text-blue-700",
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-orange-100 text-orange-700",
-  balance_paid: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-600",
-  cancelled: "bg-red-100 text-red-700",
-  no_cleaner_found: "bg-red-100 text-red-700",
+// Maps each booking status to a shared dark-theme status-pill variant.
+const STATUS_PILL: Record<string, string> = {
+  broadcasting: "pill-info",
+  accepted: "pill-warning",
+  deposit_paid: "pill-success",
+  in_progress: "pill-accent",
+  completed: "pill-warning",
+  balance_paid: "pill-success",
+  closed: "pill-neutral",
+  cancelled: "pill-danger",
+  no_cleaner_found: "pill-danger",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -109,109 +110,152 @@ export default async function BookingsPage({
   ];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">My Bookings</h1>
-        <Link href="/book" className="btn-base btn-primary text-sm px-4 py-2">
-          + New booking
-        </Link>
-      </div>
+    <main className="app-shell min-h-screen pb-20">
+      <div className="relative mx-auto w-full max-w-2xl px-6 pt-10 sm:pt-14">
+        {/* Ambient glows */}
+        <span
+          className="section-glow section-glow--teal absolute -top-12 right-0 h-64 w-64"
+          aria-hidden="true"
+        />
+        <span
+          className="section-glow absolute top-48 -left-16 h-56 w-56"
+          aria-hidden="true"
+        />
 
-      {/* Filter tabs */}
-      <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-        {tabs.map((t) => (
-          <Link
-            key={t.key}
-            href={`/bookings?tab=${t.key}`}
-            className={`flex-1 rounded-lg py-2 text-center text-sm font-medium transition-all ${
-              activeTab === t.key
-                ? "bg-white shadow text-slate-900"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            {t.label}
-            {t.count > 0 && (
-              <span
-                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+        <div className="relative z-10 space-y-8">
+          {/* Header */}
+          <header className="page-header sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <span className="page-eyebrow">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+                Your cleanings
+              </span>
+              <h1 className="page-title">My Bookings</h1>
+              <p className="page-subtitle">
+                Track every cleaning from first match to final payment, all in one place.
+              </p>
+            </div>
+            <Link
+              href="/book"
+              className="btn-base btn-glow shrink-0 self-start text-sm sm:self-auto"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2.25} />
+              New booking
+            </Link>
+          </header>
+
+          {/* Filter tabs */}
+          <nav className="flex gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-sm">
+            {tabs.map((t) => (
+              <Link
+                key={t.key}
+                href={`/bookings?tab=${t.key}`}
+                aria-current={activeTab === t.key ? "page" : undefined}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-center text-sm font-medium transition-all ${
                   activeTab === t.key
-                    ? "bg-accent text-white"
-                    : "bg-slate-200 text-slate-600"
+                    ? "bg-emerald-500/15 text-emerald-100 shadow-sm ring-1 ring-emerald-400/30"
+                    : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                 }`}
               >
-                {t.count}
-              </span>
-            )}
-          </Link>
-        ))}
-      </div>
+                {t.label}
+                {t.count > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
+                      activeTab === t.key
+                        ? "bg-emerald-400/20 text-emerald-200"
+                        : "bg-white/[0.06] text-slate-400"
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </nav>
 
-      {/* Booking list */}
-      {filtered.length === 0 ? (
-        <div className="card flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-light/20">
-            <Sparkles className="h-8 w-8 text-accent" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="font-semibold text-slate-700 mb-1">
-              {activeTab === "all" ? "No bookings yet" : `No ${activeTab} bookings`}
-            </p>
-            <p className="text-sm text-slate-400">
-              {activeTab === "all"
-                ? "Your bookings will appear here once you book a cleaning."
-                : "Nothing to show for this filter."}
-            </p>
-          </div>
-          {activeTab === "all" && (
-            <Link href="/book" className="btn-base btn-primary">
-              Book a cleaning
-            </Link>
+          {/* Booking list */}
+          {filtered.length === 0 ? (
+            <div className="surface-card flex flex-col items-center gap-5 py-16 text-center">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-teal-400/25 bg-gradient-to-br from-emerald-500/15 to-sky-500/10">
+                <span
+                  className="absolute inset-0 -z-10 rounded-2xl bg-emerald-400/15 blur-xl"
+                  aria-hidden="true"
+                />
+                <Sparkles className="h-8 w-8 text-teal-300" strokeWidth={1.5} />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-lg font-semibold text-slate-100">
+                  {activeTab === "all" ? "No bookings yet" : `No ${activeTab} bookings`}
+                </p>
+                <p className="mx-auto max-w-xs text-sm text-slate-400">
+                  {activeTab === "all"
+                    ? "Your bookings will appear here once you book a cleaning."
+                    : "Nothing to show for this filter."}
+                </p>
+              </div>
+              {activeTab === "all" && (
+                <Link href="/book" className="btn-base btn-glow">
+                  <Plus className="h-4 w-4" strokeWidth={2.25} />
+                  Book a cleaning
+                </Link>
+              )}
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {filtered.map((b) => (
+                <li key={b.id}>
+                  <Link
+                    href={`/bookings/${b.id}`}
+                    className="surface-card surface-card-interactive group flex items-center justify-between gap-4"
+                  >
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="truncate font-semibold text-slate-100">
+                          {b.area}
+                        </span>
+                        <span className={`pill ${STATUS_PILL[b.status] ?? "pill-neutral"}`}>
+                          <span className="pill-dot" />
+                          {STATUS_LABEL[b.status] ?? b.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar
+                            className="h-3.5 w-3.5 text-slate-500"
+                            strokeWidth={1.5}
+                          />
+                          {formatDate(b.scheduled_at)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock
+                            className="h-3.5 w-3.5 text-slate-500"
+                            strokeWidth={1.5}
+                          />
+                          {formatTime(b.scheduled_at)} &middot; {b.hours}h
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-3">
+                      <div className="text-right">
+                        <span className="block text-lg font-bold text-gradient-on-dark">
+                          ${Number(b.total_amount).toFixed(2)}
+                        </span>
+                        <span className="block text-[0.7rem] uppercase tracking-wide text-slate-500">
+                          total
+                        </span>
+                      </div>
+                      <ChevronRight
+                        className="h-5 w-5 text-slate-500 transition-colors group-hover:text-teal-300"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {filtered.map((b) => (
-            <li key={b.id}>
-              <Link
-                href={`/bookings/${b.id}`}
-                className="card flex items-center justify-between gap-4 hover:shadow-elevation-md transition-shadow p-4 group"
-              >
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-slate-900">{b.area}</span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {STATUS_LABEL[b.status] ?? b.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      {formatDate(b.scheduled_at)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      {formatTime(b.scheduled_at)} &middot; {b.hours}h
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-lg font-bold text-gradient">
-                    ${Number(b.total_amount).toFixed(2)}
-                  </span>
-                  <ChevronRight
-                    className="h-5 w-5 text-slate-400 group-hover:text-accent transition-colors"
-                    strokeWidth={1.5}
-                  />
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      </div>
     </main>
   );
 }

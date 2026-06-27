@@ -21,6 +21,8 @@ import {
   Heart,
   ShieldCheck,
   Star,
+  Sparkles,
+  Plus,
 } from "lucide-react";
 
 type FavCard = {
@@ -84,232 +86,343 @@ export default async function AccountPage() {
   });
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Account</h1>
-        <p className="text-sm text-slate-500 mt-1">Member since {accountSince}</p>
-      </div>
+    <main className="app-shell relative min-h-screen py-10 sm:py-14">
+      {/* Ambient depth glows */}
+      <span
+        className="section-glow absolute -top-24 -left-24 h-72 w-72"
+        aria-hidden="true"
+      />
+      <span
+        className="section-glow section-glow--sky absolute top-48 -right-24 h-80 w-80"
+        aria-hidden="true"
+      />
 
-      {/* Avatar / summary */}
-      <div className="card flex items-center gap-4">
-        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-xl font-bold text-white shadow-elevation-md">
-          {name ? name.charAt(0).toUpperCase() : email.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="font-semibold text-slate-900">{name || "No name set"}</p>
-          <p className="text-sm text-slate-500">{email}</p>
-          {phone && <p className="text-sm text-slate-500">{phone}</p>}
-        </div>
-      </div>
-
-      {/* Edit profile form */}
-      <div className="card space-y-5">
-        <h2 className="font-semibold text-slate-800">Edit Profile</h2>
-        <form action={updateProfile} className="space-y-4">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="name"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-            >
-              <User className="h-4 w-4 text-accent" strokeWidth={1.5} />
-              Full name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              defaultValue={name}
-              placeholder="Your full name"
-              maxLength={100}
-              className="input-modern"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="email-display"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-            >
-              <Mail className="h-4 w-4 text-accent" strokeWidth={1.5} />
-              Email address
-            </label>
-            <input
-              id="email-display"
-              type="email"
-              value={email}
-              disabled
-              className="input-modern opacity-60 cursor-not-allowed"
-              title="Email cannot be changed here"
-            />
-            <p className="text-xs text-slate-400">
-              Email changes require contacting support.
+      <div className="app-container relative z-10">
+        <div className="mx-auto max-w-2xl space-y-6">
+          {/* Page header */}
+          <header className="page-header">
+            <span className="page-eyebrow">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+              Your space
+            </span>
+            <h1 className="page-title text-gradient-on-dark">My Account</h1>
+            <p className="page-subtitle">
+              Manage your profile, saved places, and favourite cleaners.
             </p>
-          </div>
+          </header>
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor="phone"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
+          {/* Avatar / summary */}
+          <section className="surface-card flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+            <div className="relative flex-shrink-0">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-sky-500 text-2xl font-bold text-white shadow-[0_12px_34px_-10px_rgba(16,185,129,0.7)] ring-1 ring-white/15">
+                {name
+                  ? name.charAt(0).toUpperCase()
+                  : email.charAt(0).toUpperCase()}
+              </div>
+              <span
+                className="absolute -inset-1.5 -z-10 rounded-[1.4rem] bg-emerald-500/25 blur-xl"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="min-w-0 space-y-1.5">
+              <p className="text-lg font-semibold text-slate-100">
+                {name || "No name set"}
+              </p>
+              <p className="flex items-center justify-center gap-1.5 text-sm text-slate-400 sm:justify-start">
+                <Mail className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={1.5} />
+                <span className="truncate">{email}</span>
+              </p>
+              {phone && (
+                <p className="flex items-center justify-center gap-1.5 text-sm text-slate-400 sm:justify-start">
+                  <Phone
+                    className="h-3.5 w-3.5 flex-shrink-0"
+                    strokeWidth={1.5}
+                  />
+                  <span>{phone}</span>
+                </p>
+              )}
+              <div className="flex justify-center pt-1 sm:justify-start">
+                <span className="pill pill-accent">
+                  <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Member since {accountSince}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Edit profile form */}
+          <section className="surface-card space-y-5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-400/20">
+                <User className="h-4 w-4" strokeWidth={1.75} />
+              </span>
+              <h2 className="text-base font-semibold text-slate-100">
+                Edit profile
+              </h2>
+            </div>
+
+            <form action={updateProfile} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-300"
+                >
+                  <User className="h-4 w-4 text-emerald-300" strokeWidth={1.5} />
+                  Full name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  defaultValue={name}
+                  placeholder="Your full name"
+                  maxLength={100}
+                  className="input-dark"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email-display"
+                  className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-300"
+                >
+                  <Mail className="h-4 w-4 text-emerald-300" strokeWidth={1.5} />
+                  Email address
+                </label>
+                <input
+                  id="email-display"
+                  type="email"
+                  value={email}
+                  disabled
+                  className="input-dark cursor-not-allowed opacity-60"
+                  title="Email cannot be changed here"
+                />
+                <p className="field-hint">
+                  Email changes require contacting support.
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-300"
+                >
+                  <Phone
+                    className="h-4 w-4 text-emerald-300"
+                    strokeWidth={1.5}
+                  />
+                  Phone number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  defaultValue={phone}
+                  placeholder="+1 (555) 000-0000"
+                  maxLength={30}
+                  className="input-dark"
+                />
+              </div>
+
+              <button type="submit" className="btn-base btn-glow w-full">
+                Save changes
+              </button>
+            </form>
+          </section>
+
+          {/* Favorite cleaners */}
+          {favorites.length > 0 && (
+            <section className="surface-card space-y-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300 ring-1 ring-rose-400/20">
+                  <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
+                </span>
+                <h2 className="text-base font-semibold text-slate-100">
+                  Favorite cleaners
+                </h2>
+                <span className="pill pill-neutral ml-auto">
+                  {favorites.length}
+                </span>
+              </div>
+
+              <ul className="divide-y divide-white/5">
+                {favorites.map((f) => (
+                  <li
+                    key={f.cleanerId}
+                    className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-sky-500 text-sm font-bold text-white ring-1 ring-white/10">
+                        {f.name?.charAt(0).toUpperCase() ?? "C"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 text-sm font-medium text-slate-100">
+                          <span className="truncate">{f.name ?? "Cleaner"}</span>
+                          {f.id_verified && (
+                            <ShieldCheck
+                              className="h-3.5 w-3.5 flex-shrink-0 text-emerald-400"
+                              strokeWidth={2}
+                            />
+                          )}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+                          {f.avg_rating != null && (
+                            <span className="flex items-center gap-0.5">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                              {f.avg_rating}
+                            </span>
+                          )}
+                          <span>{f.jobs_completed ?? 0} jobs</span>
+                        </p>
+                      </div>
+                    </div>
+                    <form action={removeFavorite.bind(null, f.cleanerId)}>
+                      <button
+                        type="submit"
+                        aria-label="Remove favorite"
+                        className="focus-ring rounded-lg p-2 text-rose-400/80 transition hover:bg-rose-500/10 hover:text-rose-300"
+                      >
+                        <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Saved addresses */}
+          <section className="surface-card space-y-4">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-300 ring-1 ring-sky-400/20">
+                <MapPin className="h-4 w-4" strokeWidth={1.75} />
+              </span>
+              <h2 className="text-base font-semibold text-slate-100">
+                Saved addresses
+              </h2>
+            </div>
+
+            {savedAddresses.length > 0 ? (
+              <ul className="divide-y divide-white/5">
+                {savedAddresses.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-start justify-between gap-3 py-3 first:pt-0"
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <MapPin
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-300/70"
+                        strokeWidth={1.5}
+                      />
+                      <div className="min-w-0">
+                        {a.label && (
+                          <p className="text-sm font-medium text-slate-200">
+                            {a.label}
+                          </p>
+                        )}
+                        <p className="truncate text-sm text-slate-400">
+                          {a.full_address}
+                        </p>
+                      </div>
+                    </div>
+                    <form action={deleteAddress.bind(null, a.id)}>
+                      <button
+                        type="submit"
+                        aria-label="Delete address"
+                        className="focus-ring rounded-lg p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"
+                      >
+                        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="surface-muted text-center">
+                <MapPin
+                  className="mx-auto mb-2 h-6 w-6 text-slate-500"
+                  strokeWidth={1.5}
+                />
+                <p className="text-sm text-slate-400">
+                  No saved addresses yet. Add one to book faster next time.
+                </p>
+              </div>
+            )}
+
+            <form
+              action={addAddress}
+              className="space-y-2.5 border-t border-white/10 pt-5"
             >
-              <Phone className="h-4 w-4 text-accent" strokeWidth={1.5} />
-              Phone number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              defaultValue={phone}
-              placeholder="+1 (555) 000-0000"
-              maxLength={30}
-              className="input-modern"
-            />
-          </div>
+              <input
+                name="label"
+                placeholder="Label (e.g. Home, Office) — optional"
+                maxLength={40}
+                className="input-dark"
+              />
+              <input
+                name="full_address"
+                placeholder="Street, unit, city"
+                required
+                maxLength={200}
+                className="input-dark"
+              />
+              <button
+                type="submit"
+                className="btn-base btn-outline w-full text-sm sm:w-auto"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2} />
+                Add address
+              </button>
+            </form>
+          </section>
 
-          <button type="submit" className="w-full btn-base btn-primary">
-            Save changes
-          </button>
-        </form>
-      </div>
+          {/* Quick links */}
+          <section className="surface-card space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Quick links
+            </h2>
 
-      {/* Favorite cleaners */}
-      {favorites.length > 0 && (
-        <div className="card space-y-4">
-          <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
-            <Heart className="h-4 w-4 fill-rose-500 text-rose-500" strokeWidth={1.5} />
-            Favorite cleaners
-          </h2>
-          <ul className="divide-y divide-slate-100">
-            {favorites.map((f) => (
-              <li
-                key={f.cleanerId}
-                className="flex items-center justify-between gap-3 py-2.5"
+            <div className="space-y-1.5">
+              <Link
+                href="/bookings"
+                className="focus-ring group flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition hover:bg-white/5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-sm font-bold text-white">
-                    {f.name?.charAt(0).toUpperCase() ?? "C"}
-                  </div>
-                  <div>
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
-                      {f.name ?? "Cleaner"}
-                      {f.id_verified && (
-                        <ShieldCheck
-                          className="h-3.5 w-3.5 text-green-600"
-                          strokeWidth={2}
-                        />
-                      )}
-                    </p>
-                    <p className="flex items-center gap-2 text-xs text-slate-500">
-                      {f.avg_rating != null && (
-                        <span className="flex items-center gap-0.5">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          {f.avg_rating}
-                        </span>
-                      )}
-                      <span>{f.jobs_completed ?? 0} jobs</span>
-                    </p>
-                  </div>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-400/20">
+                    <ClipboardList className="h-4 w-4" strokeWidth={1.75} />
+                  </span>
+                  <span className="font-medium text-slate-200">
+                    My Bookings
+                  </span>
                 </div>
-                <form action={removeFavorite.bind(null, f.cleanerId)}>
-                  <button
-                    type="submit"
-                    aria-label="Remove favorite"
-                    className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
-                  >
-                    <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                <ChevronRight
+                  className="h-4 w-4 text-slate-500 transition-colors group-hover:text-teal-300"
+                  strokeWidth={1.5}
+                />
+              </Link>
 
-      {/* Saved addresses */}
-      <div className="card space-y-4">
-        <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
-          <MapPin className="h-4 w-4 text-accent" strokeWidth={1.5} />
-          Saved addresses
-        </h2>
-
-        {savedAddresses.length > 0 ? (
-          <ul className="divide-y divide-slate-100">
-            {savedAddresses.map((a) => (
-              <li key={a.id} className="flex items-start justify-between gap-3 py-2.5">
-                <div className="min-w-0">
-                  {a.label && (
-                    <p className="text-sm font-medium text-slate-800">{a.label}</p>
-                  )}
-                  <p className="truncate text-sm text-slate-600">{a.full_address}</p>
+              <div className="flex cursor-not-allowed items-center justify-between gap-3 rounded-xl px-3 py-3 opacity-60">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-slate-400 ring-1 ring-white/10">
+                    <Bell className="h-4 w-4" strokeWidth={1.75} />
+                  </span>
+                  <span className="font-medium text-slate-300">
+                    Notification Preferences
+                  </span>
                 </div>
-                <form action={deleteAddress.bind(null, a.id)}>
-                  <button
-                    type="submit"
-                    aria-label="Delete address"
-                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-slate-400">
-            No saved addresses yet. Add one to book faster next time.
-          </p>
-        )}
+                <span className="pill pill-neutral">Coming soon</span>
+              </div>
 
-        <form action={addAddress} className="space-y-2 border-t border-slate-100 pt-4">
-          <input
-            name="label"
-            placeholder="Label (e.g. Home, Office) — optional"
-            maxLength={40}
-            className="input-modern"
-          />
-          <input
-            name="full_address"
-            placeholder="Street, unit, city"
-            required
-            maxLength={200}
-            className="input-modern"
-          />
-          <button type="submit" className="btn-base btn-secondary text-sm">
-            Add address
-          </button>
-        </form>
-      </div>
-
-      {/* Quick links */}
-      <div className="card divide-y divide-slate-100 p-0 overflow-hidden">
-        <Link
-          href="/bookings"
-          className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <ClipboardList className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="font-medium text-slate-800">My Bookings</span>
-          </div>
-          <ChevronRight
-            className="h-4 w-4 text-slate-400 group-hover:text-accent transition-colors"
-            strokeWidth={1.5}
-          />
-        </Link>
-
-        <div className="flex items-center justify-between px-4 py-3.5 opacity-60 cursor-not-allowed">
-          <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5 text-slate-400" strokeWidth={1.5} />
-            <div>
-              <span className="font-medium text-slate-800">Notification Preferences</span>
-              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                Coming soon
-              </span>
+              <div className="flex items-center gap-3 rounded-xl px-3 py-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-slate-400 ring-1 ring-white/10">
+                  <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
+                </span>
+                <span className="text-sm text-slate-400">
+                  Member since {accountSince}
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 px-4 py-3.5 text-slate-500">
-          <CalendarDays className="h-5 w-5 text-slate-400" strokeWidth={1.5} />
-          <span className="text-sm">Member since {accountSince}</span>
+          </section>
         </div>
       </div>
     </main>

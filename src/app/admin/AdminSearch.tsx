@@ -24,12 +24,12 @@ export default function AdminSearch({
           name="q"
           defaultValue={defaultValue}
           placeholder={placeholder}
-          className="input-modern pl-9"
+          className="input-dark pl-9"
           aria-label={placeholder}
         />
       </div>
       {children}
-      <button type="submit" className="btn-base btn-primary text-sm">
+      <button type="submit" className="btn-base btn-glow text-sm">
         Search
       </button>
     </form>

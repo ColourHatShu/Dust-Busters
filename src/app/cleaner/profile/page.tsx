@@ -11,6 +11,8 @@ import {
   ShieldAlert,
   AlertTriangle,
   CheckCircle,
+  Sparkles,
+  Save,
 } from "lucide-react";
 
 export default async function CleanerProfilePage() {
@@ -40,148 +42,195 @@ export default async function CleanerProfilePage() {
   const availabilityNote = details?.availability_note ?? "";
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Manage your cleaner profile and service areas
-        </p>
-      </div>
+    <main className="app-shell relative min-h-screen overflow-hidden py-12 sm:py-16">
+      <span
+        className="section-glow absolute -top-24 left-1/4 h-72 w-72"
+        aria-hidden
+      />
+      <span
+        className="section-glow section-glow--sky absolute top-32 -right-16 h-80 w-80"
+        aria-hidden
+      />
 
-      {/* Verification / active status notices */}
-      {!isVerified && (
-        <div className="flex items-start gap-3 rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
-          <ShieldAlert
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600"
-            strokeWidth={1.5}
-          />
-          <div>
-            <p className="font-semibold">ID verification pending</p>
-            <p className="mt-0.5">
-              Your ID verification is pending admin review. You&apos;ll start
-              receiving job offers once approved.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isVerified && (
-        <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <ShieldCheck className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
-          <span className="font-medium">ID verified</span>
-        </div>
-      )}
-
-      {!isActive && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          <AlertTriangle
-            className="mt-0.5 h-5 w-5 flex-shrink-0"
-            strokeWidth={1.5}
-          />
-          <div>
-            <p className="font-semibold">Account inactive</p>
-            <p className="mt-0.5">
-              Your account is currently inactive. Contact support if you believe
-              this is a mistake.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isActive && isVerified && (
-        <div className="flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-700">
-          <CheckCircle className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
-          <span className="font-medium">
-            Account active &mdash; you&apos;re receiving job requests
+      <div className="app-container relative z-10 max-w-2xl">
+        {/* Page header */}
+        <header className="page-header">
+          <span className="page-eyebrow">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+            Cleaner account
           </span>
-        </div>
-      )}
+          <h1 className="page-title">My Profile</h1>
+          <p className="page-subtitle">
+            Manage your cleaner profile and the service areas where you accept
+            jobs.
+          </p>
 
-      {/* Edit form */}
-      <form action={updateCleanerProfile} className="card space-y-6">
-        {/* Name */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="name"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-          >
-            <User className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-            Full name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            defaultValue={fullProfile?.name ?? ""}
-            required
-            className="input-modern"
-            placeholder="Your full name"
-          />
-        </div>
-
-        {/* Phone */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="phone"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-          >
-            <Phone className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-            Phone number
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            defaultValue={fullProfile?.phone ?? ""}
-            className="input-modern"
-            placeholder="+1 (250) 000-0000"
-          />
-        </div>
-
-        {/* Areas served */}
-        <fieldset className="flex flex-col gap-2">
-          <legend className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
-            <MapPin className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-            Areas you serve
-          </legend>
-          <div className="mt-2 flex flex-col gap-2">
-            {AREAS.map((area) => (
-              <label
-                key={area}
-                className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-4 py-2.5 transition hover:border-teal-300 hover:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:bg-teal-50"
-              >
-                <input
-                  type="checkbox"
-                  name="areas"
-                  value={area}
-                  defaultChecked={areasServed.includes(area)}
-                  className="h-4 w-4 accent-teal-600"
-                />
-                <span className="text-sm text-slate-700">{area}</span>
-              </label>
-            ))}
+          {/* Quick-glance status pills */}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <span
+              className={`pill ${isVerified ? "pill-success" : "pill-warning"}`}
+            >
+              <span className="pill-dot" />
+              {isVerified ? "ID verified" : "Verification pending"}
+            </span>
+            <span className={`pill ${isActive ? "pill-accent" : "pill-danger"}`}>
+              <span className="pill-dot" />
+              {isActive ? "Active" : "Inactive"}
+            </span>
           </div>
-        </fieldset>
+        </header>
 
-        {/* Availability note (display only — stored in cleaner_details) */}
-        {availabilityNote && (
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-medium text-slate-700">
-              Availability note
-            </p>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              {availabilityNote}
+        {/* Verification / active status notices */}
+        <div className="space-y-3">
+          {!isVerified && (
+            <div className="flex items-start gap-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] p-4">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
+                <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div className="text-sm">
+                <p className="font-semibold text-amber-200">
+                  ID verification pending
+                </p>
+                <p className="mt-1 text-slate-400">
+                  Your ID verification is pending admin review. You&apos;ll start
+                  receiving job offers once approved.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-400">
-              Contact support to update your availability note.
-            </p>
-          </div>
-        )}
+          )}
 
-        <button type="submit" className="w-full btn-base btn-primary">
-          Save changes
-        </button>
-      </form>
+          {isVerified && (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.06] px-4 py-3 text-sm">
+              <ShieldCheck
+                className="h-5 w-5 flex-shrink-0 text-emerald-300"
+                strokeWidth={1.5}
+              />
+              <span className="font-medium text-emerald-200">ID verified</span>
+            </div>
+          )}
+
+          {!isActive && (
+            <div className="flex items-start gap-4 rounded-2xl border border-red-400/25 bg-red-500/[0.06] p-4">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-red-400/30 bg-red-500/10 text-red-300">
+                <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div className="text-sm">
+                <p className="font-semibold text-red-200">Account inactive</p>
+                <p className="mt-1 text-slate-400">
+                  Your account is currently inactive. Contact support if you
+                  believe this is a mistake.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isActive && isVerified && (
+            <div className="flex items-center gap-3 rounded-2xl border border-teal-400/25 bg-teal-400/[0.06] px-4 py-3 text-sm">
+              <CheckCircle
+                className="h-5 w-5 flex-shrink-0 text-teal-300"
+                strokeWidth={1.5}
+              />
+              <span className="font-medium text-teal-100">
+                Account active &mdash; you&apos;re receiving job requests
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Edit form */}
+        <form action={updateCleanerProfile} className="surface-card mt-6 space-y-7">
+          {/* Name */}
+          <div>
+            <label
+              htmlFor="name"
+              className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-300"
+            >
+              <User className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+              Full name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              defaultValue={fullProfile?.name ?? ""}
+              required
+              className="input-dark"
+              placeholder="Your full name"
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-300"
+            >
+              <Phone className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+              Phone number
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              defaultValue={fullProfile?.phone ?? ""}
+              className="input-dark"
+              placeholder="+1 (250) 000-0000"
+            />
+          </div>
+
+          <hr className="divider" />
+
+          {/* Areas served */}
+          <fieldset>
+            <legend className="flex items-center gap-2 text-sm font-medium text-slate-300">
+              <MapPin className="h-4 w-4 text-teal-300/80" strokeWidth={1.5} />
+              Areas you serve
+            </legend>
+            <p className="field-hint mt-1">
+              Select every town you&apos;re willing to travel to for jobs.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {AREAS.map((area) => (
+                <label
+                  key={area}
+                  className="group flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 transition hover:border-teal-400/40 hover:bg-teal-400/[0.06] has-[:checked]:border-teal-400/60 has-[:checked]:bg-teal-400/10"
+                >
+                  <input
+                    type="checkbox"
+                    name="areas"
+                    value={area}
+                    defaultChecked={areasServed.includes(area)}
+                    className="h-4 w-4 accent-teal-500"
+                  />
+                  <span className="text-sm text-slate-200 transition group-hover:text-white">
+                    {area}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          {/* Availability note (display only — stored in cleaner_details) */}
+          {availabilityNote && (
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-slate-300">
+                Availability note
+              </p>
+              <div className="surface-muted text-sm text-slate-300">
+                {availabilityNote}
+              </div>
+              <p className="field-hint">
+                Contact support to update your availability note.
+              </p>
+            </div>
+          )}
+
+          <button type="submit" className="w-full btn-base btn-glow">
+            <Save className="h-4 w-4" strokeWidth={2} />
+            Save changes
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

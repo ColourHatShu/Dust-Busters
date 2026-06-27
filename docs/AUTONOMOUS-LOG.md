@@ -5,6 +5,29 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — 🎨 Futuristic dark redesign of the whole app (multi-agent)
+
+- **Founder request:** make every page modern/futuristic via multi-agent (one
+  agent per page) + a verify agent per page.
+- **How:** a 47-agent workflow — Foundation (1 agent: extended `globals.css` with a
+  shared design system — dark canvas, `surface-card`, `input-dark`, `table-dark`,
+  `pill-*`, `page-header`, glows; single writer) → Redesign (22 agents, one per
+  interior page, edit-in-place, logic preserved) → Verify (22 agents, one per page).
+  **Verify result: avg 8.6/10, 8 great / 11 good / 4 needs-fixes.**
+- **Reconciled the 4 needs-fixes + leftovers myself:** rebuilt the `cleaner/jobs`
+  page (its redesign agent died mid-edit → fixed the `STATUS_COLOR` build break +
+  dispatched a fresh agent for a full dark pass); **re-added the dropped review
+  status-gate** (real regression — a direct URL could review an in-flight booking);
+  dark-themed BOTH `MessagePanel`s (local customer + shared cleaner) **and applied
+  the hydration mount-gate to the local one** (the actual file behind the founder's
+  hydration error); `input-dark` on the admin filters/AdminSearch; dark `Skeleton`
+  loaders + `error`/`not-found` pages.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** build the council's post-accept page; start the audit's 🔴 list
+  (timezone, double-charge, refund math, `disputed` maps, RLS migrations).
+
+---
+
 ## 2026-06-28 — Crash-hardening sweep (cont.): review submissions
 
 - **Item:** the throw-crash pattern on the next lifecycle step. `submitReview`

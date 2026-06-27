@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Dark-first canvas — the whole app sits on the landing's deep near-black.
+     Pages/components paint their own surfaces on top; this is the floor. */
+  --background: #070b14;
+  --foreground: #e2e8f0;
 }
 
 /* Tailwind v4: color tokens MUST live in @theme to emit utilities
@@ -59,7 +61,9 @@ h3 {
 }
 
 p {
-  color: #475569;
+  /* Default body copy reads on the dark canvas (slate-300). Tailwind text-*
+     utilities and the foundation helpers below override this per element. */
+  color: #cbd5e1;
   line-height: 1.625;
 }
 
@@ -268,12 +272,11 @@ p {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
-/* Locked to a single polished light theme — no prefers-color-scheme
-   override, because pages are authored light-first (slate text on white).
-   Honoring the OS dark preference here produced unreadable mixed light/dark
-   patches across pages. Light-only is the intended, production-safe theme. */
+/* Locked to a single polished dark theme — the whole app is authored dark-first
+   (light text on the #070b14 canvas, glass surfaces). color-scheme: dark keeps
+   native controls (scrollbars, select popups, date pickers, autofill) on-theme. */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* ===========================================================================
@@ -1753,4 +1756,341 @@ p {
   outline: none;
   border-color: rgba(52, 211, 153, 0.6);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+
+/* ===========================================================================
+   APP FOUNDATION — shared futuristic-dark system for the interior app pages
+   ---------------------------------------------------------------------------
+   Page agents build on these instead of re-deriving the look. Everything reuses
+   the landing's palette: canvas #070b14 / #0b1220, emerald #10b981, teal
+   #2dd4bf / #5eead4, sky #0ea5e9; glass = white/4–white/8 over soft slate
+   borders; light text (near-white headings, slate-300 body, slate-400 muted).
+   Vocabulary:
+     layout ....... .app-shell  .app-container  .section-glow(+--teal/--sky)
+     header ....... .page-header  .page-eyebrow  .page-title  .page-subtitle
+     surfaces ..... .surface-card(+ -interactive)  .surface-muted  .panel-elevated
+     forms ........ .input-dark (input/select/textarea)  .field-label
+                    .field-hint  .field-error
+     data ......... .table-wrap  .table-dark
+     status ....... .pill + .pill-success/-accent/-info/-warning/-danger/-neutral
+     buttons ...... .btn-base + .btn-glow (primary) / .btn-outline (secondary)
+                    / .btn-ghost (tertiary)
+     accents ...... .link-accent  .divider  .divider-glow  .text-dim  .text-faint
+   ========================================================================== */
+
+/* Shared dark-surface tokens (plain custom props — consumed by the classes
+   below; safe to reference from page-level inline styles too). */
+:root {
+  --db-canvas: #070b14;
+  --db-surface: rgba(255, 255, 255, 0.04);
+  --db-surface-strong: rgba(255, 255, 255, 0.06);
+  --db-border: rgba(148, 163, 184, 0.14);
+  --db-border-strong: rgba(148, 163, 184, 0.22);
+  --db-border-accent: rgba(45, 212, 191, 0.45);
+  --db-ink: #e2e8f0;        /* primary body text on dark */
+  --db-ink-strong: #f1f5f9; /* headings / near-white */
+  --db-ink-muted: #94a3b8;  /* secondary / muted (slate-400) */
+  --db-ink-faint: #64748b;  /* faint / placeholder (slate-500) */
+}
+
+/* ---- Layout shells -------------------------------------------------------- */
+
+/* Optional page wrapper: dark canvas + a soft top radial for depth. Use on a
+   page's outermost element when you want the landing-style ambient header glow.
+   (The <body> is already dark, so plain content sections don't need this.) */
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #0d1a2e 0%, #0b1220 46%, #070b14 100%);
+  color: var(--db-ink);
+}
+
+/* Standard centered content column (matches the landing's max widths). */
+.app-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+/* Decorative ambient glow blob — position/size it with utilities
+   (e.g. `absolute -top-24 left-1/2 h-72 w-72`). Emerald by default. */
+.section-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  background: radial-gradient(circle, #10b981 0%, transparent 65%);
+}
+.section-glow--teal { background: radial-gradient(circle, #2dd4bf 0%, transparent 65%); }
+.section-glow--sky { background: radial-gradient(circle, #0ea5e9 0%, transparent 65%); }
+
+/* ---- Page header ---------------------------------------------------------- */
+
+.page-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--db-border);
+}
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+.page-title {
+  font-size: 1.875rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--db-ink-strong);
+}
+@media (min-width: 640px) {
+  .page-title { font-size: 2.25rem; }
+}
+.page-subtitle {
+  max-width: 44rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--db-ink-muted);
+}
+
+/* ---- Surfaces ------------------------------------------------------------- */
+
+/* Primary glassmorphic card — the interior-page workhorse. */
+.surface-card {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--db-border);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+  color: var(--db-ink);
+}
+/* Add for clickable / link cards — lift + accent border on hover. */
+.surface-card-interactive {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.surface-card-interactive:hover {
+  transform: translateY(-4px);
+  border-color: var(--db-border-accent);
+  box-shadow:
+    0 28px 60px -28px rgba(2, 44, 34, 0.85),
+    0 0 0 1px rgba(45, 212, 191, 0.16);
+}
+
+/* Quieter inset surface — list rows, sub-panels, empty states. */
+.surface-muted {
+  border-radius: 0.85rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: var(--db-ink);
+}
+
+/* More opaque, elevated panel — modals, popovers, sticky summaries. */
+.panel-elevated {
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(20, 30, 48, 0.92), rgba(10, 15, 26, 0.94));
+  border: 1px solid var(--db-border-strong);
+  box-shadow:
+    0 24px 60px -28px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--db-ink);
+}
+
+/* ---- Forms (extends the existing .input-dark) ----------------------------- */
+
+/* .input-dark already styles text inputs; cover textarea + select too. */
+textarea.input-dark {
+  min-height: 7rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+select.input-dark {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1.1rem;
+}
+/* Native popup list reads on theme (color-scheme: dark backs this up). */
+select.input-dark option {
+  background: #0b1220;
+  color: #f1f5f9;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+.field-hint {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--db-ink-faint);
+}
+.field-error {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #fca5a5;
+}
+
+/* ---- Tables --------------------------------------------------------------- */
+
+/* Wrap a .table-dark in this for the rounded, bordered glass frame. */
+.table-wrap {
+  border-radius: 1rem;
+  border: 1px solid var(--db-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  overflow: hidden;
+}
+.table-dark {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  color: var(--db-ink);
+}
+.table-dark thead th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--db-ink-muted);
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--db-border-strong);
+}
+.table-dark tbody td {
+  padding: 0.85rem 1rem;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+.table-dark tbody tr {
+  transition: background 0.15s ease;
+}
+.table-dark tbody tr:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+.table-dark tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Status pills --------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+/* Optional leading status dot: <span class="pill-dot" /> inside a .pill. */
+.pill-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+}
+.pill-success { color: #6ee7b7; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+.pill-accent  { color: #5eead4; background: rgba(45, 212, 191, 0.1); border-color: rgba(45, 212, 191, 0.3); }
+.pill-info    { color: #7dd3fc; background: rgba(14, 165, 233, 0.1); border-color: rgba(14, 165, 233, 0.3); }
+.pill-warning { color: #fcd34d; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+.pill-danger  { color: #fca5a5; background: rgba(239, 68, 68, 0.1);  border-color: rgba(239, 68, 68, 0.3); }
+.pill-neutral { color: #cbd5e1; background: rgba(148, 163, 184, 0.1); border-color: rgba(148, 163, 184, 0.25); }
+
+/* ---- Buttons (extend the landing's .btn-base / .btn-glow) ------------------ */
+
+/* Secondary: dark glass outline. Pair with .btn-base. */
+.btn-outline {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: #e2e8f0;
+  transition: all 0.2s ease;
+}
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.38);
+  transform: translateY(-1px);
+}
+.btn-outline:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 2px; }
+.btn-outline:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Tertiary: borderless, for low-emphasis actions. Pair with .btn-base. */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #cbd5e1;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.06); color: #f1f5f9; }
+.btn-ghost:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 2px; }
+.btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Accents & helpers ---------------------------------------------------- */
+
+.link-accent {
+  color: #5eead4;
+  transition: color 0.2s ease;
+}
+.link-accent:hover { color: #99f6e4; }
+
+/* Hairline + glowing dividers. */
+.divider {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: var(--db-border);
+}
+.divider-glow {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.4), transparent);
+}
+
+/* Muted text shortcuts (no font-size change, unlike .text-muted). */
+.text-dim { color: var(--db-ink-muted); }
+.text-faint { color: var(--db-ink-faint); }
+
+/* Consistent accent focus ring for custom interactive elements. */
+.focus-ring:focus-visible {
+  outline: 2px solid rgba(45, 212, 191, 0.7);
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
+
+/* Reusable accent focus ring also honors reduced transparency gracefully. */
+@media (prefers-reduced-motion: reduce) {
+  .surface-card-interactive { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+  .surface-card-interactive:hover { transform: none; }
 }

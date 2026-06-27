@@ -1,5 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  Users,
+  Star,
+  ShieldCheck,
+  ShieldOff,
+  Power,
+  PowerOff,
+  SearchX,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { setCleanerVerified, setCleanerActive } from "./actions";
 import AdminSearch from "../AdminSearch";
@@ -97,118 +107,220 @@ export default async function AdminCleanersPage({
     if (o.state === "accepted") statsMap[o.cleaner_id].offersAccepted += 1;
   }
 
-  return (
-    <main className="mx-auto max-w-6xl p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin" className="text-sm text-blue-600 hover:underline">
-          ← Admin
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Cleaners</h1>
-      </div>
-      <AdminSearch placeholder="Search cleaners by name or phone" defaultValue={q} />
-      <div className="card p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-gray-50 text-left text-gray-500">
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Areas</th>
-              <th className="p-3 font-medium">Verified</th>
-              <th className="p-3 font-medium">Active</th>
-              <th className="p-3 font-medium">Jobs Done</th>
-              <th className="p-3 font-medium">Avg Rating</th>
-              <th className="p-3 font-medium">Cancel Rate</th>
-              <th className="p-3 font-medium">Accept Rate</th>
-              <th className="p-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {(cleaners ?? []).map((c) => {
-              const d = Array.isArray(c.cleaner_details)
-                ? c.cleaner_details[0]
-                : c.cleaner_details;
-              const verified = d?.id_verified ?? false;
-              const active = d?.active ?? false;
-              const stats = statsMap[c.id] ?? {
-                completed: 0, cancelled: 0, total: 0,
-                totalRating: 0, reviewCount: 0,
-                offersTotal: 0, offersAccepted: 0,
-              };
-              const avgRating = stats.reviewCount > 0
-                ? (stats.totalRating / stats.reviewCount).toFixed(1)
-                : "—";
-              const cancelRate = stats.total > 0
-                ? `${Math.round((stats.cancelled / stats.total) * 100)}%`
-                : "—";
-              const acceptRate = stats.offersTotal > 0
-                ? `${Math.round((stats.offersAccepted / stats.offersTotal) * 100)}%`
-                : "—";
+  const list = cleaners ?? [];
 
-              return (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="p-3">
-                    <Link
-                      href={`/admin/cleaners/${c.id}`}
-                      className="font-medium text-blue-700 hover:underline"
-                    >
-                      {c.name ?? "(no name)"}
-                    </Link>
-                  </td>
-                  <td className="p-3 text-xs text-gray-600">
-                    {(d?.areas_served ?? []).join(", ") || "—"}
-                  </td>
-                  <td className="p-3">
-                    {verified ? (
-                      <span className="status-badge bg-green-100 text-green-800">Verified</span>
-                    ) : (
-                      <span className="status-badge bg-gray-100 text-gray-500">Unverified</span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {active ? (
-                      <span className="status-badge bg-blue-100 text-blue-800">Active</span>
-                    ) : (
-                      <span className="status-badge bg-red-100 text-red-700">Inactive</span>
-                    )}
-                  </td>
-                  <td className="p-3">{stats.completed}</td>
-                  <td className="p-3">{avgRating}</td>
-                  <td className="p-3">{cancelRate}</td>
-                  <td className="p-3">{acceptRate}</td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      <form
-                        action={async () => {
-                          "use server";
-                          await setCleanerVerified(c.id, !verified);
-                        }}
-                      >
-                        <button className="btn-base btn-secondary text-xs py-1 px-2">
-                          {verified ? "Unverify" : "Verify"}
-                        </button>
-                      </form>
-                      <form
-                        action={async () => {
-                          "use server";
-                          await setCleanerActive(c.id, !active);
-                        }}
-                      >
-                        <button
-                          className={`btn-base text-xs py-1 px-2 ${
-                            active
-                              ? "bg-red-100 text-red-700 hover:bg-red-200"
-                              : "bg-green-100 text-green-700 hover:bg-green-200"
-                          }`}
-                        >
-                          {active ? "Deactivate" : "Activate"}
-                        </button>
-                      </form>
+  // Resolve the (array-or-object) embedded cleaner_details once.
+  const getDetails = (c: (typeof list)[number]) =>
+    Array.isArray(c.cleaner_details) ? c.cleaner_details[0] : c.cleaner_details;
+
+  const verifiedCount = list.filter((c) => getDetails(c)?.id_verified).length;
+  const activeCount = list.filter((c) => getDetails(c)?.active).length;
+
+  const actionBase =
+    "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400";
+
+  return (
+    <main className="app-shell">
+      {/* Ambient depth glows */}
+      <span className="section-glow absolute -top-24 left-1/4 h-72 w-72" aria-hidden="true" />
+      <span className="section-glow section-glow--sky absolute right-0 top-32 h-72 w-72" aria-hidden="true" />
+
+      <div className="app-container relative py-10">
+        <header className="page-header">
+          <Link
+            href="/admin"
+            className="link-accent inline-flex w-fit items-center gap-1.5 text-sm font-medium"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            Admin
+          </Link>
+          <span className="page-eyebrow">
+            <Users className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            Cleaner roster
+          </span>
+          <h1 className="page-title text-gradient-on-dark">Cleaners</h1>
+          <p className="page-subtitle">
+            Verify identities, toggle availability, and monitor delivery quality across
+            your cleaning workforce.
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="pill pill-neutral">{list.length} total</span>
+            <span className="pill pill-success">
+              <span className="pill-dot" />
+              {verifiedCount} verified
+            </span>
+            <span className="pill pill-info">
+              <span className="pill-dot" />
+              {activeCount} active
+            </span>
+          </div>
+        </header>
+
+        <AdminSearch placeholder="Search cleaners by name or phone" defaultValue={q} />
+
+        <div className="table-wrap overflow-x-auto">
+          <table className="table-dark">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Areas</th>
+                <th>Verified</th>
+                <th>Active</th>
+                <th>Jobs Done</th>
+                <th>Avg Rating</th>
+                <th>Cancel Rate</th>
+                <th>Accept Rate</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400">
+                        <SearchX className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                      </span>
+                      <p className="text-sm font-medium text-slate-200">No cleaners found</p>
+                      <p className="text-xs text-faint">
+                        {q ? "Try a different name or phone number." : "Cleaners will appear here once they join."}
+                      </p>
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ) : (
+                list.map((c) => {
+                  const d = getDetails(c);
+                  const verified = d?.id_verified ?? false;
+                  const active = d?.active ?? false;
+                  const stats = statsMap[c.id] ?? {
+                    completed: 0, cancelled: 0, total: 0,
+                    totalRating: 0, reviewCount: 0,
+                    offersTotal: 0, offersAccepted: 0,
+                  };
+                  const avgRating = stats.reviewCount > 0
+                    ? (stats.totalRating / stats.reviewCount).toFixed(1)
+                    : "—";
+                  const cancelRate = stats.total > 0
+                    ? `${Math.round((stats.cancelled / stats.total) * 100)}%`
+                    : "—";
+                  const acceptRate = stats.offersTotal > 0
+                    ? `${Math.round((stats.offersAccepted / stats.offersTotal) * 100)}%`
+                    : "—";
+
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <Link
+                          href={`/admin/cleaners/${c.id}`}
+                          className="link-accent font-medium"
+                        >
+                          {c.name ?? "(no name)"}
+                        </Link>
+                      </td>
+                      <td className="max-w-[14rem] text-xs text-dim">
+                        {(d?.areas_served ?? []).join(", ") || <span className="text-faint">—</span>}
+                      </td>
+                      <td>
+                        {verified ? (
+                          <span className="pill pill-success">
+                            <span className="pill-dot" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="pill pill-neutral">
+                            <span className="pill-dot" />
+                            Unverified
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {active ? (
+                          <span className="pill pill-info">
+                            <span className="pill-dot" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="pill pill-danger">
+                            <span className="pill-dot" />
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="font-semibold tabular-nums text-slate-100">
+                          {stats.completed}
+                        </span>
+                      </td>
+                      <td>
+                        {avgRating === "—" ? (
+                          <span className="text-faint">—</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 font-medium tabular-nums text-slate-100">
+                            <Star
+                              className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                              strokeWidth={1.5}
+                              aria-hidden="true"
+                            />
+                            {avgRating}
+                          </span>
+                        )}
+                      </td>
+                      <td className="tabular-nums text-dim">{cancelRate}</td>
+                      <td className="tabular-nums text-dim">{acceptRate}</td>
+                      <td>
+                        <div className="flex gap-2">
+                          <form
+                            action={async () => {
+                              "use server";
+                              await setCleanerVerified(c.id, !verified);
+                            }}
+                          >
+                            <button
+                              className={`${actionBase} ${
+                                verified
+                                  ? "border-white/10 bg-white/[0.04] text-slate-300 hover:border-amber-400/40 hover:bg-amber-500/10 hover:text-amber-200"
+                                  : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:border-emerald-400/60 hover:bg-emerald-500/20"
+                              }`}
+                            >
+                              {verified ? (
+                                <ShieldOff className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                              ) : (
+                                <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                              )}
+                              {verified ? "Unverify" : "Verify"}
+                            </button>
+                          </form>
+                          <form
+                            action={async () => {
+                              "use server";
+                              await setCleanerActive(c.id, !active);
+                            }}
+                          >
+                            <button
+                              className={`${actionBase} ${
+                                active
+                                  ? "border-red-400/30 bg-red-500/10 text-red-200 hover:border-red-400/60 hover:bg-red-500/20"
+                                  : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:border-emerald-400/60 hover:bg-emerald-500/20"
+                              }`}
+                            >
+                              {active ? (
+                                <PowerOff className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                              ) : (
+                                <Power className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                              )}
+                              {active ? "Deactivate" : "Activate"}
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   );

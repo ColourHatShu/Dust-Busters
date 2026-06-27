@@ -3,7 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
 import BookingForm from "./BookingForm";
-import { CheckCircle } from "lucide-react";
+import { ShieldCheck, Sparkles } from "lucide-react";
 
 export const metadata = {
   title: "Book a cleaning",
@@ -70,79 +70,101 @@ export default async function BookPage({
   const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
 
   return (
-    <main className="mx-auto max-w-lg space-y-10 p-6">
-      {/* Header + pricing note */}
-      <div className="space-y-4">
-        <h1>Book a cleaning</h1>
-        <p className="text-slate-600">
-          <span className="font-semibold text-accent">
-            From {currency} ${rate}/hr
-          </span>{" "}
-          •{" "}
-          <span className="font-semibold text-accent">
-            {depositPercent}% deposit
-          </span>{" "}
-          to confirm
-          <br />
-          <span className="text-sm">
-            Pay {depositPercent}% upfront, the rest after the job.
-          </span>
-        </p>
-      </div>
-
-      <BookingForm
-        rate={rate}
-        currency={currency}
-        depositPercent={depositPercent}
-        minDate={minDate}
-        areas={AREAS}
-        prefillHours={prefillHours}
-        prefillArea={prefillArea}
-        savedAddresses={savedAddresses ?? []}
-        favorites={favorites}
+    <main className="app-shell relative overflow-hidden">
+      {/* Ambient aurora glows behind the booking flow */}
+      <span
+        className="section-glow absolute -top-24 left-1/4 h-72 w-72"
+        aria-hidden="true"
+      />
+      <span
+        className="section-glow section-glow--sky absolute top-44 -right-16 h-72 w-72"
+        aria-hidden="true"
       />
 
-      {/* How it works */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-800">How it works</h2>
-        <ol className="flex flex-col gap-4">
-          {[
-            {
-              step: 1,
-              title: "Book",
-              description:
-                "Fill in your details and we'll find you a vetted local cleaner.",
-            },
-            {
-              step: 2,
-              title: "We match a cleaner",
-              description:
-                "A cleaner accepts your job and you're notified. Pay the deposit to lock in your slot.",
-            },
-            {
-              step: 3,
-              title: "Relax",
-              description:
-                "Your cleaner arrives on time. Pay the remaining balance after you're satisfied.",
-            },
-          ].map(({ step, title, description }) => (
-            <li key={step} className="flex items-start gap-4">
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-                {step}
-              </span>
-              <div className="space-y-0.5">
-                <p className="font-semibold text-slate-900">{title}</p>
-                <p className="text-sm text-slate-600">{description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+      <div className="app-container relative z-10 max-w-xl space-y-12 py-14 sm:py-16">
+        {/* Header + pricing note */}
+        <header className="page-header">
+          <span className="page-eyebrow">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+            New booking
+          </span>
+          <h1 className="page-title text-gradient-on-dark">Book a cleaning</h1>
+          <p className="page-subtitle">
+            Pick your date, hours, and area — we&apos;ll match you with a verified
+            local cleaner in the Comox Valley in minutes.
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="pill pill-accent">
+              From {currency} ${rate}/hr
+            </span>
+            <span className="pill pill-success">
+              {depositPercent}% deposit to confirm
+            </span>
+          </div>
+          <p className="text-sm text-faint">
+            Pay {depositPercent}% upfront, the rest after the job.
+          </p>
+        </header>
 
-        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-          <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-500" strokeWidth={2} />
-          <span>All cleaners are background-checked and rated by real customers.</span>
-        </div>
-      </section>
+        <BookingForm
+          rate={rate}
+          currency={currency}
+          depositPercent={depositPercent}
+          minDate={minDate}
+          areas={AREAS}
+          prefillHours={prefillHours}
+          prefillArea={prefillArea}
+          savedAddresses={savedAddresses ?? []}
+          favorites={favorites}
+        />
+
+        {/* How it works */}
+        <section className="space-y-5">
+          <h2 className="text-lg font-semibold text-slate-100">How it works</h2>
+          <ol className="flex flex-col gap-3">
+            {[
+              {
+                step: 1,
+                title: "Book",
+                description:
+                  "Fill in your details and we'll find you a vetted local cleaner.",
+              },
+              {
+                step: 2,
+                title: "We match a cleaner",
+                description:
+                  "A cleaner accepts your job and you're notified. Pay the deposit to lock in your slot.",
+              },
+              {
+                step: 3,
+                title: "Relax",
+                description:
+                  "Your cleaner arrives on time. Pay the remaining balance after you're satisfied.",
+              },
+            ].map(({ step, title, description }) => (
+              <li key={step} className="surface-muted flex items-start gap-4">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-bold text-slate-950 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.7)]">
+                  {step}
+                </span>
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-slate-100">{title}</p>
+                  <p className="text-sm text-dim">{description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="surface-muted flex items-center gap-3 text-sm text-dim">
+            <ShieldCheck
+              className="h-5 w-5 flex-shrink-0 text-emerald-400"
+              strokeWidth={1.75}
+            />
+            <span>
+              All cleaners are background-checked and rated by real customers.
+            </span>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
