@@ -42,7 +42,6 @@ export default function FinalCta() {
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
         <span className="cta-aurora cta-aurora-1" />
         <span className="cta-aurora cta-aurora-2" />
-        <span className="cta-aurora cta-aurora-3" />
         <div className="cta-grid" />
         <div className="cta-halo" />
         {CTA_MOTES.map((p, i) => (
@@ -62,7 +61,6 @@ export default function FinalCta() {
             }}
           />
         ))}
-        <div className="cta-edge" />
       </div>
 
       <Reveal className="mx-auto w-full max-w-4xl">

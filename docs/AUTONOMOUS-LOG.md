@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Council fix: unified, consistent landing background
+
+- **Founder report:** homepage background looked inconsistent (patchy / banded /
+  shifting tone). Ran a 4-agent "council" (CSS cascade · component overlays ·
+  top-to-bottom stack · synthesis).
+- **Root cause:** the landing was 7 independently-painted surfaces. A prior
+  "seamless fix" flattened only 4 of 7, leaving: the **hero's opaque off-palette
+  teal `#122` base** (the most-visible region, a different hue than `#070b14`),
+  Pricing's top emerald wash + CTA's bottom wash at **different opacities**,
+  ambient glows at **5 different opacities (0.4–0.5)**, all corner glows stacked
+  on the **same edges** (left-edge diagonal ladder), extra bookend auroras +
+  edge-fades on hero/CTA, and a **white footer hairline**.
+- **Fix (one cohesive `#070b14` surface):** every region base (incl. hero) now
+  transparent over `<main>`; all 6 ambient glows normalized to opacity 0.3;
+  WhyTrust + ServiceAreas glows flipped so accent sides alternate; removed the
+  3rd hero/CTA auroras, the slate `hero-vignette`, the dark `cta-edge`, and the
+  footer's white top border (kept its bg).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+
+---
+
 ## 2026-06-27 — Knight iteration: instant winner reveal (map realtime)
 
 - **Item:** flagship map polish round 2a. The map caught a cleaner accepting only

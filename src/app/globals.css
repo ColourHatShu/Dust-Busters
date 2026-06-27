@@ -1561,24 +1561,39 @@ p {
 }
 
 
-/* === Seamless landing fix ===========================================
-   Each section was painting its own top-lit opaque gradient that faded to
-   #070b14, so every section boundary showed a dark->lighter seam (the page
-   looked "divided"). Drop the opaque bases — the page bg (#070b14) plus each
-   section's glow overlay give depth — and keep a soft accent glow on pricing
-   and the final CTA. */
+/* === Unified landing background (council fix) =======================
+   The landing is ONE surface: <main> paints #070b14 and EVERY region base
+   (including the hero) is transparent over it. Previously the hero kept an
+   opaque off-palette teal (#122) base and Pricing/CTA re-introduced emerald
+   washes at different opacities, so regions read as different hues/brightness.
+   We also normalize all ambient glows to a single opacity and alternate their
+   sides so the accent field is even instead of a left-edge ladder. */
+.hero-shell,
 .hiw-section,
 .trust-section,
 .area-section,
-.assure-section {
+.assure-section,
+.price-section,
+.cta-shell {
   background: transparent;
 }
-.price-section {
-  background: radial-gradient(120% 90% at 50% 0%, rgba(16, 185, 129, 0.07), transparent 60%);
+
+/* One shared ambient-glow opacity across every region (was 0.4–0.5). */
+.aurora,
+.hiw-aurora,
+.trust-glow,
+.price-aura,
+.area-glow,
+.cta-aurora {
+  opacity: 0.3;
 }
-.cta-shell {
-  background: radial-gradient(125% 140% at 50% 120%, rgba(16, 185, 129, 0.10), transparent 55%);
-}
+
+/* Alternate the corner glows (were all emerald top-left / sky bottom-right,
+   which piled up into a diagonal left-edge band at every section seam). */
+.trust-glow-a { left: auto; right: -10rem; }
+.trust-glow-b { right: auto; left: -8rem; }
+.area-glow--a { left: auto; right: -6rem; }
+.area-glow--b { right: auto; left: -8rem; }
 
 
 /* === Live cleaner matching map ===================================== */

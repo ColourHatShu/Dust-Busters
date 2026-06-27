@@ -41,7 +41,6 @@ export default function HeroBackdrop() {
       {/* Aurora blobs */}
       <span className="aurora aurora-1" />
       <span className="aurora aurora-2" />
-      <span className="aurora aurora-3" />
 
       {/* Perspective grid floor */}
       <div className="hero-grid" />
@@ -69,7 +68,6 @@ export default function HeroBackdrop() {
       ))}
 
       {/* Top fade into the navbar + bottom fade into the page */}
-      <div className="hero-vignette" />
     </div>
   );
 }
