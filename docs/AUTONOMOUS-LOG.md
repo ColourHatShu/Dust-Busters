@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Audit 🔴: refund net-paid math (re-applied on light)
+
+- **Item:** a refunded cancellation showed a **negative "Net paid"** on the booking
+  receipt and **double-reduced** the admin dashboard revenue. Cause: a refund is
+  recorded twice — the original deposit flips to status `refunded` (drops from a
+  paid sum) AND a separate negative `refund` row is inserted for the receipt line;
+  summing the negative row too subtracts the refund a second time. Fix (read-only,
+  refund storage unchanged): exclude `type = 'refund'` from both aggregates — the
+  booking `netPaid` filter and the admin `totalRevenue` query. A refunded deposit
+  now nets to $0.00; revenue is net-of-refunds, counted once, never negative.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next (AUDIT-FIXES-TODO):** timezone parse, admin-dispute, cleaner-ux,
+  admin-rating; re-add `disputed` to the status maps.
+
+---
+
 ## 2026-06-28 — UI reverted to light + RLS security holes closed (0028)
 
 - **Founder asked for a white UI** (the dark redesign also broke the admin layout):

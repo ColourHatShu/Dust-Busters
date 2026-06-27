@@ -24,11 +24,16 @@ export default async function AdminHomePage() {
     statusCounts[b.status] = (statusCounts[b.status] ?? 0) + 1;
   }
 
-  // 3. Total revenue: sum paid payments in JS
+  // 3. Total revenue: sum paid payments in JS. A refund already removes its
+  // revenue by flipping the original deposit to status "refunded", so it drops
+  // from this "paid" sum automatically; excluding the separate negative "refund"
+  // row prevents subtracting the refund a second time (revenue is net-of-refunds,
+  // counted once — never negative or double-reduced).
   const { data: paidPayments } = await supabase
     .from("payments")
     .select("amount")
-    .eq("status", "paid");
+    .eq("status", "paid")
+    .neq("type", "refund");
   const totalRevenue = (paidPayments ?? []).reduce(
     (sum, p) => sum + Number(p.amount ?? 0),
     0

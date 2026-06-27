@@ -128,8 +128,14 @@ export default async function BookingStatusPage({
       }[]
     >();
   const paymentRows = payments ?? [];
+  // A refund is recorded twice: the original deposit row flips to status
+  // "refunded" (so it already drops from a "paid" sum) AND a separate negative
+  // "refund" row is inserted for the receipt line. Counting that negative row
+  // here too would subtract the refund a second time → a negative total. Exclude
+  // refund rows from the aggregate (they still render in the list below). A
+  // refunded deposit therefore nets to $0.00.
   const netPaid = paymentRows
-    .filter((p) => p.status === "paid")
+    .filter((p) => p.status === "paid" && p.type !== "refund")
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
   let cleaner: { name: string; id_verified: boolean; jobs_completed: number } | null =
