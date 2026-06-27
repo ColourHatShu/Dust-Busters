@@ -35,8 +35,14 @@ export default function MessagePanel({
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Timestamps depend on Date.now() and the viewer's locale/timezone, which differ
+  // between the server render and the browser — render them only after mount to
+  // avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+
+  useEffect(() => setMounted(true), []);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -137,8 +143,8 @@ export default function MessagePanel({
               className={`flex flex-col gap-0.5 ${isOwn ? "items-end" : "items-start"}`}
             >
               <span className="text-xs text-slate-400">
-                {isOwn ? "You" : senderName} &middot;{" "}
-                {formatRelativeTime(msg.created_at)}
+                {isOwn ? "You" : senderName}
+                {mounted && <> &middot; {formatRelativeTime(msg.created_at)}</>}
               </span>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed ${
