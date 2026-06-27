@@ -54,17 +54,29 @@ export default async function AdminCleanerDetailPage({
     .eq("cleaner_id", id)
     .order("created_at", { ascending: false });
 
-  // Reviews for this cleaner
+  // Reviews link to a BOOKING (no cleaner_id / created_by columns), so resolve
+  // them via this cleaner's booking ids; the reviewer name comes from each
+  // booking's customer.
+  const bookingIds = (bookings ?? []).map((b) => b.id);
+  const customerByBooking = new Map(
+    (bookings ?? []).map((b) => {
+      const c = Array.isArray(b.customer) ? b.customer[0] : b.customer;
+      return [b.id, (c as { name: string } | null)?.name ?? "A customer"];
+    })
+  );
+  const reviewLookupIds = bookingIds.length
+    ? bookingIds
+    : ["00000000-0000-0000-0000-000000000000"];
   const { data: reviews } = await supabase
     .from("reviews")
-    .select("id, rating, comment, created_by, created_at, booking_id")
-    .eq("cleaner_id", id)
+    .select("id, rating, comment, created_at, booking_id")
+    .in("booking_id", reviewLookupIds)
     .order("created_at", { ascending: false });
 
-  // Offers for acceptance rate
+  // Offers for acceptance rate — real table booking_offers, column `state`.
   const { data: offers } = await supabase
-    .from("offers")
-    .select("id, status")
+    .from("booking_offers")
+    .select("id, state")
     .eq("cleaner_id", id);
 
   // Compute metrics
@@ -74,7 +86,7 @@ export default async function AdminCleanerDetailPage({
   const cancelRate = totalJobs > 0 ? Math.round((cancelled / totalJobs) * 100) : 0;
 
   const totalOffers = (offers ?? []).length;
-  const acceptedOffers = (offers ?? []).filter((o) => o.status === "accepted").length;
+  const acceptedOffers = (offers ?? []).filter((o) => o.state === "accepted").length;
   const acceptRate = totalOffers > 0 ? Math.round((acceptedOffers / totalOffers) * 100) : 0;
 
   const totalRating = (reviews ?? []).reduce((sum, r) => sum + Number(r.rating), 0);
@@ -258,7 +270,8 @@ export default async function AdminCleanerDetailPage({
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-gray-900">{r.rating}/5</span>
                   <span className="text-xs text-gray-400">
-                    by {r.created_by} · {new Date(r.created_at).toLocaleDateString()}
+                    by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
+                    {new Date(r.created_at).toLocaleDateString()}
                   </span>
                   <Link
                     href={`/admin/bookings/${r.booking_id}`}

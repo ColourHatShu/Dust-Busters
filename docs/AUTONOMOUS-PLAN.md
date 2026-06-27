@@ -45,10 +45,10 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Admin dispute `updateDisputeStatus` set nonexistent `updated_at` → removed; admins can resolve disputes again. ✅
 - [x] Admin dispute page queried `payments.payment_type` → fixed to `type` (select/neq/render); removed a no-op `onChange` that would crash the server-rendered select. ✅
 - [x] **Admin `issueRefund` (critical)**: wrote nonexistent `payment_type`/`notes`/`updated_at` + invalid enum `'refund'` → Stripe refunded but DB write always failed. Migration `0013` adds `'refund'` to `payment_type`, `'refunded'` to `payment_status`, and a `notes` column; `issueRefund` now records the refund correctly, marks the original payment `refunded`, and surfaces DB errors. ✅ APPLIED + verified live. **Unblocks the cancellation-refund item.**
-- [ ] Cleaner acceptance rate reads non-existent `offers` table / `status` col → use `booking_offers.state`. (`admin/cleaners/page.tsx:36-38`)
-- [ ] Cleaner profile reviews query selects non-existent `created_by` → reviews + Avg Rating blank. (`admin/cleaners/[id]/page.tsx:60`)
-- [ ] Duplicate-review check queries nonexistent `reviews.reviewer_id` → prompt never clears, resubmit errors. (`bookings/[id]/page.tsx:99-106`)
-- [ ] Admin dashboard status color map + 'pending' stat use statuses not in the enum. (`admin/page.tsx:58-64,97`)
+- [x] Cleaner acceptance rate: `offers`/`status` → `booking_offers`/`state` (list + profile). ✅
+- [x] Cleaner profile reviews: resolved via the cleaner's booking ids (reviews have no `cleaner_id`/`created_by`); reviewer name from the booking's customer; Avg Rating renders. ✅
+- [x] Duplicate-review check fixed earlier (uses unique `booking_id`, not `reviewer_id`). ✅
+- [x] Admin dashboard: real `booking_status` color map (was `pending`/`confirmed`), `cleaner_details.id` → `profile_id` for the active-cleaners count, and a real "active" stat instead of the always-0 "pending". ✅
 
 ### Booking / flow correctness
 - [x] Live price estimate on `/book` now reactive via a `PriceEstimator` client component (total + deposit update with the hours input). ✅

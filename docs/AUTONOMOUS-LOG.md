@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: admin schema-mismatch bug cluster
+
+- **Item:** P1 admin correctness — three pages were querying columns/tables that
+  don't exist, so they silently broke:
+  - Cleaner acceptance rate read `.from("offers").select(...status)` → fixed to
+    `booking_offers` / `state` (cleaners list + profile).
+  - Cleaner profile reviews read `reviews.created_by` and `.eq("cleaner_id")` —
+    reviews have neither. Now resolved via the cleaner's booking ids
+    (`reviews.in("booking_id", ...)`), and the reviewer name comes from each
+    booking's customer. Avg Rating now renders.
+  - Admin dashboard: status color map keyed on non-existent `pending`/`confirmed`
+    → real `booking_status` values; the active-cleaners count selected
+    `cleaner_details.id` (PK is `profile_id`) → fixed; replaced the always-0
+    "pending" stat with a real "active" (in-flight) count.
+- Code-only (no migration).
+- **Verify:** `tsc` clean · `npm test` 3/3 · `next build` 25/25. ✅
+- **Next up:** P1 resilience — `app/error.tsx` + `global-error.tsx`, then security
+  headers in `next.config.ts`; then P2 (loading skeletons, OG metadata, etc.).
+
+---
+
 ## 2026-06-27 — Knight iteration: /book live estimate + date/input validation
 
 - **Item:** P1 customer-facing booking-form fixes. The price estimate was

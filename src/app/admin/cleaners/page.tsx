@@ -32,10 +32,11 @@ export default async function AdminCleanersPage() {
     .from("reviews")
     .select("cleaner_id, rating");
 
-  // Aggregate offers (accepted vs total) per cleaner
+  // Aggregate offers (accepted vs total) per cleaner.
+  // Real table is `booking_offers` with column `state` (not `offers`/`status`).
   const { data: offers } = await supabase
-    .from("offers")
-    .select("cleaner_id, status");
+    .from("booking_offers")
+    .select("cleaner_id, state");
 
   type CleanerStats = {
     completed: number;
@@ -83,7 +84,7 @@ export default async function AdminCleanersPage() {
         offersTotal: 0, offersAccepted: 0,
       };
     statsMap[o.cleaner_id].offersTotal += 1;
-    if (o.status === "accepted") statsMap[o.cleaner_id].offersAccepted += 1;
+    if (o.state === "accepted") statsMap[o.cleaner_id].offersAccepted += 1;
   }
 
   return (
