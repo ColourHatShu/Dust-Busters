@@ -29,13 +29,14 @@ async function assertAdmin() {
 export async function setCleanerVerified(profileId: string, verified: boolean) {
   await assertAdmin();
   const svc = serviceClient();
-  await svc
+  const { error } = await svc
     .from("cleaner_details")
     .update({
       id_verified: verified,
       verified_at: verified ? new Date().toISOString() : null,
     })
     .eq("profile_id", profileId);
+  if (error) throw new Error(error.message);
   revalidatePath("/admin/cleaners");
   revalidatePath(`/admin/cleaners/${profileId}`);
 }
@@ -43,10 +44,11 @@ export async function setCleanerVerified(profileId: string, verified: boolean) {
 export async function setCleanerActive(profileId: string, active: boolean) {
   await assertAdmin();
   const svc = serviceClient();
-  await svc
+  const { error } = await svc
     .from("cleaner_details")
     .update({ active })
     .eq("profile_id", profileId);
+  if (error) throw new Error(error.message);
   revalidatePath("/admin/cleaners");
   revalidatePath(`/admin/cleaners/${profileId}`);
 }

@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — 🐛 Admin "Verify cleaner" did nothing (another 0009 side-effect)
+
+- **Founder-reported:** clicking Verify in admin didn't verify the cleaner.
+  **Root cause:** `setCleanerVerified` writes `id_verified` via the service-role
+  client, but the `0009` `enforce_cleaner_verification_admin_only` trigger forced
+  `id_verified` back to its old value whenever `NOT is_admin()` — and `is_admin()`
+  is **false for the service role** (its `auth.uid()` is null), so the verify was
+  silently reverted. Migration `0026` lets the trigger also accept the trusted
+  service role (`auth.role() = 'service_role'`); authenticated non-admins still
+  can't self-verify. **Empirically confirmed** in a rolled-back tx: `auth.role()`
+  = `service_role` and the `id_verified` write now sticks. Also hardened
+  `setCleanerVerified` / `setCleanerActive` to surface DB errors instead of
+  silently no-op-ing.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** broad server-action throw-crash audit (the recurring pattern) — harden
+  the remaining user-facing actions.
+
+---
+
 ## 2026-06-28 — 🐛 "Search again" crash + notify-on-accept
 
 - **Founder-reported crash:** clicking "Search again" threw *"Only a booking with
