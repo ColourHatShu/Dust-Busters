@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — 🐛 Regression fix: cleaner onboarding was broken (+ admin margins)
+
+- **Founder-reported:** picking areas on "Become a cleaner" and submitting just
+  bounced back to the onboard page. **Root cause = my own `0009` security trigger**:
+  it blocked *every* role change by non-admins, so `becomeCleaner`'s
+  `role: customer→cleaner` was silently rejected → role stayed `customer` →
+  `/cleaner/jobs` bounced them back to `/cleaner/onboard`. Migration `0023`
+  narrows the trigger: a non-admin may self-switch customer↔cleaner but still
+  can NOT grant themselves `admin` (escalation protection intact). Also hardened
+  `becomeCleaner` to surface DB errors instead of failing silently. Applied +
+  verified live.
+- **Also this firing (already pushed `de5acf3`):** admin dashboard revenue card
+  now breaks out realized **platform commission** vs **cleaner payouts** (from
+  settled bookings' stored split) — real margin visibility for the operator.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+
+---
+
 ## 2026-06-28 — Knight iteration: booking special instructions
 
 - **Item:** customer scope/instructions on a booking ("focus on the kitchen",

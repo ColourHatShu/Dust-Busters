@@ -12,12 +12,18 @@ export async function becomeCleaner(formData: FormData) {
 
   const areas = formData.getAll("areas").map(String);
 
-  await supabase.from("profiles").update({ role: "cleaner" }).eq("id", user.id);
-  await supabase.from("cleaner_details").upsert({
+  const { error: roleErr } = await supabase
+    .from("profiles")
+    .update({ role: "cleaner" })
+    .eq("id", user.id);
+  if (roleErr) throw new Error(roleErr.message);
+
+  const { error: detailsErr } = await supabase.from("cleaner_details").upsert({
     profile_id: user.id,
     areas_served: areas,
     active: true,
   });
+  if (detailsErr) throw new Error(detailsErr.message);
 
   redirect("/cleaner/jobs");
 }
