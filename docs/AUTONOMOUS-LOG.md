@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Audit 🟠: admin "Avg Rating" column was always blank
+
+- **Item:** the cleaner roster aggregated ratings via `reviews.select("cleaner_id, rating")`,
+  but the `reviews` table has **no `cleaner_id`** column (the cleaner is on the
+  related booking) — so every rating was unattributed and the column always showed
+  "—". Fixed the query to embed `bookings(cleaner_id)` and aggregate by the booking's
+  cleaner (same relationship the `get_cleaner_card` RPC uses). Real averages now show.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next (AUDIT-FIXES-TODO):** re-add `disputed` to the status maps; matching map
+  poll-resume after "Search again"; timezone parse.
+
+---
+
 ## 2026-06-28 — Audit 🟠: cleaner-UX trio (re-applied on light)
 
 - **Guard `/cleaner/onboard`:** it was unguarded — an existing/deactivated cleaner

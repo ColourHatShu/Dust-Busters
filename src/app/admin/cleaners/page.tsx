@@ -37,10 +37,14 @@ export default async function AdminCleanersPage({
     .from("bookings")
     .select("cleaner_id, status");
 
-  // Aggregate ratings per cleaner
+  // Aggregate ratings per cleaner. The reviews table has NO cleaner_id column —
+  // the cleaner is on the related booking — so embed bookings(cleaner_id).
   const { data: reviews } = await supabase
     .from("reviews")
-    .select("cleaner_id, rating");
+    .select("rating, bookings(cleaner_id)")
+    .returns<
+      { rating: number; bookings: { cleaner_id: string | null } | null }[]
+    >();
 
   // Aggregate offers (accepted vs total) per cleaner.
   // Real table is `booking_offers` with column `state` (not `offers`/`status`).
@@ -74,15 +78,17 @@ export default async function AdminCleanersPage({
   }
 
   for (const r of reviews ?? []) {
-    if (!r.cleaner_id) continue;
-    if (!statsMap[r.cleaner_id])
-      statsMap[r.cleaner_id] = {
+    const bk = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+    const cid = bk?.cleaner_id;
+    if (!cid) continue;
+    if (!statsMap[cid])
+      statsMap[cid] = {
         completed: 0, cancelled: 0, total: 0,
         totalRating: 0, reviewCount: 0,
         offersTotal: 0, offersAccepted: 0,
       };
-    statsMap[r.cleaner_id].totalRating += Number(r.rating);
-    statsMap[r.cleaner_id].reviewCount += 1;
+    statsMap[cid].totalRating += Number(r.rating);
+    statsMap[cid].reviewCount += 1;
   }
 
   for (const o of offers ?? []) {
