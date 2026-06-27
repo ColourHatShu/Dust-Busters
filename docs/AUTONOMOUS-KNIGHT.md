@@ -20,7 +20,8 @@ high-value improvements — autonomously, while the founder is away.
 1. `git checkout dustbusters-autonomous` and `git pull` if a remote exists.
 2. Read `AUTONOMOUS-PLAN.md`. Pick the **highest-priority unchecked `[ ]` item**.
 3. Acquire the lock: write `docs/.knight-lock` with the current `date`/item. If a
-   lock exists and its timestamp is < 30 min old, another worker is active — exit.
+   lock exists and its timestamp is < 8 min old, another worker is active — exit.
+   (Cadence is every 10 min, so the lock window is shorter than the interval.)
 4. Implement the item. Keep changes focused and idiomatic to the surrounding code.
 5. **Verify gate (all must pass — never leave the build broken):**
    - `npx tsc --noEmit`
