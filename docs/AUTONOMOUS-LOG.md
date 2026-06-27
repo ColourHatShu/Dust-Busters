@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-27 — Knight iteration: two-way reviews
+
+- **Item:** trust & safety. Reviews were customer→cleaner only. Migration `0020`
+  adds a `customer_reviews` table (one per booking; RLS: only the assigned cleaner
+  can insert, and only once the job is `completed/balance_paid/closed`; the
+  cleaner, the reviewed customer, and admins can read) + a `get_customer_rating`
+  SECURITY DEFINER RPC. The cleaner job detail page now shows the customer's
+  overall rating and a "Rate the customer" form (reuses the StarRating component +
+  optional notes), hidden once submitted.
+- **DB:** 0020 applied via pooler, verified (table + RPC).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** surface customer rating on the admin customer profile; favorites 2b
+  (book-a-favorite); P3 polish.
+
+---
+
 ## 2026-06-27 — Knight iteration: cleaner-side stale-offer expiry + 📊 milestone
 
 **This iteration:** completed the lazy-expiry feature symmetrically. The cleaner

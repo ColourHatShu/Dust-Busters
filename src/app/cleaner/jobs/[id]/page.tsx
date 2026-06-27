@@ -3,6 +3,8 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { startJob, completeJob } from "../../actions";
 import { reportProblem } from "./report-actions";
+import { submitCustomerReview } from "./customer-review-actions";
+import StarRating from "@/app/bookings/[id]/review/StarRating";
 import MessagePanel from "@/components/MessagePanel";
 import Link from "next/link";
 import {
@@ -17,6 +19,7 @@ import {
   CheckCircle,
   Lock,
   AlertTriangle,
+  Star,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -112,6 +115,27 @@ export default async function CleanerJobDetailPage({
 
   const showStart = booking.status === "deposit_paid";
   const showComplete = booking.status === "in_progress";
+
+  // Two-way reviews: once the job is done, the cleaner can rate the customer.
+  const REVIEWABLE = new Set(["completed", "balance_paid", "closed"]);
+  const canReviewCustomer = REVIEWABLE.has(booking.status);
+  let alreadyReviewedCustomer = false;
+  let customerRating: { avg_rating: number | null; review_count: number } | null =
+    null;
+  if (canReviewCustomer) {
+    const { data: existing } = await supabase
+      .from("customer_reviews")
+      .select("id")
+      .eq("booking_id", id)
+      .maybeSingle();
+    alreadyReviewedCustomer = !!existing;
+
+    const { data: rating } = await supabase.rpc("get_customer_rating", {
+      p_customer: booking.customer_id,
+    });
+    const r = Array.isArray(rating) ? rating[0] : rating;
+    customerRating = r ?? null;
+  }
 
   return (
     <main className="mx-auto max-w-lg space-y-6 p-6">
@@ -289,6 +313,47 @@ export default async function CleanerJobDetailPage({
             </button>
           </form>
         </details>
+      )}
+
+      {/* Rate the customer (two-way reviews) */}
+      {canReviewCustomer && (
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-slate-900">Rate the customer</h2>
+            {customerRating?.avg_rating != null && (
+              <span className="flex items-center gap-1 text-sm text-slate-500">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                {customerRating.avg_rating}
+                <span className="text-slate-400">
+                  ({customerRating.review_count})
+                </span>
+              </span>
+            )}
+          </div>
+
+          {alreadyReviewedCustomer ? (
+            <p className="flex items-center gap-1.5 text-sm text-slate-500">
+              <CheckCircle className="h-4 w-4 text-green-600" strokeWidth={2} />
+              Thanks — you&apos;ve rated this customer.
+            </p>
+          ) : (
+            <form
+              action={submitCustomerReview.bind(null, id, booking.customer_id)}
+              className="flex flex-col gap-4"
+            >
+              <StarRating />
+              <textarea
+                name="comment"
+                rows={3}
+                placeholder="Any notes about the property or visit (optional)"
+                className="input-modern"
+              />
+              <button className="btn-base btn-primary self-start text-sm">
+                Submit rating
+              </button>
+            </form>
+          )}
+        </div>
       )}
 
       {/* Messaging */}
