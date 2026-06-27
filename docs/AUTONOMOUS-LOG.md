@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Audit 🔴: admin dispute fixes (re-applied on light)
+
+- **Wrong Stripe intent refunded:** the refund form pinned a hidden
+  `stripe_payment_intent_id` to `payments[0]`, so on multi-payment bookings the
+  admin always refunded the first payment regardless of the dropdown choice. Fixed
+  `issueRefund` to look up the *selected* payment (scoped to the booking, excluding
+  refund rows), refund THAT intent, and validate the amount server-side (>0 and ≤
+  the charged amount). Removed the stale hidden field + the misleading `max`, and
+  the dropdown now excludes refund rows.
+- **Booking stuck in `disputed`:** resolving/closing a dispute never released the
+  booking. `updateDisputeStatus` now, on resolve/close, restores the booking
+  `disputed → completed` (open_dispute only parks a *completed* booking, verified
+  in 0014; guarded by `.eq("status","disputed")`).
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next (AUDIT-FIXES-TODO):** timezone parse, cleaner-ux, admin-rating; re-add
+  `disputed` to the status maps.
+
+---
+
 ## 2026-06-28 — Audit 🔴: refund net-paid math (re-applied on light)
 
 - **Item:** a refunded cancellation showed a **negative "Net paid"** on the booking

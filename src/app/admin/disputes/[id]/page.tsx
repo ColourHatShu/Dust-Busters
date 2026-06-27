@@ -205,19 +205,17 @@ export default async function AdminDisputeDetailPage({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Payment to Refund
               </label>
-              <select name="payment_id" className="input-modern w-full">
-                {(payments ?? []).map((p) => (
-                  <option key={p.id} value={p.id} data-intent={p.stripe_payment_intent_id ?? "none"}>
-                    {p.type} — ${Number(p.amount).toFixed(2)} ({p.status})
-                  </option>
-                ))}
+              <select name="payment_id" required className="input-modern w-full">
+                {(payments ?? [])
+                  .filter((p) => p.type !== "refund")
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.type} — ${Number(p.amount).toFixed(2)} ({p.status})
+                    </option>
+                  ))}
               </select>
-              {/* Hidden field — JS-free: pre-fill with first payment's intent */}
-              <input
-                type="hidden"
-                name="stripe_payment_intent_id"
-                value={payments?.[0]?.stripe_payment_intent_id ?? "none"}
-              />
+              {/* The action refunds the SELECTED payment's intent and validates
+                  the amount against it server-side. */}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -228,7 +226,6 @@ export default async function AdminDisputeDetailPage({
                 name="amount"
                 step="0.01"
                 min="0.01"
-                max={Number(payments?.[0]?.amount ?? 0)}
                 required
                 placeholder="0.00"
                 className="input-modern w-full"
