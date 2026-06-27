@@ -68,10 +68,10 @@ export default async function BookingStatusPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ cancelled?: string }>;
+  searchParams: Promise<{ cancelled?: string; payError?: string }>;
 }) {
   const { id } = await params;
-  const { cancelled } = await searchParams;
+  const { cancelled, payError } = await searchParams;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
 
@@ -192,6 +192,11 @@ export default async function BookingStatusPage({
         <MatchingMap bookingId={booking.id} initial={matching} />
       )}
 
+      {payError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {payError}
+        </div>
+      )}
       {cancelled === "refunded" && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
           Booking cancelled. Your deposit has been refunded to your original

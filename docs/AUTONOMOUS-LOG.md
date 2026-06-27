@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-28 — Harden the payment flow against crashes (money path)
+
+- **Item:** the recurring throw-crash pattern, applied to the highest-risk
+  next-click — **Pay deposit / Pay balance**. `startCheckout` threw on a stale
+  state ("not payable right now"), a missing booking, or any Stripe API error →
+  crashed to the global error boundary mid-payment. Rewrote it to **redirect back
+  to the booking with a friendly `?payError=` message** instead (kept `redirect()`
+  out of the try/catch so `NEXT_REDIRECT` still propagates; the Stripe call is
+  wrapped and falls back to a "couldn't start checkout, try again" message). Added
+  a red `payError` banner on the booking page.
+- **Verify:** `tsc` clean · `npm test` 15/15 · `next build` 27/27. ✅
+- **Next:** surface errors in `startJob`/`completeJob` (currently swallowed);
+  harden remaining review/dispute/report actions (duplicate-submit → crash).
+
+---
+
 ## 2026-06-28 — 🐛 Admin "Verify cleaner" did nothing (another 0009 side-effect)
 
 - **Founder-reported:** clicking Verify in admin didn't verify the cleaner.
