@@ -59,7 +59,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Cancellation never issues a refund despite stated policy. (`0008:135-168`, `bookings/[id]/page.tsx:334`)
 - [x] `start_job`/`complete_job` swallow errors and fail silently → already surfaced: both log + `jobsError(...)` redirect to the jobs list with a friendly banner instead of swallowing. Verified. ✅ (`cleaner/actions.ts`)
 - [x] Live job feed ignored the `bookings` table → added a second realtime subscription on `bookings` filtered by `cleaner_id`, so the cleaner's list auto-refreshes when an assigned booking changes status (deposit_paid / cancelled / reassigned), not just on offer changes. ✅ tsc+build+tests green. (`cleaner/jobs/JobsLive.tsx`)
-- [ ] Accept-offer race result (won/lost) discarded → loser gets no feedback. (`cleaner/jobs/page.tsx:155-165`)
+- [x] Accept-offer race result (won/lost) discarded → `acceptJob` now redirects with `?notice=won`/`?notice=lost`; the jobs page shows a success banner on a win and a friendly "another cleaner accepted first" banner on a loss. ✅ tsc+build+tests green. (`cleaner/actions.ts`, `cleaner/jobs/page.tsx`)
 
 ### UX feedback & forms
 - [x] Pay-deposit/balance forms had no pending/disabled state (double-click → double-charge risk) → added a shared client `SubmitButton` (`useFormStatus`: disables + shows a pending label + `aria-busy` while the action is in flight); wired into the deposit + balance pay forms. Other forms can adopt it incrementally. ✅ (`components/SubmitButton.tsx`, `bookings/[id]/page.tsx`)

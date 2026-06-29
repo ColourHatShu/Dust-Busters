@@ -57,10 +57,13 @@ export async function acceptJob(bookingId: string) {
         bookingId,
       );
     }
+    // Won the race — confirm it so the cleaner knows the job is theirs.
+    redirect("/cleaner/jobs?notice=won");
   }
 
-  revalidatePath("/cleaner/jobs");
-  return data === true;
+  // accept_offer returned false: another cleaner accepted first (or the offer
+  // expired). Previously this result was discarded and the loser got no feedback.
+  redirect("/cleaner/jobs?notice=lost");
 }
 
 export async function setAvailability(accepting: boolean) {

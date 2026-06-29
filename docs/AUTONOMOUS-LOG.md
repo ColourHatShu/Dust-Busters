@@ -5,6 +5,50 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — 📊 Milestone summary (8 Knight items shipped this run)
+
+**Shipped + verified (tsc + next build + npm test) + pushed to
+`origin/dustbusters-autonomous`:**
+1. `4099566` — P0 chargeback webhook → real `disputes` schema (chargebacks were
+   silently lost; now reach the admin queue, idempotent).
+2. `41d3b11` — P1 notify customer on cleaner accept (pay deposit) / complete
+   (pay balance).
+3. `b758a3e` — P1 `SubmitButton` pending/disabled on pay + cleaner action forms
+   (double-charge / double-accept guard).
+4. `5c5b695` — P1 CSRF/same-origin guard on the `mark-read` POST.
+5. `fc507b7` — P1 `ConfirmSubmit` confirmation on destructive admin actions
+   (cancel / refund / reassign / override / verify / deactivate).
+6. `316e3ad` — P1 booking timezone: parse `datetime-local` as Pacific (DST-aware),
+   not server UTC. +5 unit tests.
+7. `3aadd6c` — P1 cleaner live feed also reacts to `bookings` status changes
+   (deposit_paid / cancel / reassign).
+8. `(this commit)` — P1 accept-offer race feedback (won/lost banners).
+
+Also reconciled several stale backlog items already fixed in earlier work (admin
+`issueRefund`/0013, `start_job`/`complete_job` error surfacing). Test suite grew
+15 → 20. Two new shared components: `SubmitButton`, `ConfirmSubmit`.
+
+**Queued next (P1/P2):** `deposit_deadline` never set (needs an RPC migration via
+the pooler); transactional email/SMS channel abstraction (keys are founder-only);
+Terms/Privacy pages; rate limiting; reschedule-before-deposit.
+**⛔ Founder-only:** `STRIPE_WEBHOOK_SECRET`, Stripe live keys, Vercel deploy,
+real ID verification (Storage/Stripe Identity), Stripe Connect payouts.
+
+---
+
+## 2026-06-29 — Knight iteration: accept-offer race feedback (won / lost)
+
+- **Item:** P1 feedback. `acceptJob`'s won/lost result was discarded, so a cleaner
+  who lost the race (another cleaner accepted first) just saw the offer vanish
+  with no explanation.
+- **Fix:** `acceptJob` now redirects with `?notice=won` (after sending the
+  customer's "pay your deposit" notification) or `?notice=lost`; the jobs page
+  renders a success banner on a win and a friendly "another cleaner accepted
+  first — new offers appear here in real time" banner on a loss.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+
+---
+
 ## 2026-06-29 — Knight iteration: cleaner live feed reacts to booking status
 
 - **Item:** P1 realtime correctness. `JobsLive` only subscribed to

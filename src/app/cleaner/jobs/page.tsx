@@ -219,6 +219,24 @@ export default async function CleanerJobsPage({
           </span>
         </div>
       )}
+      {notice === "won" && (
+        <div className="alert alert-success">
+          <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
+          <span>
+            You got the job! It&apos;s now in your jobs below — we&apos;ll let you
+            know once the customer pays the deposit.
+          </span>
+        </div>
+      )}
+      {notice === "lost" && (
+        <div className="alert alert-info">
+          <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
+          <span>
+            Another cleaner accepted that job first. Keep an eye out — new offers
+            appear here in real time.
+          </span>
+        </div>
+      )}
       {actionError && (
         <div className="alert alert-error">
           <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
