@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: CSRF/same-origin guard on mark-read
+
+- **Item:** P1 security hardening. The `/api/notifications/mark-read` POST relied
+  only on the auth cookie, so a malicious cross-site page could POST with the
+  victim's session and mark notifications read (low impact, but a real CSRF gap).
+- **Fix:** added an `isCrossOrigin` guard that returns 403 for `Sec-Fetch-Site:
+  cross-site` and for any `Origin` whose host doesn't match the request `Host`,
+  before the auth + RLS checks. Same-origin fetches (the only legitimate caller)
+  pass unchanged.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 15/15.
+- **Next up:** P1 — confirmation prompts on destructive admin actions.
+
+---
+
 ## 2026-06-29 — Knight iteration: pending/disabled state on action forms
 
 - **Item:** P1 UX + money safety. The pay-deposit/balance forms and the cleaner
