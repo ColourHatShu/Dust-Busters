@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Star, MessageSquare } from "lucide-react";
+import { ArrowLeft, Star, MessageSquare, Lightbulb, Check } from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { submitReview } from "./actions";
@@ -24,8 +24,14 @@ export default async function ReviewPage({
 
   if (!booking || booking.customer_id !== user.id) redirect("/");
 
+  const tips = [
+    "Mention what stood out — punctuality, attention to detail, friendliness.",
+    "Be specific and honest; it helps cleaners improve.",
+    "Keep it respectful — focus on the work, not the person.",
+  ];
+
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-6">
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
       <Link
         href={`/bookings/${id}`}
         className="link-subtle inline-flex items-center gap-1.5 text-sm"
@@ -46,34 +52,53 @@ export default async function ReviewPage({
         </div>
       </div>
 
-      <form
-        action={async (formData) => {
-          "use server";
-          await submitReview(booking.id, formData);
-        }}
-        className="card flex flex-col gap-6"
-      >
-        <div className="surface-muted flex flex-col items-center gap-4 p-5 text-center">
-          <span className="eyebrow-label">How was it?</span>
-          <StarRating />
-        </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <form
+          action={async (formData) => {
+            "use server";
+            await submitReview(booking.id, formData);
+          }}
+          className="card flex flex-col gap-6 lg:col-span-2"
+        >
+          <div className="surface-muted flex flex-col items-center gap-4 p-5 text-center">
+            <span className="eyebrow-label">How was it?</span>
+            <StarRating />
+          </div>
 
-        <label className="flex flex-col gap-2">
-          <span className="form-label">
-            <MessageSquare className="h-4 w-4" strokeWidth={1.5} />
-            Comment
-            <span className="font-normal text-slate-400">(optional)</span>
-          </span>
-          <textarea
-            name="comment"
-            rows={4}
-            placeholder="Tell us how it went…"
-            className="input-modern"
-          />
-        </label>
+          <label className="flex flex-col gap-2">
+            <span className="form-label">
+              <MessageSquare className="h-4 w-4" strokeWidth={1.5} />
+              Comment
+              <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <textarea
+              name="comment"
+              rows={4}
+              placeholder="Tell us how it went…"
+              className="input-modern"
+            />
+          </label>
 
-        <button className="btn-base btn-primary">Submit review</button>
-      </form>
+          <button className="btn-base btn-primary">Submit review</button>
+        </form>
+
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div className="card card-sm flex flex-col gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <Lightbulb className="h-4 w-4" strokeWidth={1.75} />
+            </span>
+            <h2 className="section-title">Tips for a helpful review</h2>
+            <ul className="flex flex-col gap-2.5">
+              {tips.map((tip) => (
+                <li key={tip} className="flex items-start gap-2 text-sm text-slate-600">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" strokeWidth={2} />
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }

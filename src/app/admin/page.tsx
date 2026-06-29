@@ -188,21 +188,6 @@ export default async function AdminHomePage() {
         </div>
       </div>
 
-      {/* Booking Status Breakdown */}
-      {Object.keys(statusCounts).length > 0 && (
-        <div className="card">
-          <h2 className="section-title mb-3">Booking Status Breakdown</h2>
-          <div className="flex flex-wrap gap-2.5">
-            {Object.entries(statusCounts).map(([status, count]) => (
-              <span key={status} className={bookingBadgeClass(status)}>
-                {bookingStatusLabel(status)}
-                <span className="font-bold">{count}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Nav Cards */}
       <div>
         <h2 className="eyebrow-label mb-3">Manage</h2>
@@ -225,15 +210,17 @@ export default async function AdminHomePage() {
         </div>
       </div>
 
-      {/* Recent Bookings */}
-      <div className="card card-flush overflow-hidden">
-        <div className="flex items-center justify-between gap-4 p-5 sm:p-6">
-          <h2 className="section-title">Recent Bookings</h2>
-          <Link href="/admin/bookings" className="link-accent text-sm">
-            View all →
-          </Link>
-        </div>
-        <div className="overflow-x-auto">
+      {/* Recent Bookings + Booking Status Breakdown */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Recent Bookings */}
+        <div className="lg:col-span-2 card card-flush overflow-hidden">
+          <div className="flex items-center justify-between gap-4 p-5 sm:p-6">
+            <h2 className="section-title">Recent Bookings</h2>
+            <Link href="/admin/bookings" className="link-accent text-sm">
+              View all →
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>
@@ -312,7 +299,23 @@ export default async function AdminHomePage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
+
+        {/* Booking Status Breakdown */}
+        {Object.keys(statusCounts).length > 0 && (
+          <aside className="card">
+            <h2 className="section-title mb-3">Booking Status Breakdown</h2>
+            <div className="flex flex-wrap gap-2.5">
+              {Object.entries(statusCounts).map(([status, count]) => (
+                <span key={status} className={bookingBadgeClass(status)}>
+                  {bookingStatusLabel(status)}
+                  <span className="font-bold">{count}</span>
+                </span>
+              ))}
+            </div>
+          </aside>
+        )}
       </div>
     </main>
   );

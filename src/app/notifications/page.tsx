@@ -67,7 +67,7 @@ export default async function NotificationsPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-6">
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="icon-tile">
@@ -111,7 +111,7 @@ export default async function NotificationsPage() {
         return (
           <section key={group} className="space-y-3">
             <h2 className="eyebrow-label">{group}</h2>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="grid gap-3 sm:grid-cols-2">
               {groupItems.map((n) => (
                 <li key={n.id}>
                   {/* Whole row is clickable: marks read, then opens the booking

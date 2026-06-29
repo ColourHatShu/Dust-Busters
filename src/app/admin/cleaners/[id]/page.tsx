@@ -110,7 +110,7 @@ export default async function AdminCleanerDetailPage({
       .toUpperCase() || "?";
 
   return (
-    <main className="mx-auto max-w-4xl p-6 space-y-6">
+    <main className="mx-auto max-w-6xl p-6 space-y-6">
       <div>
         <Link
           href="/admin/cleaners"
@@ -122,282 +122,287 @@ export default async function AdminCleanerDetailPage({
         <h1 className="page-title">Cleaner Profile</h1>
       </div>
 
-      {/* Profile + Actions */}
-      <div className="card flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex-1 space-y-5">
-          <div className="flex items-center gap-4">
-            <span className="avatar h-14 w-14 text-lg" aria-hidden="true">
-              {initials}
-            </span>
-            <div className="min-w-0">
-              <p className="text-xl font-semibold text-slate-900">
-                {cleaner.name ?? "—"}
-              </p>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {verified ? (
-                  <span className="badge badge-success">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    Verified
-                  </span>
-                ) : (
-                  <span className="badge badge-neutral">Unverified</span>
-                )}
-                {active ? (
-                  <span className="badge badge-info">
-                    <span className="badge-dot" />
-                    Active
-                  </span>
-                ) : (
-                  <span className="badge badge-danger">
-                    <span className="badge-dot" />
-                    Inactive
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-muted px-4 py-1">
-            <div className="detail-row">
-              <span className="detail-label">
-                <Phone className="h-4 w-4" aria-hidden="true" />
-                Phone
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Profile */}
+          <div className="card space-y-5">
+            <div className="flex items-center gap-4">
+              <span className="avatar h-14 w-14 text-lg" aria-hidden="true">
+                {initials}
               </span>
-              <span className="detail-value">{cleaner.phone ?? "—"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">
-                <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                Joined
-              </span>
-              <span className="detail-value">
-                {new Date(cleaner.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-                Areas Served
-              </span>
-              <span className="detail-value">
-                {(d?.areas_served ?? []).join(", ") || "—"}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                Verified At
-              </span>
-              <span className="detail-value">
-                {d?.verified_at
-                  ? new Date(d.verified_at).toLocaleDateString()
-                  : "—"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col gap-2 sm:w-44">
-          {!verified && (
-            <div className="alert alert-warning">
-              <ShieldAlert className="h-4 w-4" aria-hidden="true" />
-              <span>This cleaner has not been ID-verified yet.</span>
-            </div>
-          )}
-          {!active && (
-            <div className="alert alert-error">
-              <ShieldAlert className="h-4 w-4" aria-hidden="true" />
-              <span>Inactive — this cleaner won&apos;t receive job offers.</span>
-            </div>
-          )}
-          <form
-            action={async () => {
-              "use server";
-              await setCleanerVerified(id, !verified);
-            }}
-          >
-            <button className="btn-base btn-secondary w-full">
-              {verified ? "Unverify" : "Verify"}
-            </button>
-          </form>
-          <form
-            action={async () => {
-              "use server";
-              await setCleanerActive(id, !active);
-            }}
-          >
-            <button
-              className={`btn-base w-full ${
-                active
-                  ? "bg-red-100 text-red-700 hover:bg-red-200"
-                  : "bg-green-100 text-green-700 hover:bg-green-200"
-              }`}
-            >
-              {active ? "Deactivate" : "Activate"}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="stat-card">
-          <span className="stat-label">Jobs Completed</span>
-          <span className="stat-value">{completed}</span>
-          <span className="stat-sub">of {totalJobs} total</span>
-        </div>
-        <div className="stat-card stat-card-accent">
-          <span className="stat-label">Avg Rating</span>
-          <span className="stat-value inline-flex items-center gap-1.5">
-            {avgRating !== null && (
-              <Star
-                className="h-5 w-5 text-amber-400"
-                fill="currentColor"
-                aria-hidden="true"
-              />
-            )}
-            {avgRating ?? "—"}
-          </span>
-          <span className="stat-sub">
-            {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
-          </span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Cancel Rate</span>
-          <span className="stat-value">{cancelRate}%</span>
-          <span className="stat-sub">{cancelled} cancelled</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Acceptance Rate</span>
-          <span className="stat-value">{acceptRate}%</span>
-          <span className="stat-sub">
-            {acceptedOffers} of {totalOffers} offers
-          </span>
-        </div>
-      </div>
-
-      {/* Booking History */}
-      <div className="card card-flush overflow-hidden">
-        <div className="flex items-center gap-2.5 px-6 pb-3 pt-5">
-          <span className="icon-tile icon-tile-sm icon-tile-soft">
-            <CalendarClock className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <h2 className="section-title">Booking History</h2>
-        </div>
-        {(bookings ?? []).length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">
-              <CalendarClock className="h-6 w-6" aria-hidden="true" />
-            </span>
-            <p className="empty-state-title">No bookings yet</p>
-            <p className="empty-state-text">
-              This cleaner has not been assigned to any bookings.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Area</th>
-                  <th>Scheduled</th>
-                  <th className="num">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(bookings ?? []).map((b) => {
-                  const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
-                  return (
-                    <tr key={b.id}>
-                      <td>
-                        <Link
-                          href={`/admin/bookings/${b.id}`}
-                          className="link-accent font-mono text-xs"
-                        >
-                          {String(b.id).slice(0, 8)}
-                        </Link>
-                      </td>
-                      <td>{customer?.name ?? "—"}</td>
-                      <td>
-                        <span className={bookingBadgeClass(b.status)}>
-                          {bookingStatusLabel(b.status)}
-                        </span>
-                      </td>
-                      <td>{b.area ?? "—"}</td>
-                      <td className="text-xs text-slate-500">
-                        {b.scheduled_at
-                          ? new Date(b.scheduled_at).toLocaleString()
-                          : "—"}
-                      </td>
-                      <td className="num">
-                        {b.total_amount != null
-                          ? `$${Number(b.total_amount).toFixed(2)}`
-                          : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Reviews */}
-      <div className="card">
-        <div className="mb-4 flex items-center gap-2.5">
-          <span className="icon-tile icon-tile-sm icon-tile-soft">
-            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <h2 className="section-title">Reviews ({reviewCount})</h2>
-        </div>
-        {reviewCount === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">
-              <Star className="h-6 w-6" aria-hidden="true" />
-            </span>
-            <p className="empty-state-title">No reviews yet</p>
-            <p className="empty-state-text">
-              Customer reviews for this cleaner will appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {(reviews ?? []).map((r) => (
-              <div
-                key={r.id}
-                className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
-              >
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 font-semibold text-slate-900">
-                    <Star
-                      className="h-4 w-4 text-amber-400"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    />
-                    {r.rating}/5
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
-                    {new Date(r.created_at).toLocaleDateString()}
-                  </span>
-                  <Link
-                    href={`/admin/bookings/${r.booking_id}`}
-                    className="link-accent ml-auto text-xs"
-                  >
-                    Booking
-                  </Link>
+              <div className="min-w-0">
+                <p className="text-xl font-semibold text-slate-900">
+                  {cleaner.name ?? "—"}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {verified ? (
+                    <span className="badge badge-success">
+                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="badge badge-neutral">Unverified</span>
+                  )}
+                  {active ? (
+                    <span className="badge badge-info">
+                      <span className="badge-dot" />
+                      Active
+                    </span>
+                  ) : (
+                    <span className="badge badge-danger">
+                      <span className="badge-dot" />
+                      Inactive
+                    </span>
+                  )}
                 </div>
-                {r.comment && (
-                  <p className="text-sm text-slate-700">{r.comment}</p>
-                )}
               </div>
-            ))}
+            </div>
+
+            <div className="surface-muted px-4 py-1">
+              <div className="detail-row">
+                <span className="detail-label">
+                  <Phone className="h-4 w-4" aria-hidden="true" />
+                  Phone
+                </span>
+                <span className="detail-value">{cleaner.phone ?? "—"}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">
+                  <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                  Joined
+                </span>
+                <span className="detail-value">
+                  {new Date(cleaner.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  Areas Served
+                </span>
+                <span className="detail-value">
+                  {(d?.areas_served ?? []).join(", ") || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  Verified At
+                </span>
+                <span className="detail-value">
+                  {d?.verified_at
+                    ? new Date(d.verified_at).toLocaleDateString()
+                    : "—"}
+                </span>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="stat-card">
+              <span className="stat-label">Jobs Completed</span>
+              <span className="stat-value">{completed}</span>
+              <span className="stat-sub">of {totalJobs} total</span>
+            </div>
+            <div className="stat-card stat-card-accent">
+              <span className="stat-label">Avg Rating</span>
+              <span className="stat-value inline-flex items-center gap-1.5">
+                {avgRating !== null && (
+                  <Star
+                    className="h-5 w-5 text-amber-400"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  />
+                )}
+                {avgRating ?? "—"}
+              </span>
+              <span className="stat-sub">
+                {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+              </span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">Cancel Rate</span>
+              <span className="stat-value">{cancelRate}%</span>
+              <span className="stat-sub">{cancelled} cancelled</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">Acceptance Rate</span>
+              <span className="stat-value">{acceptRate}%</span>
+              <span className="stat-sub">
+                {acceptedOffers} of {totalOffers} offers
+              </span>
+            </div>
+          </div>
+
+          {/* Booking History */}
+          <div className="card card-flush overflow-hidden">
+            <div className="flex items-center gap-2.5 px-6 pb-3 pt-5">
+              <span className="icon-tile icon-tile-sm icon-tile-soft">
+                <CalendarClock className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <h2 className="section-title">Booking History</h2>
+            </div>
+            {(bookings ?? []).length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-state-icon">
+                  <CalendarClock className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <p className="empty-state-title">No bookings yet</p>
+                <p className="empty-state-text">
+                  This cleaner has not been assigned to any bookings.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Customer</th>
+                      <th>Status</th>
+                      <th>Area</th>
+                      <th>Scheduled</th>
+                      <th className="num">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(bookings ?? []).map((b) => {
+                      const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
+                      return (
+                        <tr key={b.id}>
+                          <td>
+                            <Link
+                              href={`/admin/bookings/${b.id}`}
+                              className="link-accent font-mono text-xs"
+                            >
+                              {String(b.id).slice(0, 8)}
+                            </Link>
+                          </td>
+                          <td>{customer?.name ?? "—"}</td>
+                          <td>
+                            <span className={bookingBadgeClass(b.status)}>
+                              {bookingStatusLabel(b.status)}
+                            </span>
+                          </td>
+                          <td>{b.area ?? "—"}</td>
+                          <td className="text-xs text-slate-500">
+                            {b.scheduled_at
+                              ? new Date(b.scheduled_at).toLocaleString()
+                              : "—"}
+                          </td>
+                          <td className="num">
+                            {b.total_amount != null
+                              ? `$${Number(b.total_amount).toFixed(2)}`
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Reviews */}
+          <div className="card">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="icon-tile icon-tile-sm icon-tile-soft">
+                <MessageSquare className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <h2 className="section-title">Reviews ({reviewCount})</h2>
+            </div>
+            {reviewCount === 0 ? (
+              <div className="empty-state">
+                <span className="empty-state-icon">
+                  <Star className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <p className="empty-state-title">No reviews yet</p>
+                <p className="empty-state-text">
+                  Customer reviews for this cleaner will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(reviews ?? []).map((r) => (
+                  <div
+                    key={r.id}
+                    className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 font-semibold text-slate-900">
+                        <Star
+                          className="h-4 w-4 text-amber-400"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        />
+                        {r.rating}/5
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </span>
+                      <Link
+                        href={`/admin/bookings/${r.booking_id}`}
+                        className="link-accent ml-auto text-xs"
+                      >
+                        Booking
+                      </Link>
+                    </div>
+                    {r.comment && (
+                      <p className="text-sm text-slate-700">{r.comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          {/* Verification & status actions */}
+          <div className="card flex flex-col gap-3">
+            {!verified && (
+              <div className="alert alert-warning">
+                <ShieldAlert className="h-4 w-4" aria-hidden="true" />
+                <span>This cleaner has not been ID-verified yet.</span>
+              </div>
+            )}
+            {!active && (
+              <div className="alert alert-error">
+                <ShieldAlert className="h-4 w-4" aria-hidden="true" />
+                <span>Inactive — this cleaner won&apos;t receive job offers.</span>
+              </div>
+            )}
+            <form
+              action={async () => {
+                "use server";
+                await setCleanerVerified(id, !verified);
+              }}
+            >
+              <button className="btn-base btn-secondary w-full">
+                {verified ? "Unverify" : "Verify"}
+              </button>
+            </form>
+            <form
+              action={async () => {
+                "use server";
+                await setCleanerActive(id, !active);
+              }}
+            >
+              <button
+                className={`btn-base w-full ${
+                  active
+                    ? "bg-red-100 text-red-700 hover:bg-red-200"
+                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                }`}
+              >
+                {active ? "Deactivate" : "Activate"}
+              </button>
+            </form>
+          </div>
+        </aside>
       </div>
     </main>
   );

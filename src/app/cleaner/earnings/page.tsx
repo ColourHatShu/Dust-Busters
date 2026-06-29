@@ -96,7 +96,7 @@ export default async function CleanerEarningsPage() {
   );
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-6">
+    <main className="mx-auto max-w-5xl space-y-8 p-6">
       <div>
         <h1 className="page-title">Earnings</h1>
         <p className="page-subtitle">
@@ -105,7 +105,7 @@ export default async function CleanerEarningsPage() {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Briefcase}
           label="Total jobs"
@@ -157,7 +157,7 @@ export default async function CleanerEarningsPage() {
               their balance.
             </span>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {pendingJobs.map((j) => (
               <div
                 key={j.id}

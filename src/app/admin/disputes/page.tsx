@@ -48,7 +48,7 @@ export default async function AdminDisputesPage({
   const STATUSES = ["all", "open", "investigating", "resolved", "closed"];
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-6xl p-6">
       <div className="mb-6">
         <Link
           href="/admin"

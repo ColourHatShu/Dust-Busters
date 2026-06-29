@@ -18,7 +18,7 @@ export default async function AdminSettingsPage() {
     .single();
 
   return (
-    <main className="mx-auto max-w-md p-6">
+    <main className="mx-auto max-w-4xl p-6">
       <div className="mb-6">
         <Link
           href="/admin"
@@ -38,54 +38,56 @@ export default async function AdminSettingsPage() {
       </div>
 
       <form action={updateSettings} className="card space-y-5">
-        <div className="space-y-1.5">
-          <label htmlFor="hourly_rate" className="form-label">
-            <DollarSign className="h-4 w-4" /> Hourly Rate
-          </label>
-          <input
-            id="hourly_rate"
-            name="hourly_rate"
-            type="number"
-            step="0.01"
-            defaultValue={settings?.hourly_rate ?? ""}
-            className="input-modern"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="deposit_percent" className="form-label">
-            <Percent className="h-4 w-4" /> Deposit Percent
-          </label>
-          <input
-            id="deposit_percent"
-            name="deposit_percent"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            required
-            defaultValue={settings?.deposit_percent ?? ""}
-            className="input-modern"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="commission_percent" className="form-label">
-            <Percent className="h-4 w-4" /> Platform commission %
-          </label>
-          <input
-            id="commission_percent"
-            name="commission_percent"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            required
-            defaultValue={settings?.commission_percent ?? ""}
-            className="input-modern"
-          />
-          <p className="form-hint">
-            Applied to new bookings going forward (existing bookings keep their
-            locked rate).
-          </p>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="hourly_rate" className="form-label">
+              <DollarSign className="h-4 w-4" /> Hourly Rate
+            </label>
+            <input
+              id="hourly_rate"
+              name="hourly_rate"
+              type="number"
+              step="0.01"
+              defaultValue={settings?.hourly_rate ?? ""}
+              className="input-modern"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="deposit_percent" className="form-label">
+              <Percent className="h-4 w-4" /> Deposit Percent
+            </label>
+            <input
+              id="deposit_percent"
+              name="deposit_percent"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              required
+              defaultValue={settings?.deposit_percent ?? ""}
+              className="input-modern"
+            />
+          </div>
+          <div className="space-y-1.5 lg:col-span-2">
+            <label htmlFor="commission_percent" className="form-label">
+              <Percent className="h-4 w-4" /> Platform commission %
+            </label>
+            <input
+              id="commission_percent"
+              name="commission_percent"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              required
+              defaultValue={settings?.commission_percent ?? ""}
+              className="input-modern"
+            />
+            <p className="form-hint">
+              Applied to new bookings going forward (existing bookings keep their
+              locked rate).
+            </p>
+          </div>
         </div>
         <hr className="hr-soft" />
         <button type="submit" className="btn-base btn-primary">

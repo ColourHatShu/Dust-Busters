@@ -84,12 +84,14 @@ export default async function AccountPage() {
   });
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-6">
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
         <h1 className="page-title">My Account</h1>
         <p className="page-subtitle">Member since {accountSince}</p>
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
       {/* Avatar / summary */}
       <div className="card flex items-center gap-4">
         <div className="avatar h-16 w-16 text-xl">
@@ -177,61 +179,6 @@ export default async function AccountPage() {
         </form>
       </div>
 
-      {/* Favorite cleaners */}
-      {favorites.length > 0 && (
-        <div className="card space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="icon-tile icon-tile-sm icon-tile-soft">
-              <Heart className="h-4 w-4" strokeWidth={1.5} />
-            </span>
-            <h2 className="section-title">Favorite cleaners</h2>
-          </div>
-          <ul className="divide-y divide-slate-100">
-            {favorites.map((f) => (
-              <li
-                key={f.cleanerId}
-                className="flex items-center justify-between gap-3 py-2.5"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="avatar h-10 w-10 text-sm">
-                    {f.name?.charAt(0).toUpperCase() ?? "C"}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-900">
-                      {f.name ?? "Cleaner"}
-                      {f.id_verified && (
-                        <ShieldCheck
-                          className="h-3.5 w-3.5 shrink-0 text-emerald-600"
-                          strokeWidth={2}
-                        />
-                      )}
-                    </p>
-                    <p className="flex items-center gap-2 text-xs text-slate-500">
-                      {f.avg_rating != null && (
-                        <span className="flex items-center gap-0.5">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          {f.avg_rating}
-                        </span>
-                      )}
-                      <span>{f.jobs_completed ?? 0} jobs</span>
-                    </p>
-                  </div>
-                </div>
-                <form action={removeFavorite.bind(null, f.cleanerId)}>
-                  <button
-                    type="submit"
-                    aria-label="Remove favorite"
-                    className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
-                  >
-                    <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* Saved addresses */}
       <div className="card space-y-4">
         <div className="flex items-center gap-3">
@@ -294,6 +241,63 @@ export default async function AccountPage() {
           </button>
         </form>
       </div>
+        </div>
+
+        <aside className="space-y-6">
+      {/* Favorite cleaners */}
+      {favorites.length > 0 && (
+        <div className="card space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <Heart className="h-4 w-4" strokeWidth={1.5} />
+            </span>
+            <h2 className="section-title">Favorite cleaners</h2>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {favorites.map((f) => (
+              <li
+                key={f.cleanerId}
+                className="flex items-center justify-between gap-3 py-2.5"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="avatar h-10 w-10 text-sm">
+                    {f.name?.charAt(0).toUpperCase() ?? "C"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-900">
+                      {f.name ?? "Cleaner"}
+                      {f.id_verified && (
+                        <ShieldCheck
+                          className="h-3.5 w-3.5 shrink-0 text-emerald-600"
+                          strokeWidth={2}
+                        />
+                      )}
+                    </p>
+                    <p className="flex items-center gap-2 text-xs text-slate-500">
+                      {f.avg_rating != null && (
+                        <span className="flex items-center gap-0.5">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          {f.avg_rating}
+                        </span>
+                      )}
+                      <span>{f.jobs_completed ?? 0} jobs</span>
+                    </p>
+                  </div>
+                </div>
+                <form action={removeFavorite.bind(null, f.cleanerId)}>
+                  <button
+                    type="submit"
+                    aria-label="Remove favorite"
+                    className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  >
+                    <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="card card-flush divide-y divide-slate-100 overflow-hidden">
@@ -329,6 +333,8 @@ export default async function AccountPage() {
           </span>
           <span className="text-sm text-slate-500">Member since {accountSince}</span>
         </div>
+      </div>
+        </aside>
       </div>
     </main>
   );

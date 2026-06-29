@@ -57,7 +57,7 @@ export default async function AdminCustomersPage({
   const customerList = customers ?? [];
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-6xl p-6">
       <div className="mb-6">
         <Link
           href="/admin"

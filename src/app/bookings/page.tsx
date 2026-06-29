@@ -86,7 +86,7 @@ export default async function BookingsPage({
   ];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-6">
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
       {/* Header */}
       <div className="flex items-end justify-between gap-4">
         <div>
@@ -146,7 +146,7 @@ export default async function BookingsPage({
           </div>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-4 sm:grid-cols-2">
           {filtered.map((b) => (
             <li key={b.id}>
               <Link

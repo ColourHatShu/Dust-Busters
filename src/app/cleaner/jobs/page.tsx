@@ -167,7 +167,7 @@ export default async function CleanerJobsPage({
   const jobGroupOrder = ["Today", "Upcoming", "Earlier"] as const;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-6">
+    <main className="mx-auto max-w-5xl space-y-8 p-6">
       <JobsLive cleanerId={user.id} />
 
       {/* Availability toggle (online / offline) */}
@@ -248,7 +248,7 @@ export default async function CleanerJobsPage({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {openOffers.map((o) => {
               const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
               if (!b) return null;
@@ -342,7 +342,7 @@ export default async function CleanerJobsPage({
                   <h3 className="eyebrow-label">
                     {g} ({jobGroups[g].length})
                   </h3>
-                  <div className="flex flex-col gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     {jobGroups[g].map((b) => {
                       const initial =
                         b.customerName.trim().charAt(0).toUpperCase() || "C";

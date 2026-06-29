@@ -77,7 +77,7 @@ export default async function AdminCustomerDetailPage({
   const reviewList = customerReviews ?? [];
 
   return (
-    <main className="mx-auto max-w-4xl p-6 space-y-6">
+    <main className="mx-auto max-w-6xl p-6 space-y-6">
       <div>
         <Link
           href="/admin/customers"
@@ -89,167 +89,173 @@ export default async function AdminCustomerDetailPage({
         <h1 className="page-title mt-2">Customer Profile</h1>
       </div>
 
-      {/* Profile Card */}
-      <div className="card card-lg">
-        <div className="flex items-center gap-4">
-          <span className="avatar h-16 w-16 text-xl" aria-hidden="true">
-            {getInitials(customer.name)}
-          </span>
-          <div className="min-w-0">
-            <h2 className="section-title truncate">{customer.name ?? "—"}</h2>
-            <p className="mt-0.5 text-sm text-slate-500">Customer</p>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Profile Card */}
+          <div className="card card-lg">
+            <div className="flex items-center gap-4">
+              <span className="avatar h-16 w-16 text-xl" aria-hidden="true">
+                {getInitials(customer.name)}
+              </span>
+              <div className="min-w-0">
+                <h2 className="section-title truncate">{customer.name ?? "—"}</h2>
+                <p className="mt-0.5 text-sm text-slate-500">Customer</p>
+              </div>
+            </div>
+            <hr className="hr-soft my-5" />
+            <div>
+              <div className="detail-row">
+                <span className="detail-label">
+                  <Phone className="h-4 w-4" aria-hidden="true" />
+                  Phone
+                </span>
+                <span className="detail-value">{customer.phone ?? "—"}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">
+                  <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                  Joined
+                </span>
+                <span className="detail-value">
+                  {new Date(customer.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-        <hr className="hr-soft my-5" />
-        <div>
-          <div className="detail-row">
-            <span className="detail-label">
-              <Phone className="h-4 w-4" aria-hidden="true" />
-              Phone
-            </span>
-            <span className="detail-value">{customer.phone ?? "—"}</span>
-          </div>
-          <div className="detail-row">
-            <span className="detail-label">
-              <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              Joined
-            </span>
-            <span className="detail-value">
-              {new Date(customer.created_at).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Key metrics */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="stat-card">
-          <span className="stat-label">Total Bookings</span>
-          <span className="stat-value">{bookingList.length}</span>
-        </div>
-        <div className="stat-card stat-card-accent">
-          <span className="stat-label">Total Spent</span>
-          <span className="stat-value">${totalSpent.toFixed(2)}</span>
-          <span className="stat-sub">Completed bookings</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Rating from cleaners</span>
-          <span className="stat-value">
-            {rating?.avg_rating != null ? rating.avg_rating : "—"}
-          </span>
-          <span className="stat-sub">
-            {rating?.avg_rating != null
-              ? `${rating.review_count} ${rating.review_count === 1 ? "review" : "reviews"}`
-              : "No reviews yet"}
-          </span>
-        </div>
-      </div>
-
-      {/* Reviews from cleaners */}
-      {reviewList.length > 0 && (
-        <div className="card">
-          <div className="mb-4 flex items-center gap-3">
-            <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
-              <Star className="h-4 w-4" />
-            </span>
-            <h2 className="section-title">Reviews from cleaners</h2>
-          </div>
-          <ul className="divide-y divide-slate-100">
-            {reviewList.map((r) => (
-              <li key={r.id} className="py-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-2">
-                  <span className="badge badge-accent">
-                    <Star className="h-3 w-3" aria-hidden="true" />
-                    {r.rating}/5
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    {new Date(r.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                {r.comment && (
-                  <p className="mt-1.5 text-sm text-slate-600">{r.comment}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Booking History */}
-      <div className="card card-flush overflow-hidden">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
-              <ClipboardList className="h-4 w-4" />
-            </span>
-            <h2 className="section-title">Booking History</h2>
-          </div>
-          <span className="badge badge-neutral">{bookingList.length}</span>
-        </div>
-        {bookingList.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon" aria-hidden="true">
-              <ClipboardList className="h-7 w-7" strokeWidth={1.5} />
-            </span>
-            <p className="empty-state-title">No bookings yet</p>
-            <p className="empty-state-text">
-              This customer hasn&apos;t booked any cleanings.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cleaner</th>
-                  <th>Status</th>
-                  <th>Area</th>
-                  <th>Scheduled</th>
-                  <th className="num">Total</th>
-                  <th className="num"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookingList.map((b) => {
-                  const cleaner = Array.isArray(b.cleaner) ? b.cleaner[0] : b.cleaner;
-                  return (
-                    <tr key={b.id}>
-                      <td className="font-mono text-xs text-slate-500">
-                        {String(b.id).slice(0, 8)}
-                      </td>
-                      <td>{cleaner?.name ?? "—"}</td>
-                      <td>
-                        <span className={bookingBadgeClass(b.status)}>
-                          {bookingStatusLabel(b.status)}
-                        </span>
-                      </td>
-                      <td>{b.area ?? "—"}</td>
-                      <td className="whitespace-nowrap text-xs">
-                        {b.scheduled_at
-                          ? new Date(b.scheduled_at).toLocaleString()
-                          : "—"}
-                      </td>
-                      <td className="num">
-                        {b.total_amount != null
-                          ? `$${Number(b.total_amount).toFixed(2)}`
-                          : "—"}
-                      </td>
-                      <td className="num">
-                        <Link
-                          href={`/admin/bookings/${b.id}`}
-                          className="link-accent text-xs"
-                        >
-                          View
-                        </Link>
-                      </td>
+          {/* Booking History */}
+          <div className="card card-flush overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
+                  <ClipboardList className="h-4 w-4" />
+                </span>
+                <h2 className="section-title">Booking History</h2>
+              </div>
+              <span className="badge badge-neutral">{bookingList.length}</span>
+            </div>
+            {bookingList.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-state-icon" aria-hidden="true">
+                  <ClipboardList className="h-7 w-7" strokeWidth={1.5} />
+                </span>
+                <p className="empty-state-title">No bookings yet</p>
+                <p className="empty-state-text">
+                  This customer hasn&apos;t booked any cleanings.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cleaner</th>
+                      <th>Status</th>
+                      <th>Area</th>
+                      <th>Scheduled</th>
+                      <th className="num">Total</th>
+                      <th className="num"></th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {bookingList.map((b) => {
+                      const cleaner = Array.isArray(b.cleaner) ? b.cleaner[0] : b.cleaner;
+                      return (
+                        <tr key={b.id}>
+                          <td className="font-mono text-xs text-slate-500">
+                            {String(b.id).slice(0, 8)}
+                          </td>
+                          <td>{cleaner?.name ?? "—"}</td>
+                          <td>
+                            <span className={bookingBadgeClass(b.status)}>
+                              {bookingStatusLabel(b.status)}
+                            </span>
+                          </td>
+                          <td>{b.area ?? "—"}</td>
+                          <td className="whitespace-nowrap text-xs">
+                            {b.scheduled_at
+                              ? new Date(b.scheduled_at).toLocaleString()
+                              : "—"}
+                          </td>
+                          <td className="num">
+                            {b.total_amount != null
+                              ? `$${Number(b.total_amount).toFixed(2)}`
+                              : "—"}
+                          </td>
+                          <td className="num">
+                            <Link
+                              href={`/admin/bookings/${b.id}`}
+                              className="link-accent text-xs"
+                            >
+                              View
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        <aside className="space-y-6">
+          {/* Key metrics */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="stat-card">
+              <span className="stat-label">Total Bookings</span>
+              <span className="stat-value">{bookingList.length}</span>
+            </div>
+            <div className="stat-card stat-card-accent">
+              <span className="stat-label">Total Spent</span>
+              <span className="stat-value">${totalSpent.toFixed(2)}</span>
+              <span className="stat-sub">Completed bookings</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">Rating from cleaners</span>
+              <span className="stat-value">
+                {rating?.avg_rating != null ? rating.avg_rating : "—"}
+              </span>
+              <span className="stat-sub">
+                {rating?.avg_rating != null
+                  ? `${rating.review_count} ${rating.review_count === 1 ? "review" : "reviews"}`
+                  : "No reviews yet"}
+              </span>
+            </div>
+          </div>
+
+          {/* Reviews from cleaners */}
+          {reviewList.length > 0 && (
+            <div className="card">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
+                  <Star className="h-4 w-4" />
+                </span>
+                <h2 className="section-title">Reviews from cleaners</h2>
+              </div>
+              <ul className="divide-y divide-slate-100">
+                {reviewList.map((r) => (
+                  <li key={r.id} className="py-3 first:pt-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <span className="badge badge-accent">
+                        <Star className="h-3 w-3" aria-hidden="true" />
+                        {r.rating}/5
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {r.comment && (
+                      <p className="mt-1.5 text-sm text-slate-600">{r.comment}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </aside>
       </div>
     </main>
   );
