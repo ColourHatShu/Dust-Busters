@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: a11y — live status region + nav icons
+
+- **Item:** P3 accessibility. Booking status changes (driven by the realtime
+  `StatusLive` refresh) were not announced to screen-reader users, and the nav's
+  decorative icons weren't hidden from SR.
+- **Fix:** the booking status sentence is now `role="status" aria-live="polite"`,
+  so SR users hear "cleaner found / deposit paid / completed" as it updates;
+  the Bell (desktop + mobile), Menu, and X nav icons are `aria-hidden` (their
+  link/button already provides an `aria-label`). Most page-level decorative icons
+  already received `aria-hidden` during the UI redesign.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up (needs founder OK — production DB):** set + lazily enforce
+  `deposit_deadline` so unpaid `accepted` bookings auto-expire (rewrites the core
+  `accept_offer` RPC).
+
+---
+
 ## 2026-06-29 — Knight iteration: Terms of Service + Privacy Policy pages
 
 - **Item:** P2 legal/trust. A payments marketplace had no Terms or Privacy pages.

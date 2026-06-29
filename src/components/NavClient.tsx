@@ -64,7 +64,7 @@ export default function NavClient({
                   : "Notifications"
               }
             >
-              <Bell className="h-5 w-5" strokeWidth={1.5} />
+              <Bell className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
               <Bubble />
             </Link>
 
@@ -98,7 +98,11 @@ export default function NavClient({
             aria-expanded={open}
             className="flex items-center transition hover:text-accent-light"
           >
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {open ? (
+              <X className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            )}
           </button>
         ) : (
           <Link href="/login" className="text-sm font-medium transition hover:text-accent-light">

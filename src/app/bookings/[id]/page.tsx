@@ -226,7 +226,7 @@ export default async function BookingStatusPage({
             {bookingStatusLabel(booking.status)}
           </span>
         </div>
-        <p className="page-subtitle">
+        <p className="page-subtitle" role="status" aria-live="polite">
           {STATUS_LABEL[booking.status as keyof typeof STATUS_LABEL] ??
             booking.status}
         </p>

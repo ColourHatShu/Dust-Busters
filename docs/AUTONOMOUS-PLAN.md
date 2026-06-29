@@ -116,7 +116,7 @@ payment_type); `bookings` has NO `updated_at`.
 
 ## P3 — Polish / nice-to-have
 - [x] **Skip-to-content link** in the layout (sr-only until focused → jumps to `#main-content`). ✅
-- [ ] Hide remaining decorative icons from SR (`aria-hidden`); aria-live for live status/notification updates.
+- [x] a11y: live status/notification updates → the booking status sentence is now a `role="status" aria-live="polite"` region, so SR users hear status changes (cleaner found, deposit paid, completed) when StatusLive refreshes. Decorative nav icons (Bell ×2, Menu, X) are `aria-hidden` (their controls already carry `aria-label`). Most page-level decorative icons already got `aria-hidden` during the UI redesign. ✅ tsc+build+tests green. (`bookings/[id]/page.tsx`, `NavClient.tsx`)
 - [x] Offer card: live **expiry countdown** (`Countdown` client component, from `broadcast_expires_at`) + the cleaner's **take-home** (`cleaner_payout`) shown as the headline amount with the gross as subtext. ✅
 - [x] **CI workflow** (`.github/workflows/ci.yml`) — typecheck + unit tests + production build on push/PR (dummy env so build needs no secrets); pinned Node `engines` (>=20). ✅
 - [x] Expand test coverage: pure `src/lib/booking.ts` now holds the refund-window logic AND `validateBooking` (booking input validation), both extracted from their server actions and covered by boundary tests. Suite: **15 tests / 2 files**. ✅
