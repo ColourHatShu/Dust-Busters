@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: cleaner live feed reacts to booking status
+
+- **Item:** P1 realtime correctness. `JobsLive` only subscribed to
+  `booking_offers`, so when a customer paid the deposit (booking → deposit_paid)
+  or a job was cancelled/reassigned, the cleaner's list stayed stale until a
+  manual reload.
+- **Fix:** added a second `postgres_changes` subscription on the `bookings` table
+  filtered by `cleaner_id`, refreshing the route on any status change to one of
+  the cleaner's assigned bookings (`bookings` is already in the realtime
+  publication via the MatchingMap; RLS scopes it to the cleaner).
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** P1 — accept-offer race result (won/lost) feedback to the loser.
+
+---
+
 ## 2026-06-29 — Knight iteration: booking timezone (Pacific, DST-aware)
 
 - **Item:** P1 correctness. The `<input type="datetime-local">` value has no

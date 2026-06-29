@@ -58,7 +58,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] No notification when cleaner accepts/completes (the two transitions that require customer payment) → `acceptJob` now notifies the customer "a cleaner accepted — pay your deposit" and `completeJob` notifies "cleaning complete — pay the balance" (via `createNotification`, in the action success path). ✅ tsc+build+tests green. (`cleaner/actions.ts`)
 - [ ] Cancellation never issues a refund despite stated policy. (`0008:135-168`, `bookings/[id]/page.tsx:334`)
 - [x] `start_job`/`complete_job` swallow errors and fail silently → already surfaced: both log + `jobsError(...)` redirect to the jobs list with a friendly banner instead of swallowing. Verified. ✅ (`cleaner/actions.ts`)
-- [ ] Live job feed ignores `bookings` table → deposit-paid / lost-race states never refresh. (`cleaner/jobs/JobsLive.tsx:12-24`)
+- [x] Live job feed ignored the `bookings` table → added a second realtime subscription on `bookings` filtered by `cleaner_id`, so the cleaner's list auto-refreshes when an assigned booking changes status (deposit_paid / cancelled / reassigned), not just on offer changes. ✅ tsc+build+tests green. (`cleaner/jobs/JobsLive.tsx`)
 - [ ] Accept-offer race result (won/lost) discarded → loser gets no feedback. (`cleaner/jobs/page.tsx:155-165`)
 
 ### UX feedback & forms
