@@ -5,6 +5,29 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: chargeback webhook → real disputes schema
+
+- **Item:** P0 money-path correctness. The `charge.dispute.created` Stripe webhook
+  inserted into `disputes` with columns that don't exist (`payment_id`,
+  `stripe_dispute_id`, `reason`, `amount`), used a Stripe `status` value (not the
+  4-value enum), and omitted the NOT NULL `raised_by` / `category` / `description`
+  — so every chargeback insert threw, was swallowed by the handler's catch, and
+  was silently lost (Stripe still got a 200). Customer chargebacks never reached
+  the admin dispute queue.
+- **Fix (code-only, no migration):** map the chargeback onto the real `0008`
+  schema — `raised_by` = the booking's customer (the cardholder), category
+  `payment_issue`, a composed `description` (Stripe reason + amount + dispute id),
+  `status` `open`. Added idempotency (guards on an existing open payment_issue
+  dispute for the booking, since there's no `stripe_dispute_id` column to dedupe
+  on) and surfaced any insert error to the server log.
+- Also reconciled the stale P0 "admin refund writes nonexistent columns" item:
+  the live `issueRefund` is already correct (migration `0013`) — verified + ticked.
+- **Verify:** `tsc --noEmit` clean · `next build` green (27 routes) · `npm test` 15/15.
+- **Next up:** P1 — surface silent failures in `start_job`/`complete_job`; add
+  pending/disabled state to the payment + accept/start/complete forms.
+
+---
+
 ## 2026-06-28 — Audit 🟠: admin "Avg Rating" column was always blank
 
 - **Item:** the cleaner roster aggregated ratings via `reviews.select("cleaner_id, rating")`,

@@ -157,19 +157,53 @@ export async function POST(req: NextRequest) {
             .eq("id", payment.booking_id)
             .neq("status", "disputed");
 
-          // Insert dispute record
-          await db.from("disputes").insert({
-            booking_id: payment.booking_id,
-            payment_id: payment.id,
-            stripe_dispute_id: dispute.id,
-            reason: dispute.reason,
-            amount: dispute.amount / 100,
-            status: dispute.status,
-            created_at: new Date().toISOString(),
-          });
+          // Record the chargeback in our own disputes queue. The previous insert
+          // wrote columns that don't exist (payment_id, stripe_dispute_id, reason,
+          // amount) and omitted the NOT NULL fields (raised_by, category,
+          // description) + used a Stripe status value, so every chargeback insert
+          // failed silently. Map onto the real schema (migration 0008):
+          // a chargeback is raised by the cardholder = the booking's customer.
+          const { data: booking } = await db
+            .from("bookings")
+            .select("customer_id")
+            .eq("id", payment.booking_id)
+            .single();
+
+          // Idempotency: Stripe replays charge.dispute.created and disputes has no
+          // stripe_dispute_id column, so guard on an existing open chargeback for
+          // this booking rather than inserting duplicates.
+          const { data: existing } = await db
+            .from("disputes")
+            .select("id")
+            .eq("booking_id", payment.booking_id)
+            .eq("category", "payment_issue")
+            .in("status", ["open", "investigating"])
+            .limit(1);
+
+          if (booking?.customer_id && (!existing || existing.length === 0)) {
+            const amount = (dispute.amount ?? 0) / 100;
+            const description =
+              "Stripe chargeback opened by the cardholder" +
+              (dispute.reason ? ` (reason: ${dispute.reason})` : "") +
+              `. Amount: $${amount.toFixed(2)}. Stripe dispute: ${dispute.id}.`;
+
+            const { error: disputeErr } = await db.from("disputes").insert({
+              booking_id: payment.booking_id,
+              raised_by: booking.customer_id,
+              category: "payment_issue",
+              description,
+              status: "open",
+            });
+            if (disputeErr) {
+              console.error(
+                "[webhook] failed to record chargeback dispute:",
+                disputeErr.message
+              );
+            }
+          }
 
           console.log(
-            `[webhook] dispute created for booking ${payment.booking_id}, dispute ${dispute.id}`
+            `[webhook] chargeback for booking ${payment.booking_id}, stripe dispute ${dispute.id}`
           );
         }
       }
