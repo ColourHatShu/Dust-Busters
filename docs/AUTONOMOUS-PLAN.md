@@ -91,7 +91,7 @@ payment_type); `bookings` has NO `updated_at`.
 
 ## P2 — High-value features (finalize from docs/ROADMAP.md)
 - [x] Open Graph / Twitter metadata + `metadataBase` (silences the build warning), a title template (`%s · Dust Busters`), and an asset-free branded OG image via `next/og` `ImageResponse` (`opengraph-image` + `twitter-image`). Per-page titles on about/book. ✅
-- [ ] Terms of Service + Privacy Policy pages (legal/trust for a payments marketplace).
+- [x] Terms of Service + Privacy Policy pages → `/terms` + `/privacy`, written to match the actual app behavior (deposit/balance via Stripe, 24h cancellation/refund window, address-private-until-confirmed, independent cleaners, reviews/disputes, data handling via Stripe/Supabase). Premium light layout (design system), cross-linked, + Footer links. ✅ tsc+build+tests green. (`app/terms`, `app/privacy`, `components/Footer.tsx`)
 - [x] `.env.example` (all required env vars, no secrets; gitignore exception so it's tracked) + a real `README.md` (stack, setup, run, migrations, first-admin, status flow, Vercel deploy, doc index). ✅
 - [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
 - [x] Search/filter on admin lists via a shared JS-free `AdminSearch` (GET): customers + cleaners by name/phone (`.or ilike`), bookings by area + a status dropdown. Also fixed the bookings list's stale `pending`/`confirmed` status-color map → real enum values. ✅

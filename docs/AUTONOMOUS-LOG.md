@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: Terms of Service + Privacy Policy pages
+
+- **Item:** P2 legal/trust. A payments marketplace had no Terms or Privacy pages.
+- **Fix:** added `/terms` and `/privacy`, written to match how the app actually
+  works — deposit/balance via Stripe, the 24h cancellation/refund window,
+  address kept private until the booking is confirmed, independent-contractor
+  cleaners, reviews/disputes, and data handling (Stripe for payments, Supabase
+  for hosting; no card numbers stored, no data sold). Premium light layout using
+  the design system, the two pages cross-link, and both are linked in the footer.
+- Decision note: chose this (safe, high-trust, zero-risk) over the
+  `deposit_deadline` production-DB migration, which rewrites the core
+  `accept_offer` RPC and should be a focused, founder-aware iteration.
+- **Verify:** `tsc` clean · `next build` green (`/terms` + `/privacy` compiled) ·
+  `npm test` 20/20.
+- **Next up:** a11y pass (aria-hidden decorative icons + aria-live live regions).
+
+---
+
 ## 2026-06-29 — 📊 Milestone summary (8 Knight items shipped this run)
 
 **Shipped + verified (tsc + next build + npm test) + pushed to

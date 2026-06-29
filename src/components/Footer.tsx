@@ -14,6 +14,12 @@ export default function Footer() {
           <Link href="/book" className="transition hover:text-emerald-400">
             Book a cleaning
           </Link>
+          <Link href="/terms" className="transition hover:text-emerald-400">
+            Terms
+          </Link>
+          <Link href="/privacy" className="transition hover:text-emerald-400">
+            Privacy
+          </Link>
           <a
             href="mailto:support@dustbusters.ca"
             className="transition hover:text-emerald-400"
