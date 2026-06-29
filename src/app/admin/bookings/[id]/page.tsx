@@ -22,6 +22,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel, paymentBadgeClass } from "@/lib/status";
 import { updateBookingStatus, adminCancelBooking, reassignCleaner } from "./actions";
+import ConfirmSubmit from "@/components/ConfirmSubmit";
 
 const BOOKING_STATUSES = [
   "broadcasting",
@@ -433,7 +434,13 @@ export default async function AdminBookingDetailPage({
                     <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
                   ))}
                 </select>
-                <button type="submit" className="btn-base btn-primary">Update Status</button>
+                <ConfirmSubmit
+                  message="Override this booking's status? This can disrupt the customer/cleaner flow."
+                  className="btn-base btn-primary"
+                  pendingText="Updating…"
+                >
+                  Update Status
+                </ConfirmSubmit>
               </form>
             </div>
 
@@ -448,12 +455,13 @@ export default async function AdminBookingDetailPage({
                   <form action={adminCancelBooking} className="space-y-2">
                     <input type="hidden" name="booking_id" value={booking.id} />
                     <input name="reason" placeholder="Cancellation reason (required)" required className="input-modern w-full" />
-                    <button
-                      type="submit"
+                    <ConfirmSubmit
+                      message="Cancel this booking? If a deposit was paid it may be refunded or forfeited per policy. This notifies the customer and cleaner."
                       className="btn-base bg-red-600 text-white hover:bg-red-700"
+                      pendingText="Cancelling…"
                     >
                       Cancel Booking
-                    </button>
+                    </ConfirmSubmit>
                   </form>
                 </div>
               </>
@@ -476,7 +484,13 @@ export default async function AdminBookingDetailPage({
                       <option key={c.id} value={c.id}>{c.name ?? c.id}</option>
                     ))}
                   </select>
-                  <button type="submit" className="btn-base btn-secondary">Reassign</button>
+                  <ConfirmSubmit
+                    message="Reassign this booking to the selected cleaner? The current cleaner will be unassigned."
+                    className="btn-base btn-secondary"
+                    pendingText="Reassigning…"
+                  >
+                    Reassign
+                  </ConfirmSubmit>
                 </form>
               )}
             </div>

@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: confirmation on destructive admin actions
+
+- **Item:** P1 safety. Admin actions that are impactful or irreversible — override
+  status, cancel booking, reassign cleaner, **issue refund** (real money via
+  Stripe), and verify/deactivate a cleaner — fired immediately on a single click,
+  with no confirmation.
+- **Fix:** new shared client `ConfirmSubmit` (`components/ConfirmSubmit.tsx`) that
+  asks `window.confirm(message)` before submitting and (via `useFormStatus`)
+  disables + shows a pending label while the action runs. Wired into all the
+  above with action-specific messages (the refund warns the money can't be
+  undone; the cleaner toggles use a state-aware message).
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 15/15.
+- **Next up:** P1 — booking timezone handling (`book/actions.ts`); live job feed
+  ignores the bookings table (`JobsLive.tsx`).
+
+---
+
 ## 2026-06-29 — Knight iteration: CSRF/same-origin guard on mark-read
 
 - **Item:** P1 security hardening. The `/api/notifications/mark-read` POST relied

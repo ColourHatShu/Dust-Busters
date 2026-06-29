@@ -64,7 +64,7 @@ payment_type); `bookings` has NO `updated_at`.
 ### UX feedback & forms
 - [x] Pay-deposit/balance forms had no pending/disabled state (double-click → double-charge risk) → added a shared client `SubmitButton` (`useFormStatus`: disables + shows a pending label + `aria-busy` while the action is in flight); wired into the deposit + balance pay forms. Other forms can adopt it incrementally. ✅ (`components/SubmitButton.tsx`, `bookings/[id]/page.tsx`)
 - [x] Accept/Decline/Start/Complete buttons had no pending/disabled state → now use `SubmitButton` (Accepting…/Declining…/Starting…/Completing…). ✅ (`cleaner/jobs/page.tsx`)
-- [ ] No confirmation on destructive admin actions (cancel/refund/deactivate/override/reassign). (`admin/bookings/[id]/page.tsx`)
+- [x] No confirmation on destructive admin actions → added a shared `ConfirmSubmit` (confirm dialog + `useFormStatus` pending/disabled) and wired it into: override status, cancel booking, reassign cleaner (`admin/bookings/[id]`), issue refund (`admin/disputes/[id]` — money, irreversible), and verify/deactivate toggles (`admin/cleaners/[id]`). ✅ tsc+build+tests green. (`components/ConfirmSubmit.tsx`)
 - [x] Settings: now validates hourly rate (>0), deposit % and commission % (0–100) and rejects blanks instead of coercing to 0. ✅ (done with the commission cluster)
 - [ ] Add nav link to cleaner profile page. (`Nav.tsx`)
 

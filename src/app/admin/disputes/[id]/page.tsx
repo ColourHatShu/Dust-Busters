@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { updateDisputeStatus, issueRefund } from "./actions";
+import ConfirmSubmit from "@/components/ConfirmSubmit";
 import {
   ArrowLeft,
   CalendarDays,
@@ -364,12 +365,13 @@ export default async function AdminDisputeDetailPage({
                     className="input-modern"
                   />
                 </div>
-                <button
-                  type="submit"
+                <ConfirmSubmit
+                  message="Issue this refund? Money will be returned to the customer via Stripe — this cannot be undone."
                   className="btn-base bg-red-600 text-white hover:bg-red-700"
+                  pendingText="Issuing refund…"
                 >
                   Issue Refund
-                </button>
+                </ConfirmSubmit>
               </form>
             )}
           </div>

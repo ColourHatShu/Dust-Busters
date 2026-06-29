@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import { setCleanerVerified, setCleanerActive } from "../actions";
+import ConfirmSubmit from "@/components/ConfirmSubmit";
 
 export default async function AdminCleanerDetailPage({
   params,
@@ -381,9 +382,17 @@ export default async function AdminCleanerDetailPage({
                 await setCleanerVerified(id, !verified);
               }}
             >
-              <button className="btn-base btn-secondary w-full">
+              <ConfirmSubmit
+                message={
+                  verified
+                    ? "Remove this cleaner's ID-verified status?"
+                    : "Mark this cleaner as ID-verified?"
+                }
+                className="btn-base btn-secondary w-full"
+                pendingText="Saving…"
+              >
                 {verified ? "Unverify" : "Verify"}
-              </button>
+              </ConfirmSubmit>
             </form>
             <form
               action={async () => {
@@ -391,15 +400,21 @@ export default async function AdminCleanerDetailPage({
                 await setCleanerActive(id, !active);
               }}
             >
-              <button
+              <ConfirmSubmit
+                message={
+                  active
+                    ? "Deactivate this cleaner? They will stop receiving job offers."
+                    : "Reactivate this cleaner? They will start receiving job offers again."
+                }
                 className={`btn-base w-full ${
                   active
                     ? "bg-red-100 text-red-700 hover:bg-red-200"
                     : "bg-green-100 text-green-700 hover:bg-green-200"
                 }`}
+                pendingText="Saving…"
               >
                 {active ? "Deactivate" : "Activate"}
-              </button>
+              </ConfirmSubmit>
             </form>
           </div>
         </aside>
