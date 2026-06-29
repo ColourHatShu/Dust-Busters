@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star, MessageSquare } from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { submitReview } from "./actions";
@@ -28,17 +28,22 @@ export default async function ReviewPage({
     <main className="mx-auto max-w-lg space-y-6 p-6">
       <Link
         href={`/bookings/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-800"
+        className="link-subtle inline-flex items-center gap-1.5 text-sm"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
         Back to booking
       </Link>
 
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-slate-900">Rate your cleaning</h1>
-        <p className="text-slate-600">
-          Your feedback helps cleaners improve and helps other customers choose.
-        </p>
+      <div className="flex items-center gap-4">
+        <span className="icon-tile icon-tile-lg">
+          <Star className="h-6 w-6" strokeWidth={1.5} />
+        </span>
+        <div>
+          <h1 className="page-title">Rate your cleaning</h1>
+          <p className="page-subtitle">
+            Your feedback helps cleaners improve and helps other customers choose.
+          </p>
+        </div>
       </div>
 
       <form
@@ -48,16 +53,16 @@ export default async function ReviewPage({
         }}
         className="card flex flex-col gap-6"
       >
-        <div className="flex flex-col gap-3">
-          <span className="text-center text-sm font-medium text-slate-900">
-            How was it?
-          </span>
+        <div className="surface-muted flex flex-col items-center gap-4 p-5 text-center">
+          <span className="eyebrow-label">How was it?</span>
           <StarRating />
         </div>
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-slate-900">
-            Comment <span className="font-normal text-slate-400">(optional)</span>
+          <span className="form-label">
+            <MessageSquare className="h-4 w-4" strokeWidth={1.5} />
+            Comment
+            <span className="font-normal text-slate-400">(optional)</span>
           </span>
           <textarea
             name="comment"

@@ -1,20 +1,21 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ClipboardList,
+  Phone,
+  Star,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 
-// Real booking_status enum values (no pending/confirmed).
-const statusColor: Record<string, string> = {
-  broadcasting: "bg-blue-100 text-blue-800",
-  accepted: "bg-yellow-100 text-yellow-800",
-  deposit_paid: "bg-green-100 text-green-800",
-  in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-orange-100 text-orange-800",
-  balance_paid: "bg-green-100 text-green-800",
-  closed: "bg-gray-100 text-gray-700",
-  cancelled: "bg-red-100 text-red-800",
-  no_cleaner_found: "bg-red-100 text-red-800",
-  disputed: "bg-purple-100 text-purple-800",
-};
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
 
 export default async function AdminCustomerDetailPage({
   params,
@@ -72,64 +73,101 @@ export default async function AdminCustomerDetailPage({
       { id: string; rating: number; comment: string | null; created_at: string }[]
     >();
 
+  const bookingList = bookings ?? [];
+  const reviewList = customerReviews ?? [];
+
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/customers" className="text-sm text-blue-600 hover:underline">
-          ← Customers
+      <div>
+        <Link
+          href="/admin/customers"
+          className="link-subtle inline-flex items-center gap-1 text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Customers
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Customer Profile</h1>
+        <h1 className="page-title mt-2">Customer Profile</h1>
       </div>
 
       {/* Profile Card */}
-      <div className="card p-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div>
-          <p className="text-xs text-gray-500">Name</p>
-          <p className="font-semibold text-gray-900">{customer.name ?? "—"}</p>
+      <div className="card card-lg">
+        <div className="flex items-center gap-4">
+          <span className="avatar h-16 w-16 text-xl" aria-hidden="true">
+            {getInitials(customer.name)}
+          </span>
+          <div className="min-w-0">
+            <h2 className="section-title truncate">{customer.name ?? "—"}</h2>
+            <p className="mt-0.5 text-sm text-slate-500">Customer</p>
+          </div>
         </div>
+        <hr className="hr-soft my-5" />
         <div>
-          <p className="text-xs text-gray-500">Phone</p>
-          <p className="font-medium">{customer.phone ?? "—"}</p>
+          <div className="detail-row">
+            <span className="detail-label">
+              <Phone className="h-4 w-4" aria-hidden="true" />
+              Phone
+            </span>
+            <span className="detail-value">{customer.phone ?? "—"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
+              Joined
+            </span>
+            <span className="detail-value">
+              {new Date(customer.created_at).toLocaleDateString()}
+            </span>
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-gray-500">Joined</p>
-          <p className="font-medium">
-            {new Date(customer.created_at).toLocaleDateString()}
-          </p>
+      </div>
+
+      {/* Key metrics */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="stat-card">
+          <span className="stat-label">Total Bookings</span>
+          <span className="stat-value">{bookingList.length}</span>
         </div>
-        <div>
-          <p className="text-xs text-gray-500">Total Bookings</p>
-          <p className="font-semibold text-gray-900">{(bookings ?? []).length}</p>
+        <div className="stat-card stat-card-accent">
+          <span className="stat-label">Total Spent</span>
+          <span className="stat-value">${totalSpent.toFixed(2)}</span>
+          <span className="stat-sub">Completed bookings</span>
         </div>
-        <div>
-          <p className="text-xs text-gray-500">Total Spent (completed)</p>
-          <p className="font-semibold text-gray-900">${totalSpent.toFixed(2)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Rating (from cleaners)</p>
-          <p className="font-semibold text-gray-900">
+        <div className="stat-card">
+          <span className="stat-label">Rating from cleaners</span>
+          <span className="stat-value">
+            {rating?.avg_rating != null ? rating.avg_rating : "—"}
+          </span>
+          <span className="stat-sub">
             {rating?.avg_rating != null
-              ? `★ ${rating.avg_rating} (${rating.review_count})`
-              : "—"}
-          </p>
+              ? `${rating.review_count} ${rating.review_count === 1 ? "review" : "reviews"}`
+              : "No reviews yet"}
+          </span>
         </div>
       </div>
 
       {/* Reviews from cleaners */}
-      {(customerReviews ?? []).length > 0 && (
-        <div className="card p-6">
-          <h2 className="mb-4 font-semibold text-gray-900">Reviews from cleaners</h2>
-          <ul className="divide-y divide-gray-100">
-            {(customerReviews ?? []).map((r) => (
-              <li key={r.id} className="py-3">
+      {reviewList.length > 0 && (
+        <div className="card">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
+              <Star className="h-4 w-4" />
+            </span>
+            <h2 className="section-title">Reviews from cleaners</h2>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {reviewList.map((r) => (
+              <li key={r.id} className="py-3 first:pt-0 last:pb-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{r.rating}/5</span>
-                  <span className="text-xs text-gray-400">
+                  <span className="badge badge-accent">
+                    <Star className="h-3 w-3" aria-hidden="true" />
+                    {r.rating}/5
+                  </span>
+                  <span className="text-xs text-slate-400">
                     {new Date(r.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 {r.comment && (
-                  <p className="mt-1 text-sm text-gray-600">{r.comment}</p>
+                  <p className="mt-1.5 text-sm text-slate-600">{r.comment}</p>
                 )}
               </li>
             ))}
@@ -138,55 +176,69 @@ export default async function AdminCustomerDetailPage({
       )}
 
       {/* Booking History */}
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Booking History</h2>
-        {(bookings ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400">No bookings yet.</p>
+      <div className="card card-flush overflow-hidden">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft" aria-hidden="true">
+              <ClipboardList className="h-4 w-4" />
+            </span>
+            <h2 className="section-title">Booking History</h2>
+          </div>
+          <span className="badge badge-neutral">{bookingList.length}</span>
+        </div>
+        {bookingList.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon" aria-hidden="true">
+              <ClipboardList className="h-7 w-7" strokeWidth={1.5} />
+            </span>
+            <p className="empty-state-title">No bookings yet</p>
+            <p className="empty-state-text">
+              This customer hasn&apos;t booked any cleanings.
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table">
               <thead>
-                <tr className="border-b text-left text-gray-500">
-                  <th className="pb-2 pr-4 font-medium">ID</th>
-                  <th className="pb-2 pr-4 font-medium">Cleaner</th>
-                  <th className="pb-2 pr-4 font-medium">Status</th>
-                  <th className="pb-2 pr-4 font-medium">Area</th>
-                  <th className="pb-2 pr-4 font-medium">Scheduled</th>
-                  <th className="pb-2 pr-4 font-medium">Total</th>
-                  <th className="pb-2 font-medium"></th>
+                <tr>
+                  <th>ID</th>
+                  <th>Cleaner</th>
+                  <th>Status</th>
+                  <th>Area</th>
+                  <th>Scheduled</th>
+                  <th className="num">Total</th>
+                  <th className="num"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(bookings ?? []).map((b) => {
+              <tbody>
+                {bookingList.map((b) => {
                   const cleaner = Array.isArray(b.cleaner) ? b.cleaner[0] : b.cleaner;
                   return (
                     <tr key={b.id}>
-                      <td className="py-2 pr-4 font-mono text-xs text-gray-500">
+                      <td className="font-mono text-xs text-slate-500">
                         {String(b.id).slice(0, 8)}
                       </td>
-                      <td className="py-2 pr-4">{cleaner?.name ?? "—"}</td>
-                      <td className="py-2 pr-4">
-                        <span
-                          className={`status-badge ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
-                        >
-                          {b.status}
+                      <td>{cleaner?.name ?? "—"}</td>
+                      <td>
+                        <span className={bookingBadgeClass(b.status)}>
+                          {bookingStatusLabel(b.status)}
                         </span>
                       </td>
-                      <td className="py-2 pr-4">{b.area ?? "—"}</td>
-                      <td className="py-2 pr-4 text-xs">
+                      <td>{b.area ?? "—"}</td>
+                      <td className="whitespace-nowrap text-xs">
                         {b.scheduled_at
                           ? new Date(b.scheduled_at).toLocaleString()
                           : "—"}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td className="num">
                         {b.total_amount != null
                           ? `$${Number(b.total_amount).toFixed(2)}`
                           : "—"}
                       </td>
-                      <td className="py-2">
+                      <td className="num">
                         <Link
                           href={`/admin/bookings/${b.id}`}
-                          className="text-blue-600 hover:underline text-xs"
+                          className="link-accent text-xs"
                         >
                           View
                         </Link>

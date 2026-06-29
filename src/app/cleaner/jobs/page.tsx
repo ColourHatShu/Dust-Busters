@@ -11,6 +11,7 @@ import {
 import JobsLive from "./JobsLive";
 import Countdown from "./Countdown";
 import Link from "next/link";
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import {
   MapPin,
   Clock,
@@ -20,21 +21,11 @@ import {
   Home,
   CheckCircle,
   PlayCircle,
+  AlertTriangle,
+  AlertCircle,
+  BellRing,
+  Briefcase,
 } from "lucide-react";
-
-const STATUS_LABEL: Record<string, string> = {
-  accepted: "Cleaner assigned",
-  deposit_paid: "Deposit paid – ready to start",
-  in_progress: "In progress",
-  completed: "Completed",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-blue-100 text-blue-700",
-};
 
 const DEPOSIT_PAID_AND_LATER = new Set([
   "deposit_paid",
@@ -176,15 +167,13 @@ export default async function CleanerJobsPage({
   const jobGroupOrder = ["Today", "Upcoming", "Earlier"] as const;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-10 p-6">
+    <main className="mx-auto max-w-2xl space-y-8 p-6">
       <JobsLive cleanerId={user.id} />
 
       {/* Availability toggle (online / offline) */}
       <div
-        className={`flex items-center justify-between rounded-xl border p-4 ${
-          accepting
-            ? "border-emerald-200 bg-emerald-50"
-            : "border-slate-200 bg-slate-50"
+        className={`card card-sm flex flex-wrap items-center justify-between gap-4${
+          accepting ? " card-accent" : ""
         }`}
       >
         <div className="flex items-center gap-3">
@@ -198,7 +187,7 @@ export default async function CleanerJobsPage({
             )}
           </span>
           <div>
-            <p className="font-medium text-slate-900">
+            <p className="font-semibold text-slate-900">
               {accepting ? "Online" : "Offline"}
             </p>
             <p className="text-xs text-slate-500">
@@ -221,60 +210,81 @@ export default async function CleanerJobsPage({
       </div>
 
       {notice === "conflict" && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          That job overlaps with another job you&apos;ve already accepted. Finish or
-          free up that time slot before taking this one.
+        <div className="alert alert-warning">
+          <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
+          <span>
+            That job overlaps with another job you&apos;ve already accepted.
+            Finish or free up that time slot before taking this one.
+          </span>
         </div>
       )}
       {actionError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {actionError}
+        <div className="alert alert-error">
+          <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
+          <span>{actionError}</span>
         </div>
       )}
 
       {/* Open Offers */}
-      <section>
-        <h1 className="mb-1 text-2xl font-bold text-slate-900">Job requests</h1>
-        <p className="mb-4 text-sm text-slate-500">
-          New requests appear here in real time. Accept within the offer window!
-        </p>
+      <section className="space-y-4">
+        <header>
+          <h1 className="page-title">Job requests</h1>
+          <p className="page-subtitle">
+            New requests appear here in real time. Accept within the offer
+            window!
+          </p>
+        </header>
 
         {openOffers.length === 0 ? (
-          <div className="card text-center text-sm text-slate-400">
-            No open requests right now. New jobs will appear here instantly.
+          <div className="card card-flush">
+            <div className="empty-state">
+              <span className="empty-state-icon">
+                <BellRing className="h-6 w-6" strokeWidth={1.5} />
+              </span>
+              <p className="empty-state-title">No open requests right now</p>
+              <p className="empty-state-text">
+                New jobs will appear here instantly.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {openOffers.map((o) => {
               const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
               if (!b) return null;
               return (
-                <div
-                  key={o.booking_id}
-                  className="card border-l-4 border-l-teal-500"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div>
+                <div key={o.booking_id} className="card card-accent space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
                       <div className="font-semibold text-slate-900">
                         {b.area}
                       </div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                        <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {b.hours}h
-                        <span className="mx-1">&middot;</span>
-                        <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {new Date(b.scheduled_at).toLocaleString()}
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Calendar
+                            className="h-4 w-4 text-slate-400"
+                            strokeWidth={1.5}
+                          />
+                          {new Date(b.scheduled_at).toLocaleString()}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock
+                            className="h-4 w-4 text-slate-400"
+                            strokeWidth={1.5}
+                          />
+                          {b.hours}h
+                        </span>
                       </div>
                       <div className="mt-2">
                         <Countdown expiresAt={b.broadcast_expires_at ?? null} />
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-teal-700">
+                    <div className="shrink-0 text-right">
+                      <div className="text-xl font-bold tabular-nums text-emerald-700">
                         ${Number(b.cleaner_payout ?? b.total_amount).toFixed(2)}
                       </div>
                       <div className="text-xs text-slate-400">your take-home</div>
-                      <div className="mt-0.5 text-xs text-slate-400">
+                      <div className="mt-0.5 text-xs tabular-nums text-slate-400">
                         ${Number(b.total_amount).toFixed(2)} total
                       </div>
                     </div>
@@ -310,112 +320,142 @@ export default async function CleanerJobsPage({
       </section>
 
       {/* My Jobs */}
-      <section>
-        <h2 className="mb-4 text-xl font-bold text-slate-900">My jobs</h2>
+      <section className="space-y-5">
+        <h2 className="section-title">My jobs</h2>
         {myJobs.length === 0 ? (
-          <div className="card text-center text-sm text-slate-400">
-            No jobs yet. Accept an offer above to get started!
+          <div className="card card-flush">
+            <div className="empty-state">
+              <span className="empty-state-icon">
+                <Briefcase className="h-6 w-6" strokeWidth={1.5} />
+              </span>
+              <p className="empty-state-title">No jobs yet</p>
+              <p className="empty-state-text">
+                Accept an offer above to get started!
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
             {jobGroupOrder.map((g) =>
               jobGroups[g].length === 0 ? null : (
                 <div key={g} className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <h3 className="eyebrow-label">
                     {g} ({jobGroups[g].length})
                   </h3>
                   <div className="flex flex-col gap-4">
-                    {jobGroups[g].map((b) => (
-                      <div key={b.id} className="card space-y-3">
-                {/* Header row */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-slate-900">{b.area}</div>
-                    <div className="mt-0.5 text-sm text-slate-500">
-                      for {b.customerName}
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                      STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {STATUS_LABEL[b.status] ?? b.status}
-                  </span>
-                </div>
+                    {jobGroups[g].map((b) => {
+                      const initial =
+                        b.customerName.trim().charAt(0).toUpperCase() || "C";
+                      return (
+                        <div key={b.id} className="card space-y-4">
+                          {/* Header row */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className="avatar h-10 w-10 text-sm">
+                                {initial}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-slate-900">
+                                  {b.area}
+                                </div>
+                                <div className="text-sm text-slate-500">
+                                  for {b.customerName}
+                                </div>
+                              </div>
+                            </div>
+                            <span className={bookingBadgeClass(b.status)}>
+                              {bookingStatusLabel(b.status)}
+                            </span>
+                          </div>
 
-                {/* Details row */}
-                <div className="flex flex-wrap gap-4 text-sm text-slate-600">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-                    {new Date(b.scheduled_at).toLocaleString()}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-                    {b.hours}h
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
-                    ${Number(b.total_amount).toFixed(2)}
-                  </span>
-                </div>
+                          {/* Details row */}
+                          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
+                            <span className="flex items-center gap-1.5">
+                              <Calendar
+                                className="h-4 w-4 text-slate-400"
+                                strokeWidth={1.5}
+                              />
+                              {new Date(b.scheduled_at).toLocaleString()}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock
+                                className="h-4 w-4 text-slate-400"
+                                strokeWidth={1.5}
+                              />
+                              {b.hours}h
+                            </span>
+                            <span className="flex items-center gap-1.5 tabular-nums">
+                              <DollarSign
+                                className="h-4 w-4 text-slate-400"
+                                strokeWidth={1.5}
+                              />
+                              ${Number(b.total_amount).toFixed(2)}
+                            </span>
+                          </div>
 
-                {/* Address (shown when deposit_paid or later) */}
-                {b.address && (
-                  <div className="flex items-start gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-                    <Home
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600"
-                      strokeWidth={1.5}
-                    />
-                    <span>{b.address}</span>
-                  </div>
-                )}
+                          {/* Address (shown when deposit_paid or later) */}
+                          {b.address && (
+                            <div className="alert alert-success">
+                              <Home className="h-4 w-4" strokeWidth={1.5} />
+                              <span>{b.address}</span>
+                            </div>
+                          )}
 
-                {/* Actions row */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {b.status === "deposit_paid" && (
-                    <form
-                      action={async () => {
-                        "use server";
-                        await startJob(b.id);
-                      }}
-                    >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
-                        <PlayCircle className="h-4 w-4" strokeWidth={1.5} />
-                        Start job
-                      </button>
-                    </form>
-                  )}
-                  {b.status === "in_progress" && (
-                    <form
-                      action={async () => {
-                        "use server";
-                        await completeJob(b.id);
-                      }}
-                    >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
-                        <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
-                        Mark complete
-                      </button>
-                    </form>
-                  )}
-                  <Link
-                    href={`/cleaner/jobs/${b.id}`}
-                    className="btn-base btn-secondary flex items-center gap-1.5 text-sm"
-                  >
-                    <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
-                    Message customer
-                  </Link>
-                  <Link
-                    href={`/cleaner/jobs/${b.id}`}
-                    className="flex items-center gap-1.5 text-sm text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
-                  >
-                    <MapPin className="h-4 w-4" strokeWidth={1.5} />
-                    View details
-                  </Link>
-                </div>
-                      </div>
-                    ))}
+                          {/* Actions row */}
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {b.status === "deposit_paid" && (
+                              <form
+                                action={async () => {
+                                  "use server";
+                                  await startJob(b.id);
+                                }}
+                              >
+                                <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                                  <PlayCircle
+                                    className="h-4 w-4"
+                                    strokeWidth={1.5}
+                                  />
+                                  Start job
+                                </button>
+                              </form>
+                            )}
+                            {b.status === "in_progress" && (
+                              <form
+                                action={async () => {
+                                  "use server";
+                                  await completeJob(b.id);
+                                }}
+                              >
+                                <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                                  <CheckCircle
+                                    className="h-4 w-4"
+                                    strokeWidth={1.5}
+                                  />
+                                  Mark complete
+                                </button>
+                              </form>
+                            )}
+                            <Link
+                              href={`/cleaner/jobs/${b.id}`}
+                              className="btn-base btn-secondary flex items-center gap-1.5 text-sm"
+                            >
+                              <MessageCircle
+                                className="h-4 w-4"
+                                strokeWidth={1.5}
+                              />
+                              Message customer
+                            </Link>
+                            <Link
+                              href={`/cleaner/jobs/${b.id}`}
+                              className="link-subtle inline-flex items-center gap-1.5 text-sm"
+                            >
+                              <MapPin className="h-4 w-4" strokeWidth={1.5} />
+                              View details
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ),

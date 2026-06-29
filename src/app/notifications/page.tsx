@@ -68,23 +68,22 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Bell className="h-6 w-6 text-accent" strokeWidth={1.5} />
-          <h1 className="text-2xl font-bold">Notifications</h1>
-          {unreadCount > 0 && (
-            <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">
-              {unreadCount} new
-            </span>
-          )}
+          <span className="icon-tile">
+            <Bell className="h-5 w-5" strokeWidth={1.75} />
+          </span>
+          <div className="flex items-center gap-2.5">
+            <h1 className="page-title">Notifications</h1>
+            {unreadCount > 0 && (
+              <span className="badge badge-accent">{unreadCount} new</span>
+            )}
+          </div>
         </div>
 
         {unreadCount > 0 && (
-          <form action={markAllRead}>
-            <button
-              type="submit"
-              className="text-sm text-accent hover:underline focus:outline-none"
-            >
+          <form action={markAllRead} className="shrink-0">
+            <button type="submit" className="link-accent text-sm">
               Mark all read
             </button>
           </form>
@@ -92,9 +91,17 @@ export default async function NotificationsPage() {
       </div>
 
       {items.length === 0 && (
-        <div className="card flex flex-col items-center gap-4 py-16 text-center">
-          <Bell className="h-12 w-12 text-slate-300" strokeWidth={1} />
-          <p className="text-slate-500">No notifications yet.</p>
+        <div className="card card-flush">
+          <div className="empty-state">
+            <span className="empty-state-icon">
+              <Bell className="h-6 w-6" strokeWidth={1.5} />
+            </span>
+            <p className="empty-state-title">No notifications yet</p>
+            <p className="empty-state-text">
+              You&apos;re all caught up. Updates about your bookings will appear
+              here.
+            </p>
+          </div>
         </div>
       )}
 
@@ -102,11 +109,9 @@ export default async function NotificationsPage() {
         const groupItems = groups[group];
         if (groupItems.length === 0) return null;
         return (
-          <section key={group} className="space-y-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {group}
-            </h2>
-            <ul className="flex flex-col gap-2">
+          <section key={group} className="space-y-3">
+            <h2 className="eyebrow-label">{group}</h2>
+            <ul className="flex flex-col gap-2.5">
               {groupItems.map((n) => (
                 <li key={n.id}>
                   {/* Whole row is clickable: marks read, then opens the booking
@@ -114,15 +119,31 @@ export default async function NotificationsPage() {
                   <form action={markRead.bind(null, n.id, n.booking_id)}>
                     <button
                       type="submit"
-                      className={[
-                        "card card-lift flex w-full items-start gap-4 text-left transition-colors",
+                      style={
                         !n.read_at
-                          ? "border-l-4 border-accent bg-accent/5"
-                          : "border-l-4 border-transparent",
+                          ? { backgroundColor: "rgba(16, 185, 129, 0.06)" }
+                          : undefined
+                      }
+                      className={[
+                        "card card-interactive card-sm flex w-full items-start gap-3 text-left",
+                        !n.read_at ? "card-accent" : "",
                       ].join(" ")}
                     >
-                      <div className="flex-1 space-y-0.5">
-                        <p className="text-sm font-semibold text-slate-900">
+                      <span
+                        className={[
+                          "icon-tile icon-tile-sm",
+                          n.read_at ? "icon-tile-neutral" : "",
+                        ].join(" ")}
+                      >
+                        <Bell className="h-4 w-4" strokeWidth={1.75} />
+                      </span>
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p
+                          className={[
+                            "text-sm font-semibold",
+                            n.read_at ? "text-slate-700" : "text-slate-900",
+                          ].join(" ")}
+                        >
                           {n.title}
                         </p>
                         <p className="text-sm text-slate-600">{n.body}</p>
@@ -131,7 +152,7 @@ export default async function NotificationsPage() {
                         </p>
                       </div>
                       {n.booking_id && (
-                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                       )}
                     </button>
                   </form>

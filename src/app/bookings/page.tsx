@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Calendar, Clock, ChevronRight, Sparkles } from "lucide-react";
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
+import { Calendar, Clock, ChevronRight, Sparkles, Plus } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -11,30 +12,6 @@ type Booking = {
   scheduled_at: string;
   hours: number;
   total_amount: number;
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  broadcasting: "bg-blue-100 text-blue-700",
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-orange-100 text-orange-700",
-  balance_paid: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-600",
-  cancelled: "bg-red-100 text-red-700",
-  no_cleaner_found: "bg-red-100 text-red-700",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  broadcasting: "Finding cleaner",
-  accepted: "Awaiting deposit",
-  deposit_paid: "Confirmed",
-  in_progress: "In progress",
-  completed: "Awaiting payment",
-  balance_paid: "Paid in full",
-  closed: "Closed",
-  cancelled: "Cancelled",
-  no_cleaner_found: "No cleaner found",
 };
 
 const ACTIVE_STATUSES = new Set([
@@ -111,29 +88,29 @@ export default async function BookingsPage({
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">My Bookings</h1>
-        <Link href="/book" className="btn-base btn-primary text-sm px-4 py-2">
-          + New booking
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="page-title">My Bookings</h1>
+          <p className="page-subtitle">Track and manage your cleaning appointments.</p>
+        </div>
+        <Link href="/book" className="btn-base btn-primary text-sm px-4 py-2 flex-shrink-0">
+          <Plus className="h-4 w-4" strokeWidth={2} />
+          New booking
         </Link>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+      <div className="segmented">
         {tabs.map((t) => (
           <Link
             key={t.key}
             href={`/bookings?tab=${t.key}`}
-            className={`flex-1 rounded-lg py-2 text-center text-sm font-medium transition-all ${
-              activeTab === t.key
-                ? "bg-white shadow text-slate-900"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
+            className={`seg-item ${activeTab === t.key ? "seg-item-active" : ""}`}
           >
             {t.label}
             {t.count > 0 && (
               <span
-                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
                   activeTab === t.key
                     ? "bg-accent text-white"
                     : "bg-slate-200 text-slate-600"
@@ -148,25 +125,25 @@ export default async function BookingsPage({
 
       {/* Booking list */}
       {filtered.length === 0 ? (
-        <div className="card flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-light/20">
-            <Sparkles className="h-8 w-8 text-accent" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="font-semibold text-slate-700 mb-1">
+        <div className="card">
+          <div className="empty-state">
+            <span className="empty-state-icon">
+              <Sparkles className="h-7 w-7" strokeWidth={1.5} />
+            </span>
+            <p className="empty-state-title">
               {activeTab === "all" ? "No bookings yet" : `No ${activeTab} bookings`}
             </p>
-            <p className="text-sm text-slate-400">
+            <p className="empty-state-text">
               {activeTab === "all"
                 ? "Your bookings will appear here once you book a cleaning."
                 : "Nothing to show for this filter."}
             </p>
+            {activeTab === "all" && (
+              <Link href="/book" className="btn-base btn-primary">
+                Book a cleaning
+              </Link>
+            )}
           </div>
-          {activeTab === "all" && (
-            <Link href="/book" className="btn-base btn-primary">
-              Book a cleaning
-            </Link>
-          )}
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -174,17 +151,13 @@ export default async function BookingsPage({
             <li key={b.id}>
               <Link
                 href={`/bookings/${b.id}`}
-                className="card flex items-center justify-between gap-4 hover:shadow-elevation-md transition-shadow p-4 group"
+                className="card card-interactive card-sm flex items-center justify-between gap-4 group"
               >
-                <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-slate-900">{b.area}</span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {STATUS_LABEL[b.status] ?? b.status}
+                    <span className={bookingBadgeClass(b.status)}>
+                      {bookingStatusLabel(b.status)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
@@ -199,7 +172,7 @@ export default async function BookingsPage({
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-lg font-bold text-gradient">
+                  <span className="text-lg font-bold text-gradient tabular-nums">
                     ${Number(b.total_amount).toFixed(2)}
                   </span>
                   <ChevronRight

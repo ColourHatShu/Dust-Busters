@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { updateSettings } from "./actions";
+import { ArrowLeft, DollarSign, Percent, SlidersHorizontal } from "lucide-react";
 
 export default async function AdminSettingsPage() {
   const { user, profile } = await getSessionProfile();
@@ -17,11 +19,28 @@ export default async function AdminSettingsPage() {
 
   return (
     <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-4 text-2xl font-bold">Settings</h1>
-      <form action={updateSettings} className="space-y-4">
-        <div>
-          <label htmlFor="hourly_rate" className="mb-1 block text-sm font-medium">
-            Hourly Rate
+      <div className="mb-6">
+        <Link
+          href="/admin"
+          className="link-subtle inline-flex items-center gap-1 text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" /> Admin
+        </Link>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="icon-tile">
+            <SlidersHorizontal className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="page-title">Settings</h1>
+            <p className="page-subtitle">Pricing and platform commission</p>
+          </div>
+        </div>
+      </div>
+
+      <form action={updateSettings} className="card space-y-5">
+        <div className="space-y-1.5">
+          <label htmlFor="hourly_rate" className="form-label">
+            <DollarSign className="h-4 w-4" /> Hourly Rate
           </label>
           <input
             id="hourly_rate"
@@ -29,15 +48,12 @@ export default async function AdminSettingsPage() {
             type="number"
             step="0.01"
             defaultValue={settings?.hourly_rate ?? ""}
-            className="w-full rounded border p-2"
+            className="input-modern"
           />
         </div>
-        <div>
-          <label
-            htmlFor="deposit_percent"
-            className="mb-1 block text-sm font-medium"
-          >
-            Deposit Percent
+        <div className="space-y-1.5">
+          <label htmlFor="deposit_percent" className="form-label">
+            <Percent className="h-4 w-4" /> Deposit Percent
           </label>
           <input
             id="deposit_percent"
@@ -48,15 +64,12 @@ export default async function AdminSettingsPage() {
             max="100"
             required
             defaultValue={settings?.deposit_percent ?? ""}
-            className="w-full rounded border p-2"
+            className="input-modern"
           />
         </div>
-        <div>
-          <label
-            htmlFor="commission_percent"
-            className="mb-1 block text-sm font-medium"
-          >
-            Platform commission %
+        <div className="space-y-1.5">
+          <label htmlFor="commission_percent" className="form-label">
+            <Percent className="h-4 w-4" /> Platform commission %
           </label>
           <input
             id="commission_percent"
@@ -67,17 +80,15 @@ export default async function AdminSettingsPage() {
             max="100"
             required
             defaultValue={settings?.commission_percent ?? ""}
-            className="w-full rounded border p-2"
+            className="input-modern"
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="form-hint">
             Applied to new bookings going forward (existing bookings keep their
             locked rate).
           </p>
         </div>
-        <button
-          type="submit"
-          className="rounded bg-green-600 px-3 py-1 text-white"
-        >
+        <hr className="hr-soft" />
+        <button type="submit" className="btn-base btn-primary">
           Save
         </button>
       </form>

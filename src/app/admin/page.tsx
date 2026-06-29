@@ -2,6 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
+import {
+  ClipboardList,
+  Users,
+  Sparkles,
+  AlertTriangle,
+  Settings,
+  DollarSign,
+  ShieldCheck,
+} from "lucide-react";
 
 export default async function AdminHomePage() {
   const { user, profile } = await getSessionProfile();
@@ -77,20 +87,6 @@ export default async function AdminHomePage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // Real booking_status enum values (no 'pending'/'confirmed' exist).
-  const statusColor: Record<string, string> = {
-    broadcasting: "bg-blue-100 text-blue-800",
-    accepted: "bg-yellow-100 text-yellow-800",
-    deposit_paid: "bg-green-100 text-green-800",
-    in_progress: "bg-indigo-100 text-indigo-800",
-    completed: "bg-orange-100 text-orange-800",
-    balance_paid: "bg-green-100 text-green-800",
-    closed: "bg-gray-100 text-gray-700",
-    cancelled: "bg-red-100 text-red-800",
-    no_cleaner_found: "bg-red-100 text-red-800",
-    disputed: "bg-purple-100 text-purple-800",
-  };
-
   // "Active" = bookings still in flight (not completed/closed/cancelled/etc.).
   const activeCount = ["broadcasting", "accepted", "deposit_paid", "in_progress"].reduce(
     (sum, st) => sum + (statusCounts[st] ?? 0),
@@ -98,97 +94,108 @@ export default async function AdminHomePage() {
   );
 
   const navCards = [
-    { href: "/admin/bookings", label: "Bookings", icon: "📋", desc: "Manage all bookings" },
-    { href: "/admin/customers", label: "Customers", icon: "👥", desc: "View customer accounts" },
-    { href: "/admin/cleaners", label: "Cleaners", icon: "🧹", desc: "Manage cleaner roster" },
-    { href: "/admin/disputes", label: "Disputes", icon: "⚠️", desc: "Resolve open disputes" },
-    { href: "/admin/settings", label: "Settings", icon: "⚙️", desc: "App configuration" },
+    { href: "/admin/bookings", label: "Bookings", icon: ClipboardList, desc: "Manage all bookings" },
+    { href: "/admin/customers", label: "Customers", icon: Users, desc: "View customer accounts" },
+    { href: "/admin/cleaners", label: "Cleaners", icon: Sparkles, desc: "Manage cleaner roster" },
+    { href: "/admin/disputes", label: "Disputes", icon: AlertTriangle, desc: "Resolve open disputes" },
+    { href: "/admin/settings", label: "Settings", icon: Settings, desc: "App configuration" },
   ];
+
+  const disputesOpen = (openDisputes ?? 0) > 0;
 
   return (
     <main className="mx-auto max-w-6xl p-6 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <span className="page-eyebrow">
+            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            Admin
+          </span>
+          <h1 className="page-title mt-2">Admin Dashboard</h1>
+          <p className="page-subtitle">
             Welcome back, {profile?.name ?? "Admin"} — here&apos;s your overview
           </p>
         </div>
-        <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent-light uppercase tracking-wide">
-          Admin
-        </span>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="card p-5 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Total Bookings
-          </p>
-          <p className="text-3xl font-bold text-gray-900">{totalBookings ?? 0}</p>
-          <p className="text-xs text-gray-400">
-            {activeCount} active ·{" "}
-            {statusCounts["completed"] ?? 0} completed
+        <div className="stat-card">
+          <div className="flex items-start justify-between gap-3">
+            <p className="stat-label">Total Bookings</p>
+            <span className="icon-tile icon-tile-sm icon-tile-info">
+              <ClipboardList className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            </span>
+          </div>
+          <p className="stat-value">{totalBookings ?? 0}</p>
+          <p className="stat-sub">
+            {activeCount} active · {statusCounts["completed"] ?? 0} completed
           </p>
         </div>
 
-        <div className="card p-5 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Revenue (CAD)
-          </p>
-          <p className="text-3xl font-bold text-gradient">
-            ${money(totalRevenue)}
-          </p>
-          <p className="text-xs text-gray-400">from paid payments</p>
-          <div className="mt-1 space-y-0.5 border-t border-slate-100 pt-1.5">
-            <p className="flex justify-between text-xs text-gray-500">
+        <div className="stat-card stat-card-accent">
+          <div className="flex items-start justify-between gap-3">
+            <p className="stat-label">Revenue (CAD)</p>
+            <span className="icon-tile icon-tile-sm">
+              <DollarSign className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            </span>
+          </div>
+          <p className="stat-value">${money(totalRevenue)}</p>
+          <p className="stat-sub">from paid payments</p>
+          <div className="mt-1 space-y-0.5 border-t border-emerald-200/60 pt-1.5">
+            <p className="flex justify-between text-xs text-slate-500">
               <span>Platform (commission)</span>
-              <span className="font-medium text-emerald-700">
+              <span className="font-medium text-emerald-700 tabular-nums">
                 ${money(platformRevenue)}
               </span>
             </p>
-            <p className="flex justify-between text-xs text-gray-500">
+            <p className="flex justify-between text-xs text-slate-500">
               <span>Cleaner payouts</span>
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-slate-700 tabular-nums">
                 ${money(cleanerPayouts)}
               </span>
             </p>
           </div>
         </div>
 
-        <div className="card p-5 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Active Cleaners
-          </p>
-          <p className="text-3xl font-bold text-gray-900">{activeCleaners ?? 0}</p>
-          <p className="text-xs text-gray-400">available for dispatch</p>
+        <div className="stat-card">
+          <div className="flex items-start justify-between gap-3">
+            <p className="stat-label">Active Cleaners</p>
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            </span>
+          </div>
+          <p className="stat-value">{activeCleaners ?? 0}</p>
+          <p className="stat-sub">available for dispatch</p>
         </div>
 
-        <div className="card p-5 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Open Disputes
-          </p>
-          <p className={`text-3xl font-bold ${(openDisputes ?? 0) > 0 ? "text-red-600" : "text-gray-900"}`}>
+        <div className="stat-card">
+          <div className="flex items-start justify-between gap-3">
+            <p className="stat-label">Open Disputes</p>
+            <span
+              className={`icon-tile icon-tile-sm ${disputesOpen ? "icon-tile-danger" : "icon-tile-neutral"}`}
+            >
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            </span>
+          </div>
+          <p className={`stat-value ${disputesOpen ? "text-red-600!" : ""}`}>
             {openDisputes ?? 0}
           </p>
-          <p className="text-xs text-gray-400">
-            {(openDisputes ?? 0) > 0 ? "requires attention" : "all clear"}
+          <p className="stat-sub">
+            {disputesOpen ? "requires attention" : "all clear"}
           </p>
         </div>
       </div>
 
       {/* Booking Status Breakdown */}
       {Object.keys(statusCounts).length > 0 && (
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Booking Status Breakdown</h2>
-          <div className="flex flex-wrap gap-3">
+        <div className="card">
+          <h2 className="section-title mb-3">Booking Status Breakdown</h2>
+          <div className="flex flex-wrap gap-2.5">
             {Object.entries(statusCounts).map(([status, count]) => (
-              <span
-                key={status}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${statusColor[status] ?? "bg-gray-100 text-gray-700"}`}
-              >
-                {status.replace("_", " ")}
+              <span key={status} className={bookingBadgeClass(status)}>
+                {bookingStatusLabel(status)}
                 <span className="font-bold">{count}</span>
               </span>
             ))}
@@ -198,56 +205,61 @@ export default async function AdminHomePage() {
 
       {/* Nav Cards */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Manage
-        </h2>
+        <h2 className="eyebrow-label mb-3">Manage</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {navCards.map(({ href, label, icon, desc }) => (
+          {navCards.map(({ href, label, icon: Icon, desc }) => (
             <Link
               key={href}
               href={href}
-              className="card p-4 flex flex-col items-center text-center gap-2 hover:shadow-lg transition-shadow group"
+              className="card card-interactive p-4 flex flex-col items-center text-center gap-2 group"
             >
-              <span className="text-2xl">{icon}</span>
-              <span className="text-sm font-semibold text-gray-800 group-hover:text-accent-light transition-colors">
+              <span className="icon-tile">
+                <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="text-sm font-semibold text-slate-800 group-hover:text-accent-light transition-colors">
                 {label}
               </span>
-              <span className="text-xs text-gray-400 hidden sm:block">{desc}</span>
+              <span className="text-xs text-slate-400 hidden sm:block">{desc}</span>
             </Link>
           ))}
         </div>
       </div>
 
       {/* Recent Bookings */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
-          <Link
-            href="/admin/bookings"
-            className="text-sm font-medium text-accent-light hover:underline"
-          >
+      <div className="card card-flush overflow-hidden">
+        <div className="flex items-center justify-between gap-4 p-5 sm:p-6">
+          <h2 className="section-title">Recent Bookings</h2>
+          <Link href="/admin/bookings" className="link-accent text-sm">
             View all →
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-400">
-                <th className="pb-3 pr-4 font-medium">ID</th>
-                <th className="pb-3 pr-4 font-medium">Customer</th>
-                <th className="pb-3 pr-4 font-medium">Status</th>
-                <th className="pb-3 pr-4 font-medium">Area</th>
-                <th className="pb-3 pr-4 font-medium">Scheduled</th>
-                <th className="pb-3 pr-4 font-medium">Hrs</th>
-                <th className="pb-3 pr-4 font-medium">Total</th>
-                <th className="pb-3 font-medium"></th>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Area</th>
+                <th>Scheduled</th>
+                <th className="num">Hrs</th>
+                <th className="num">Total</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {(recentBookings ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-gray-400 text-sm">
-                    No bookings yet
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      <span className="empty-state-icon">
+                        <ClipboardList className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+                      </span>
+                      <p className="empty-state-title">No bookings yet</p>
+                      <p className="empty-state-text">
+                        New bookings will appear here as customers place them.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -256,22 +268,22 @@ export default async function AdminHomePage() {
                   ? b.profiles[0]
                   : b.profiles;
                 return (
-                  <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 pr-4 font-mono text-xs text-gray-400">
-                      {String(b.id).slice(0, 8)}
-                    </td>
-                    <td className="py-3 pr-4 font-medium text-gray-700">
-                      {customer?.name ?? "—"}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span
-                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
-                      >
-                        {b.status.replace("_", " ")}
+                  <tr key={b.id}>
+                    <td>
+                      <span className="font-mono text-xs text-slate-400">
+                        {String(b.id).slice(0, 8)}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-gray-600">{b.area ?? "—"}</td>
-                    <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">
+                    <td className="font-medium text-slate-700">
+                      {customer?.name ?? "—"}
+                    </td>
+                    <td>
+                      <span className={bookingBadgeClass(b.status)}>
+                        {bookingStatusLabel(b.status)}
+                      </span>
+                    </td>
+                    <td>{b.area ?? "—"}</td>
+                    <td className="whitespace-nowrap">
                       {b.scheduled_at
                         ? new Date(b.scheduled_at).toLocaleString("en-CA", {
                             dateStyle: "medium",
@@ -279,18 +291,18 @@ export default async function AdminHomePage() {
                           })
                         : "—"}
                     </td>
-                    <td className="py-3 pr-4 text-gray-600">
+                    <td className="num">
                       {b.hours != null ? `${b.hours}h` : "—"}
                     </td>
-                    <td className="py-3 pr-4 font-medium text-gray-800">
+                    <td className="num font-medium text-slate-800">
                       {b.total_amount != null
                         ? `$${Number(b.total_amount).toFixed(2)}`
                         : "—"}
                     </td>
-                    <td className="py-3">
+                    <td>
                       <Link
                         href={`/admin/bookings/${b.id}`}
-                        className="text-xs font-medium text-accent-light hover:underline"
+                        className="link-accent text-xs"
                       >
                         View
                       </Link>

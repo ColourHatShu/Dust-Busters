@@ -24,7 +24,14 @@
 }
 
 body {
-  background: var(--background);
+  /* Premium light app canvas: a soft cool slate wash with a faint emerald
+     bloom at the top. Dark surfaces (landing <main>, /login, navbar, footer)
+     paint their own opaque backgrounds over this, so it only shows behind the
+     light, logged-in app pages — giving white cards real depth to sit on. */
+  background:
+    radial-gradient(125% 90% at 50% -10%, rgba(16, 185, 129, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -119,13 +126,17 @@ p {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%);
   color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 1px 2px 0 rgba(4, 120, 87, 0.2),
+    0 6px 16px -6px rgba(5, 150, 105, 0.5);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 2px 6px 0 rgba(4, 120, 87, 0.25),
+    0 12px 26px -8px rgba(5, 150, 105, 0.55);
   transform: translateY(-0.125rem);
 }
 
@@ -165,40 +176,66 @@ p {
 /* Input styling */
 .input-modern {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #cbd5e1;
-  background-color: white;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.625rem;
+  border: 1px solid #d8dee9;
+  background-color: #ffffff;
   color: #0f172a;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-family: inherit;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+}
+
+.input-modern:hover {
+  border-color: #cbd5e1;
 }
 
 .input-modern:focus {
   outline: none;
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15), 0 1px 2px 0 rgba(15, 23, 42, 0.05);
 }
 
 .input-modern::placeholder {
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
-/* Premium card system — solid backgrounds with shadows */
+/* Premium card system — layered white surfaces with soft, cool depth.
+   Base cards stay calm (depth only on hover); add .card-interactive for
+   clickable cards that should lift. */
 .card {
-  background-color: white;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  padding: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 1.5rem;
+  box-shadow:
+    0 1px 2px 0 rgba(15, 23, 42, 0.04),
+    0 4px 10px -2px rgba(15, 23, 42, 0.05),
+    0 14px 30px -12px rgba(15, 23, 42, 0.07);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-0.125rem);
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow:
+    0 1px 2px 0 rgba(15, 23, 42, 0.05),
+    0 8px 18px -4px rgba(15, 23, 42, 0.08),
+    0 22px 44px -18px rgba(15, 23, 42, 0.12);
+}
+
+/* Clickable cards: calm at rest, lift on hover */
+.card-interactive {
+  cursor: pointer;
+}
+.card-interactive:hover {
+  transform: translateY(-3px);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+/* Card with an emerald accent rail down the left edge */
+.card-accent {
+  border-left: 3px solid var(--color-accent);
 }
 
 .card-dark {
@@ -1753,4 +1790,299 @@ p {
   outline: none;
   border-color: rgba(52, 211, 153, 0.6);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+
+/* ===========================================================================
+   PREMIUM LIGHT APP SYSTEM  (logged-in pages only)
+   Cohesive, modern building blocks so every app page shares one visual
+   language: page headers, stat tiles, alerts, badges, detail rows, tables,
+   empty states, segmented tabs, icon tiles, option cards. Dark surfaces
+   (landing, /login, navbar, footer, matching map) keep their own styles.
+   These are intentionally unlayered so the card-padding helpers below reliably
+   control card spacing; apply a helper and drop the utility it replaces.
+   =========================================================================== */
+
+/* ---- Card padding variants (reliable overrides for .card) ---- */
+.card-flush { padding: 0; }
+.card-sm { padding: 1.1rem; }
+.card-lg { padding: 2rem; }
+
+/* ---- Muted sub-surface (read-only fields, inset panels) ---- */
+.surface-muted {
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 0.7rem;
+}
+
+/* ---- Page + section headings ---- */
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+.page-title {
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+@media (min-width: 640px) {
+  .page-title { font-size: 1.9rem; }
+}
+.page-subtitle {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1e293b;
+}
+.eyebrow-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+/* ---- Icon tiles (replace emoji + ad-hoc icon circles) ---- */
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border-radius: 0.8rem;
+  color: #fff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 6px 16px -8px rgba(5, 150, 105, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.icon-tile-sm { height: 2.25rem; width: 2.25rem; border-radius: 0.65rem; }
+.icon-tile-lg { height: 3.25rem; width: 3.25rem; border-radius: 0.95rem; }
+/* tonal (soft) variants: tinted background, colored glyph, no shadow */
+.icon-tile-soft    { color: #047857; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2);  box-shadow: none; }
+.icon-tile-info    { color: #1d4ed8; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.2);  box-shadow: none; }
+.icon-tile-warn    { color: #b45309; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.22); box-shadow: none; }
+.icon-tile-danger  { color: #b91c1c; background: rgba(239, 68, 68, 0.12);  border: 1px solid rgba(239, 68, 68, 0.2);   box-shadow: none; }
+.icon-tile-neutral { color: #475569; background: rgba(100, 116, 139, 0.1); border: 1px solid rgba(100, 116, 139, 0.18); box-shadow: none; }
+
+/* ---- Stat / metric tile ---- */
+.stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 24px -16px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 36px -18px rgba(15, 23, 42, 0.2);
+}
+.stat-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #94a3b8; }
+.stat-value { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: #0f172a; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-sub { font-size: 0.72rem; color: #94a3b8; }
+.stat-card-accent {
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.1) 0%, rgba(255, 255, 255, 0.5) 60%);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.stat-card-accent .stat-value { color: #047857; }
+
+/* ---- Alert / banner (replaces the many inline tinted boxes) ---- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.alert svg { flex-shrink: 0; margin-top: 0.1rem; }
+.alert-info    { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+.alert-success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+.alert-warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.alert-error   { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.alert-accent  { background: rgba(16, 185, 129, 0.07); border-color: rgba(16, 185, 129, 0.28); color: #065f46; }
+
+/* ---- Badge / status pill (consistent tonal system) ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.badge-dot { width: 0.45rem; height: 0.45rem; border-radius: 9999px; background: currentColor; }
+.badge-neutral { background: #f1f5f9; color: #475569; }
+.badge-info    { background: #dbeafe; color: #1d4ed8; }
+.badge-success { background: #d1fae5; color: #047857; }
+.badge-warning { background: #fef3c7; color: #b45309; }
+.badge-danger  { background: #fee2e2; color: #b91c1c; }
+.badge-accent  { background: #ccfbf1; color: #0f766e; }
+.badge-purple  { background: #ede9fe; color: #6d28d9; }
+
+/* ---- Detail / key-value row ---- */
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.detail-row:last-child { border-bottom: 0; }
+.detail-label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #64748b; }
+.detail-value { font-size: 0.875rem; font-weight: 600; color: #0f172a; text-align: right; }
+
+/* ---- Data table ---- */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.data-table thead th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+.data-table tbody td { padding: 0.8rem 1rem; color: #475569; border-bottom: 1px solid #f1f5f9; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table tbody tr { transition: background-color 0.15s ease; }
+.data-table tbody tr:hover { background: #f8fafc; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- Empty state ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 9999px;
+  color: #10b981;
+  background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.empty-state-title { font-size: 1rem; font-weight: 600; color: #334155; }
+.empty-state-text { font-size: 0.875rem; color: #94a3b8; max-width: 22rem; }
+
+/* ---- Segmented control / tab filter ---- */
+.segmented {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+  background: #eef1f5;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.seg-item {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.seg-item:hover { color: #334155; }
+.seg-item-active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 10px -4px rgba(15, 23, 42, 0.12);
+}
+
+/* ---- Option / checkbox card ---- */
+.checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  border-radius: 0.7rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  color: #334155;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.checkbox-card:hover { border-color: #6ee7b7; background: #f0fdfa; }
+.checkbox-card:has(input:checked) {
+  border-color: #10b981;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+}
+.checkbox-card input[type="checkbox"],
+.checkbox-card input[type="radio"] { accent-color: #059669; height: 1rem; width: 1rem; flex-shrink: 0; }
+
+/* ---- Form helpers ---- */
+.form-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 500; color: #334155; }
+.form-hint { font-size: 0.75rem; color: #94a3b8; }
+
+/* ---- Avatar (initials) ---- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  box-shadow: 0 6px 16px -8px rgba(5, 150, 105, 0.55);
+}
+
+/* ---- Links + amounts + dividers ---- */
+.link-accent { color: #059669; font-weight: 500; transition: color 0.15s ease; }
+.link-accent:hover { color: #047857; text-decoration: underline; }
+.link-subtle { color: #64748b; transition: color 0.15s ease; }
+.link-subtle:hover { color: #0f172a; }
+.amount-lg { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: #0f172a; font-variant-numeric: tabular-nums; }
+.hr-soft { height: 1px; background: #eef2f6; border: 0; }
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .card, .card-interactive, .stat-card, .btn-primary, .seg-item { transition: none !important; }
+  .card-interactive:hover, .stat-card:hover, .btn-primary:hover { transform: none !important; }
 }

@@ -86,31 +86,43 @@ export default async function AccountPage() {
   return (
     <main className="mx-auto max-w-lg space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Account</h1>
-        <p className="text-sm text-slate-500 mt-1">Member since {accountSince}</p>
+        <h1 className="page-title">My Account</h1>
+        <p className="page-subtitle">Member since {accountSince}</p>
       </div>
 
       {/* Avatar / summary */}
       <div className="card flex items-center gap-4">
-        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-xl font-bold text-white shadow-elevation-md">
+        <div className="avatar h-16 w-16 text-xl">
           {name ? name.charAt(0).toUpperCase() : email.charAt(0).toUpperCase()}
         </div>
-        <div>
-          <p className="font-semibold text-slate-900">{name || "No name set"}</p>
-          <p className="text-sm text-slate-500">{email}</p>
-          {phone && <p className="text-sm text-slate-500">{phone}</p>}
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold text-slate-900">
+            {name || "No name set"}
+          </p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+            <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={1.5} />
+            <span className="truncate">{email}</span>
+          </p>
+          {phone && (
+            <p className="flex items-center gap-1.5 text-sm text-slate-500">
+              <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={1.5} />
+              {phone}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Edit profile form */}
       <div className="card space-y-5">
-        <h2 className="font-semibold text-slate-800">Edit Profile</h2>
+        <div className="flex items-center gap-3">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <User className="h-4 w-4" strokeWidth={1.5} />
+          </span>
+          <h2 className="section-title">Edit profile</h2>
+        </div>
         <form action={updateProfile} className="space-y-4">
           <div className="space-y-1.5">
-            <label
-              htmlFor="name"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="name" className="form-label">
               <User className="h-4 w-4 text-accent" strokeWidth={1.5} />
               Full name
             </label>
@@ -126,10 +138,7 @@ export default async function AccountPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="email-display"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="email-display" className="form-label">
               <Mail className="h-4 w-4 text-accent" strokeWidth={1.5} />
               Email address
             </label>
@@ -138,19 +147,16 @@ export default async function AccountPage() {
               type="email"
               value={email}
               disabled
-              className="input-modern opacity-60 cursor-not-allowed"
+              className="surface-muted w-full cursor-not-allowed px-[0.9rem] py-[0.7rem] text-[0.95rem] text-slate-500"
               title="Email cannot be changed here"
             />
-            <p className="text-xs text-slate-400">
+            <p className="form-hint">
               Email changes require contacting support.
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="phone"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="phone" className="form-label">
               <Phone className="h-4 w-4 text-accent" strokeWidth={1.5} />
               Phone number
             </label>
@@ -174,26 +180,28 @@ export default async function AccountPage() {
       {/* Favorite cleaners */}
       {favorites.length > 0 && (
         <div className="card space-y-4">
-          <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
-            <Heart className="h-4 w-4 fill-rose-500 text-rose-500" strokeWidth={1.5} />
-            Favorite cleaners
-          </h2>
+          <div className="flex items-center gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <Heart className="h-4 w-4" strokeWidth={1.5} />
+            </span>
+            <h2 className="section-title">Favorite cleaners</h2>
+          </div>
           <ul className="divide-y divide-slate-100">
             {favorites.map((f) => (
               <li
                 key={f.cleanerId}
                 className="flex items-center justify-between gap-3 py-2.5"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-sm font-bold text-white">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="avatar h-10 w-10 text-sm">
                     {f.name?.charAt(0).toUpperCase() ?? "C"}
                   </div>
-                  <div>
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-900">
                       {f.name ?? "Cleaner"}
                       {f.id_verified && (
                         <ShieldCheck
-                          className="h-3.5 w-3.5 text-green-600"
+                          className="h-3.5 w-3.5 shrink-0 text-emerald-600"
                           strokeWidth={2}
                         />
                       )}
@@ -226,20 +234,27 @@ export default async function AccountPage() {
 
       {/* Saved addresses */}
       <div className="card space-y-4">
-        <h2 className="flex items-center gap-1.5 font-semibold text-slate-800">
-          <MapPin className="h-4 w-4 text-accent" strokeWidth={1.5} />
-          Saved addresses
-        </h2>
+        <div className="flex items-center gap-3">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <MapPin className="h-4 w-4" strokeWidth={1.5} />
+          </span>
+          <h2 className="section-title">Saved addresses</h2>
+        </div>
 
         {savedAddresses.length > 0 ? (
           <ul className="divide-y divide-slate-100">
             {savedAddresses.map((a) => (
               <li key={a.id} className="flex items-start justify-between gap-3 py-2.5">
-                <div className="min-w-0">
-                  {a.label && (
-                    <p className="text-sm font-medium text-slate-800">{a.label}</p>
-                  )}
-                  <p className="truncate text-sm text-slate-600">{a.full_address}</p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="icon-tile icon-tile-sm icon-tile-soft mt-0.5">
+                    <MapPin className="h-4 w-4" strokeWidth={1.5} />
+                  </span>
+                  <div className="min-w-0">
+                    {a.label && (
+                      <p className="text-sm font-medium text-slate-800">{a.label}</p>
+                    )}
+                    <p className="truncate text-sm text-slate-600">{a.full_address}</p>
+                  </div>
                 </div>
                 <form action={deleteAddress.bind(null, a.id)}>
                   <button
@@ -254,12 +269,13 @@ export default async function AccountPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-400">
+          <p className="surface-muted px-4 py-3 text-sm text-slate-500">
             No saved addresses yet. Add one to book faster next time.
           </p>
         )}
 
         <form action={addAddress} className="space-y-2 border-t border-slate-100 pt-4">
+          <p className="form-label">Add an address</p>
           <input
             name="label"
             placeholder="Label (e.g. Home, Office) — optional"
@@ -280,36 +296,38 @@ export default async function AccountPage() {
       </div>
 
       {/* Quick links */}
-      <div className="card divide-y divide-slate-100 p-0 overflow-hidden">
+      <div className="card card-flush divide-y divide-slate-100 overflow-hidden">
         <Link
           href="/bookings"
-          className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 transition-colors group"
+          className="group flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-slate-50"
         >
           <div className="flex items-center gap-3">
-            <ClipboardList className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <ClipboardList className="h-4 w-4" strokeWidth={1.5} />
+            </span>
             <span className="font-medium text-slate-800">My Bookings</span>
           </div>
           <ChevronRight
-            className="h-4 w-4 text-slate-400 group-hover:text-accent transition-colors"
+            className="h-4 w-4 text-slate-400 transition-colors group-hover:text-accent"
             strokeWidth={1.5}
           />
         </Link>
 
-        <div className="flex items-center justify-between px-4 py-3.5 opacity-60 cursor-not-allowed">
+        <div className="flex items-center justify-between gap-3 px-5 py-4">
           <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5 text-slate-400" strokeWidth={1.5} />
-            <div>
-              <span className="font-medium text-slate-800">Notification Preferences</span>
-              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                Coming soon
-              </span>
-            </div>
+            <span className="icon-tile icon-tile-sm icon-tile-neutral">
+              <Bell className="h-4 w-4" strokeWidth={1.5} />
+            </span>
+            <span className="font-medium text-slate-500">Notification Preferences</span>
           </div>
+          <span className="badge badge-neutral">Coming soon</span>
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-3.5 text-slate-500">
-          <CalendarDays className="h-5 w-5 text-slate-400" strokeWidth={1.5} />
-          <span className="text-sm">Member since {accountSince}</span>
+        <div className="flex items-center gap-3 px-5 py-4">
+          <span className="icon-tile icon-tile-sm icon-tile-neutral">
+            <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
+          </span>
+          <span className="text-sm text-slate-500">Member since {accountSince}</span>
         </div>
       </div>
     </main>

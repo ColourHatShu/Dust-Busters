@@ -22,24 +22,7 @@ import {
   Star,
   ClipboardList,
 } from "lucide-react";
-
-const STATUS_LABEL: Record<string, string> = {
-  accepted: "Cleaner assigned — awaiting deposit",
-  deposit_paid: "Deposit paid — ready to start",
-  in_progress: "Job in progress",
-  completed: "Completed — awaiting balance payment",
-  balance_paid: "Paid in full",
-  closed: "Closed",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-orange-100 text-orange-700",
-  balance_paid: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-700",
-};
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 
 const DEPOSIT_PAID_AND_LATER = new Set([
   "deposit_paid",
@@ -146,77 +129,73 @@ export default async function CleanerJobDetailPage({
       {/* Back link */}
       <Link
         href="/cleaner/jobs"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800"
+        className="link-subtle inline-flex items-center gap-1.5 text-sm"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
         Back to jobs
       </Link>
 
-      {/* Status badge */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Job details</h1>
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-            STATUS_COLOR[booking.status] ?? "bg-slate-100 text-slate-600"
-          }`}
-        >
-          {STATUS_LABEL[booking.status] ?? booking.status}
+      {/* Header + status badge */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="page-title">Job details</h1>
+        <span className={bookingBadgeClass(booking.status)}>
+          {bookingStatusLabel(booking.status)}
         </span>
       </div>
 
       {/* Booking detail card */}
-      <div className="card space-y-4">
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
+      <div className="card">
+        <div className="detail-row">
+          <span className="detail-label">
             <Calendar className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Date & time</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
+            Date & time
+          </span>
+          <span className="detail-value">
             {new Date(booking.scheduled_at).toLocaleString()}
           </span>
         </div>
 
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
+        <div className="detail-row">
+          <span className="detail-label">
             <Clock className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Duration</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
-            {booking.hours} hours
+            Duration
           </span>
+          <span className="detail-value">{booking.hours} hours</span>
         </div>
 
-        <div className="flex justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-slate-500">
+        <div className="detail-row">
+          <span className="detail-label">
             <MapPin className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Area</span>
-          </div>
-          <span className="text-sm font-medium text-slate-900">
-            {booking.area}
+            Area
           </span>
+          <span className="detail-value">{booking.area}</span>
         </div>
 
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-slate-500">
+        <div className="detail-row">
+          <span className="detail-label">
             <DollarSign className="h-4 w-4" strokeWidth={1.5} />
-            <span className="text-sm">Your gross</span>
-          </div>
-          <span className="text-sm font-bold text-teal-700">
+            Your gross
+          </span>
+          <span className="detail-value text-emerald-700">
             ${Number(booking.total_amount).toFixed(2)}
           </span>
         </div>
       </div>
 
       {/* Customer card */}
-      <div className="card space-y-3">
-        <div className="flex items-center gap-2 text-slate-500">
-          <User className="h-4 w-4" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-700">Customer</span>
+      <div className="card space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <User className="h-4 w-4" strokeWidth={1.5} />
+          </span>
+          <div>
+            <p className="eyebrow-label">Customer</p>
+            <p className="font-semibold text-slate-900">{customerName}</p>
+          </div>
         </div>
-        <p className="font-semibold text-slate-900">{customerName}</p>
         {!DEPOSIT_PAID_AND_LATER.has(booking.status) && (
-          <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-400">
-            <Lock className="h-3.5 w-3.5" strokeWidth={1.5} />
+          <div className="alert alert-info">
+            <Lock className="h-4 w-4" strokeWidth={1.5} />
             <span>Full address revealed once the customer pays the deposit</span>
           </div>
         )}
@@ -224,31 +203,25 @@ export default async function CleanerJobDetailPage({
 
       {/* Address card (deposit_paid and later) */}
       {address && (
-        <div className="card flex items-start gap-3">
-          <Home
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600"
-            strokeWidth={1.5}
-          />
+        <div className="card flex items-start gap-4">
+          <span className="icon-tile icon-tile-soft">
+            <Home className="h-5 w-5" strokeWidth={1.5} />
+          </span>
           <div>
-            <p className="text-sm font-medium text-slate-700">
-              Service address
-            </p>
-            <p className="mt-0.5 text-slate-900">{address}</p>
+            <p className="eyebrow-label">Service address</p>
+            <p className="mt-1 text-slate-900">{address}</p>
           </div>
         </div>
       )}
 
       {notes && (
-        <div className="card flex items-start gap-3">
-          <ClipboardList
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600"
-            strokeWidth={1.5}
-          />
+        <div className="card flex items-start gap-4">
+          <span className="icon-tile icon-tile-soft">
+            <ClipboardList className="h-5 w-5" strokeWidth={1.5} />
+          </span>
           <div>
-            <p className="text-sm font-medium text-slate-700">
-              Customer instructions
-            </p>
-            <p className="mt-0.5 whitespace-pre-wrap text-slate-900">{notes}</p>
+            <p className="eyebrow-label">Customer instructions</p>
+            <p className="mt-1 whitespace-pre-wrap text-slate-900">{notes}</p>
           </div>
         </div>
       )}
@@ -264,7 +237,7 @@ export default async function CleanerJobDetailPage({
                 redirect(`/cleaner/jobs/${id}`);
               }}
             >
-              <button className="w-full btn-base btn-primary flex items-center justify-center gap-2">
+              <button className="btn-base btn-primary w-full">
                 <PlayCircle className="h-5 w-5" strokeWidth={1.5} />
                 Start this job
               </button>
@@ -278,7 +251,7 @@ export default async function CleanerJobDetailPage({
                 redirect(`/cleaner/jobs/${id}`);
               }}
             >
-              <button className="w-full btn-base btn-primary flex items-center justify-center gap-2">
+              <button className="btn-base btn-primary w-full">
                 <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
                 Mark as complete
               </button>
@@ -289,30 +262,34 @@ export default async function CleanerJobDetailPage({
 
       {/* Report a problem (cleaner-side dispute) */}
       {reported === "1" && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-          Thanks — your report was submitted. Our team will review it and follow up.
+        <div className="alert alert-success">
+          <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
+          <span>
+            Thanks — your report was submitted. Our team will review it and
+            follow up.
+          </span>
         </div>
       )}
       {reportError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {reportError}
+        <div className="alert alert-error">
+          <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
+          <span>{reportError}</span>
         </div>
       )}
       {DISPUTABLE.has(booking.status) && (
         <details className="card group">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-700">
-            <AlertTriangle
-              className="h-4 w-4 text-amber-500"
-              strokeWidth={1.5}
-            />
+          <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-semibold text-slate-800">
+            <span className="icon-tile icon-tile-sm icon-tile-warn">
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
+            </span>
             Report a problem with this job
           </summary>
           <form
             action={reportProblem.bind(null, id)}
-            className="mt-4 flex flex-col gap-3"
+            className="mt-4 flex flex-col gap-4"
           >
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-slate-700">Issue</span>
+              <span className="form-label">Issue</span>
               <select name="category" className="input-modern" required>
                 <option value="no_show">Customer no-show / no access</option>
                 <option value="other">Unsafe or inappropriate conditions</option>
@@ -321,9 +298,7 @@ export default async function CleanerJobDetailPage({
               </select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-slate-700">
-                What happened?
-              </span>
+              <span className="form-label">What happened?</span>
               <textarea
                 name="description"
                 required
@@ -342,8 +317,8 @@ export default async function CleanerJobDetailPage({
       {/* Rate the customer (two-way reviews) */}
       {canReviewCustomer && (
         <div className="card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900">Rate the customer</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="section-title">Rate the customer</h2>
             {customerRating?.avg_rating != null && (
               <span className="flex items-center gap-1 text-sm text-slate-500">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -356,10 +331,10 @@ export default async function CleanerJobDetailPage({
           </div>
 
           {alreadyReviewedCustomer ? (
-            <p className="flex items-center gap-1.5 text-sm text-slate-500">
-              <CheckCircle className="h-4 w-4 text-green-600" strokeWidth={2} />
-              Thanks — you&apos;ve rated this customer.
-            </p>
+            <div className="alert alert-success">
+              <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
+              <span>Thanks — you&apos;ve rated this customer.</span>
+            </div>
           ) : (
             <form
               action={submitCustomerReview.bind(null, id, booking.customer_id)}

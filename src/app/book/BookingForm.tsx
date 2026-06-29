@@ -42,19 +42,19 @@ export default function BookingForm({
   );
 
   return (
-    <form action={action} className="card flex flex-col gap-8">
+    <form action={action} className="card flex flex-col gap-6">
       {state?.error && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={2} />
+        <div className="alert alert-error" role="alert">
+          <AlertTriangle className="h-5 w-5" strokeWidth={2} />
           <span>{state.error}</span>
         </div>
       )}
 
-      <label className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-accent" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-900">Date and time</span>
-        </div>
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <Calendar className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          Date and time
+        </span>
         <input
           type="datetime-local"
           name="scheduled_at"
@@ -78,11 +78,13 @@ export default function BookingForm({
         defaultHours={prefillHours}
       />
 
-      <label className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-accent" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-900">Area</span>
-        </div>
+      <hr className="hr-soft" />
+
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <MapPin className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          Area
+        </span>
         <select
           name="area"
           required
@@ -98,11 +100,11 @@ export default function BookingForm({
       </label>
 
       {favorites.length > 0 && (
-        <label className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Heart className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-slate-900">Cleaner</span>
-          </div>
+        <label className="flex flex-col gap-2.5">
+          <span className="form-label">
+            <Heart className="h-4 w-4 text-accent" strokeWidth={1.75} />
+            Cleaner
+          </span>
           <select name="preferred_cleaner" className="input-modern" defaultValue="">
             <option value="">Any available cleaner</option>
             {favorites.map((f) => (
@@ -111,17 +113,17 @@ export default function BookingForm({
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-500">
+          <span className="form-hint">
             Request a favorite directly, or let any available cleaner accept.
           </span>
         </label>
       )}
 
-      <label className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <Home className="h-5 w-5 text-accent" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-900">Full address</span>
-        </div>
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <Home className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          Full address
+        </span>
         <input
           type="text"
           name="full_address"
@@ -139,23 +141,25 @@ export default function BookingForm({
             ))}
           </datalist>
         )}
-        <div className="flex items-start gap-2 text-xs text-slate-500">
-          <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" strokeWidth={1.5} />
+        <span className="form-hint flex items-start gap-1.5">
+          <Lock className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-accent" strokeWidth={1.75} />
           <span>
             Your address stays hidden from cleaners until you&apos;ve paid the
             deposit.
           </span>
-        </div>
+        </span>
       </label>
 
-      <label className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-accent" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-slate-900">
+      <hr className="hr-soft" />
+
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <ClipboardList className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          <span>
             Special instructions{" "}
             <span className="font-normal text-slate-400">(optional)</span>
           </span>
-        </div>
+        </span>
         <textarea
           name="notes"
           rows={3}
@@ -163,7 +167,7 @@ export default function BookingForm({
           placeholder="e.g. focus on the kitchen and bathrooms, pets inside, parking out front…"
           className="input-modern"
         />
-        <span className="text-xs text-slate-500">
+        <span className="form-hint">
           Shared with your cleaner after you pay the deposit.
         </span>
       </label>

@@ -20,7 +20,7 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
 
   if (left <= 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
+      <span className="badge badge-danger">
         <Timer className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
         Expired
       </span>
@@ -43,11 +43,7 @@ export default function Countdown({ expiresAt }: { expiresAt: string | null }) {
   const urgent = left < 5 * 60_000; // red only in the final 5 minutes
 
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-        urgent ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700"
-      }`}
-    >
+    <span className={`badge ${urgent ? "badge-danger" : "badge-warning"}`}>
       <Timer className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
       Expires in {label}
     </span>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Send } from "lucide-react";
+import { Send, MessageSquare, AlertCircle } from "lucide-react";
 
 type Message = {
   id: string;
@@ -119,7 +119,12 @@ export default function MessagePanel({
 
   return (
     <div className="card flex flex-col gap-4">
-      <h3 className="font-semibold text-slate-900">Messages</h3>
+      <div className="flex items-center gap-2.5">
+        <span className="icon-tile icon-tile-soft icon-tile-sm" aria-hidden="true">
+          <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
+        </span>
+        <h3 className="section-title">Messages</h3>
+      </div>
 
       {/* Message list */}
       <div
@@ -127,9 +132,13 @@ export default function MessagePanel({
         className="flex max-h-72 flex-col gap-3 overflow-y-auto pr-1"
       >
         {messages.length === 0 && (
-          <p className="text-center text-sm text-slate-400">
-            No messages yet. Say hello!
-          </p>
+          <div className="empty-state py-8">
+            <span className="empty-state-icon" aria-hidden="true">
+              <MessageSquare className="h-6 w-6" strokeWidth={1.5} />
+            </span>
+            <p className="empty-state-title">No messages yet</p>
+            <p className="empty-state-text">Say hello!</p>
+          </div>
         )}
         {messages.map((msg) => {
           const isOwn = msg.sender_id === currentUserId;
@@ -147,10 +156,10 @@ export default function MessagePanel({
                 {mounted && <> &middot; {formatRelativeTime(msg.created_at)}</>}
               </span>
               <div
-                className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ${
                   isOwn
-                    ? "rounded-tr-sm bg-teal-600 text-white"
-                    : "rounded-tl-sm bg-slate-100 text-slate-800"
+                    ? "rounded-tr-sm bg-emerald-600 text-white"
+                    : "rounded-tl-sm border border-slate-200/70 bg-slate-100 text-slate-800"
                 }`}
               >
                 {msg.body}
@@ -162,9 +171,10 @@ export default function MessagePanel({
 
       {/* Error */}
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
+        <div className="alert alert-error" role="alert">
+          <AlertCircle className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+          <span>{error}</span>
+        </div>
       )}
 
       {/* Input */}

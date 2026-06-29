@@ -42,19 +42,16 @@ export default async function CleanerProfilePage() {
   return (
     <main className="mx-auto max-w-lg space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="page-title">My Profile</h1>
+        <p className="page-subtitle">
           Manage your cleaner profile and service areas
         </p>
       </div>
 
       {/* Verification / active status notices */}
       {!isVerified && (
-        <div className="flex items-start gap-3 rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
-          <ShieldAlert
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600"
-            strokeWidth={1.5}
-          />
+        <div className="alert alert-warning">
+          <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />
           <div>
             <p className="font-semibold">ID verification pending</p>
             <p className="mt-0.5">
@@ -66,18 +63,15 @@ export default async function CleanerProfilePage() {
       )}
 
       {isVerified && (
-        <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <ShieldCheck className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
+        <div className="alert alert-success">
+          <ShieldCheck className="h-5 w-5" strokeWidth={1.5} />
           <span className="font-medium">ID verified</span>
         </div>
       )}
 
       {!isActive && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          <AlertTriangle
-            className="mt-0.5 h-5 w-5 flex-shrink-0"
-            strokeWidth={1.5}
-          />
+        <div className="alert alert-error">
+          <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
           <div>
             <p className="font-semibold">Account inactive</p>
             <p className="mt-0.5">
@@ -89,8 +83,8 @@ export default async function CleanerProfilePage() {
       )}
 
       {isActive && isVerified && (
-        <div className="flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-700">
-          <CheckCircle className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
+        <div className="alert alert-accent">
+          <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
           <span className="font-medium">
             Account active &mdash; you&apos;re receiving job requests
           </span>
@@ -101,10 +95,7 @@ export default async function CleanerProfilePage() {
       <form action={updateCleanerProfile} className="card space-y-6">
         {/* Name */}
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="name"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="name" className="form-label">
             <User className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
             Full name
           </label>
@@ -121,10 +112,7 @@ export default async function CleanerProfilePage() {
 
         {/* Phone */}
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="phone"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="phone" className="form-label">
             <Phone className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
             Phone number
           </label>
@@ -140,24 +128,20 @@ export default async function CleanerProfilePage() {
 
         {/* Areas served */}
         <fieldset className="flex flex-col gap-2">
-          <legend className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+          <legend className="form-label">
             <MapPin className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
             Areas you serve
           </legend>
           <div className="mt-2 flex flex-col gap-2">
             {AREAS.map((area) => (
-              <label
-                key={area}
-                className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-4 py-2.5 transition hover:border-teal-300 hover:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:bg-teal-50"
-              >
+              <label key={area} className="checkbox-card">
                 <input
                   type="checkbox"
                   name="areas"
                   value={area}
                   defaultChecked={areasServed.includes(area)}
-                  className="h-4 w-4 accent-teal-600"
                 />
-                <span className="text-sm text-slate-700">{area}</span>
+                <span>{area}</span>
               </label>
             ))}
           </div>
@@ -166,13 +150,11 @@ export default async function CleanerProfilePage() {
         {/* Availability note (display only — stored in cleaner_details) */}
         {availabilityNote && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-medium text-slate-700">
-              Availability note
-            </p>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <p className="form-label">Availability note</p>
+            <div className="surface-muted px-4 py-3 text-sm text-slate-600">
               {availabilityNote}
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="form-hint">
               Contact support to update your availability note.
             </p>
           </div>

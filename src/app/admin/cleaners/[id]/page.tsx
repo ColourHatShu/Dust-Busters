@@ -1,15 +1,19 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  CalendarClock,
+  CalendarDays,
+  MapPin,
+  MessageSquare,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import { setCleanerVerified, setCleanerActive } from "../actions";
-
-const statusColor: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  in_progress: "bg-indigo-100 text-indigo-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
 
 export default async function AdminCleanerDetailPage({
   params,
@@ -89,65 +93,123 @@ export default async function AdminCleanerDetailPage({
   const acceptedOffers = (offers ?? []).filter((o) => o.state === "accepted").length;
   const acceptRate = totalOffers > 0 ? Math.round((acceptedOffers / totalOffers) * 100) : 0;
 
+  const reviewCount = (reviews ?? []).length;
   const totalRating = (reviews ?? []).reduce((sum, r) => sum + Number(r.rating), 0);
-  const avgRating =
-    (reviews ?? []).length > 0
-      ? (totalRating / (reviews ?? []).length).toFixed(1)
-      : null;
+  const avgRating = reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : null;
 
   const verified = d?.id_verified ?? false;
   const active = d?.active ?? false;
 
+  const initials =
+    (cleaner.name ?? "")
+      .split(" ")
+      .map((s: string) => s[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
+
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/cleaners" className="text-sm text-blue-600 hover:underline">
-          ← Cleaners
+      <div>
+        <Link
+          href="/admin/cleaners"
+          className="link-subtle mb-3 inline-flex items-center gap-1 text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Cleaners
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Cleaner Profile</h1>
+        <h1 className="page-title">Cleaner Profile</h1>
       </div>
 
       {/* Profile + Actions */}
-      <div className="card p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-gray-500">Name</p>
-            <p className="text-xl font-semibold text-gray-900">{cleaner.name ?? "—"}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-500">Phone</p>
-              <p className="font-medium">{cleaner.phone ?? "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Joined</p>
-              <p className="font-medium">{new Date(cleaner.created_at).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Areas Served</p>
-              <p className="font-medium">{(d?.areas_served ?? []).join(", ") || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Verified At</p>
-              <p className="font-medium">
-                {d?.verified_at ? new Date(d.verified_at).toLocaleDateString() : "—"}
+      <div className="card flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex-1 space-y-5">
+          <div className="flex items-center gap-4">
+            <span className="avatar h-14 w-14 text-lg" aria-hidden="true">
+              {initials}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xl font-semibold text-slate-900">
+                {cleaner.name ?? "—"}
               </p>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {verified ? (
+                  <span className="badge badge-success">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="badge badge-neutral">Unverified</span>
+                )}
+                {active ? (
+                  <span className="badge badge-info">
+                    <span className="badge-dot" />
+                    Active
+                  </span>
+                ) : (
+                  <span className="badge badge-danger">
+                    <span className="badge-dot" />
+                    Inactive
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            {verified ? (
-              <span className="status-badge bg-green-100 text-green-800">Verified</span>
-            ) : (
-              <span className="status-badge bg-gray-100 text-gray-500">Unverified</span>
-            )}
-            {active ? (
-              <span className="status-badge bg-blue-100 text-blue-800">Active</span>
-            ) : (
-              <span className="status-badge bg-red-100 text-red-700">Inactive</span>
-            )}
+
+          <div className="surface-muted px-4 py-1">
+            <div className="detail-row">
+              <span className="detail-label">
+                <Phone className="h-4 w-4" aria-hidden="true" />
+                Phone
+              </span>
+              <span className="detail-value">{cleaner.phone ?? "—"}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                Joined
+              </span>
+              <span className="detail-value">
+                {new Date(cleaner.created_at).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                Areas Served
+              </span>
+              <span className="detail-value">
+                {(d?.areas_served ?? []).join(", ") || "—"}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                Verified At
+              </span>
+              <span className="detail-value">
+                {d?.verified_at
+                  ? new Date(d.verified_at).toLocaleDateString()
+                  : "—"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2 shrink-0">
+
+        <div className="flex shrink-0 flex-col gap-2 sm:w-44">
+          {!verified && (
+            <div className="alert alert-warning">
+              <ShieldAlert className="h-4 w-4" aria-hidden="true" />
+              <span>This cleaner has not been ID-verified yet.</span>
+            </div>
+          )}
+          {!active && (
+            <div className="alert alert-error">
+              <ShieldAlert className="h-4 w-4" aria-hidden="true" />
+              <span>Inactive — this cleaner won&apos;t receive job offers.</span>
+            </div>
+          )}
           <form
             action={async () => {
               "use server";
@@ -179,70 +241,98 @@ export default async function AdminCleanerDetailPage({
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{completed}</p>
-          <p className="text-xs text-gray-500 mt-1">Jobs Completed</p>
+        <div className="stat-card">
+          <span className="stat-label">Jobs Completed</span>
+          <span className="stat-value">{completed}</span>
+          <span className="stat-sub">of {totalJobs} total</span>
         </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{avgRating ?? "—"}</p>
-          <p className="text-xs text-gray-500 mt-1">Avg Rating</p>
+        <div className="stat-card stat-card-accent">
+          <span className="stat-label">Avg Rating</span>
+          <span className="stat-value inline-flex items-center gap-1.5">
+            {avgRating !== null && (
+              <Star
+                className="h-5 w-5 text-amber-400"
+                fill="currentColor"
+                aria-hidden="true"
+              />
+            )}
+            {avgRating ?? "—"}
+          </span>
+          <span className="stat-sub">
+            {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+          </span>
         </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{cancelRate}%</p>
-          <p className="text-xs text-gray-500 mt-1">Cancel Rate</p>
+        <div className="stat-card">
+          <span className="stat-label">Cancel Rate</span>
+          <span className="stat-value">{cancelRate}%</span>
+          <span className="stat-sub">{cancelled} cancelled</span>
         </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{acceptRate}%</p>
-          <p className="text-xs text-gray-500 mt-1">Acceptance Rate</p>
+        <div className="stat-card">
+          <span className="stat-label">Acceptance Rate</span>
+          <span className="stat-value">{acceptRate}%</span>
+          <span className="stat-sub">
+            {acceptedOffers} of {totalOffers} offers
+          </span>
         </div>
       </div>
 
       {/* Booking History */}
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Booking History</h2>
+      <div className="card card-flush overflow-hidden">
+        <div className="flex items-center gap-2.5 px-6 pb-3 pt-5">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <CalendarClock className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <h2 className="section-title">Booking History</h2>
+        </div>
         {(bookings ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400">No bookings yet.</p>
+          <div className="empty-state">
+            <span className="empty-state-icon">
+              <CalendarClock className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <p className="empty-state-title">No bookings yet</p>
+            <p className="empty-state-text">
+              This cleaner has not been assigned to any bookings.
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table">
               <thead>
-                <tr className="border-b text-left text-gray-500">
-                  <th className="pb-2 pr-4 font-medium">ID</th>
-                  <th className="pb-2 pr-4 font-medium">Customer</th>
-                  <th className="pb-2 pr-4 font-medium">Status</th>
-                  <th className="pb-2 pr-4 font-medium">Area</th>
-                  <th className="pb-2 pr-4 font-medium">Scheduled</th>
-                  <th className="pb-2 font-medium">Total</th>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th>Area</th>
+                  <th>Scheduled</th>
+                  <th className="num">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {(bookings ?? []).map((b) => {
                   const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
                   return (
                     <tr key={b.id}>
-                      <td className="py-2 pr-4">
+                      <td>
                         <Link
                           href={`/admin/bookings/${b.id}`}
-                          className="font-mono text-xs text-blue-600 hover:underline"
+                          className="link-accent font-mono text-xs"
                         >
                           {String(b.id).slice(0, 8)}
                         </Link>
                       </td>
-                      <td className="py-2 pr-4">{customer?.name ?? "—"}</td>
-                      <td className="py-2 pr-4">
-                        <span
-                          className={`status-badge ${statusColor[b.status] ?? "bg-gray-100 text-gray-700"}`}
-                        >
-                          {b.status}
+                      <td>{customer?.name ?? "—"}</td>
+                      <td>
+                        <span className={bookingBadgeClass(b.status)}>
+                          {bookingStatusLabel(b.status)}
                         </span>
                       </td>
-                      <td className="py-2 pr-4">{b.area ?? "—"}</td>
-                      <td className="py-2 pr-4 text-xs text-gray-500">
+                      <td>{b.area ?? "—"}</td>
+                      <td className="text-xs text-slate-500">
                         {b.scheduled_at
                           ? new Date(b.scheduled_at).toLocaleString()
                           : "—"}
                       </td>
-                      <td className="py-2">
+                      <td className="num">
                         {b.total_amount != null
                           ? `$${Number(b.total_amount).toFixed(2)}`
                           : "—"}
@@ -257,31 +347,52 @@ export default async function AdminCleanerDetailPage({
       </div>
 
       {/* Reviews */}
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">
-          Reviews ({(reviews ?? []).length})
-        </h2>
-        {(reviews ?? []).length === 0 ? (
-          <p className="text-sm text-gray-400">No reviews yet.</p>
+      <div className="card">
+        <div className="mb-4 flex items-center gap-2.5">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <h2 className="section-title">Reviews ({reviewCount})</h2>
+        </div>
+        {reviewCount === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon">
+              <Star className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <p className="empty-state-title">No reviews yet</p>
+            <p className="empty-state-text">
+              Customer reviews for this cleaner will appear here.
+            </p>
+          </div>
         ) : (
           <div className="space-y-3">
             {(reviews ?? []).map((r) => (
-              <div key={r.id} className="border-b pb-3 last:border-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-900">{r.rating}/5</span>
-                  <span className="text-xs text-gray-400">
+              <div
+                key={r.id}
+                className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+              >
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 font-semibold text-slate-900">
+                    <Star
+                      className="h-4 w-4 text-amber-400"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    />
+                    {r.rating}/5
+                  </span>
+                  <span className="text-xs text-slate-400">
                     by {customerByBooking.get(r.booking_id) ?? "A customer"} ·{" "}
                     {new Date(r.created_at).toLocaleDateString()}
                   </span>
                   <Link
                     href={`/admin/bookings/${r.booking_id}`}
-                    className="text-xs text-blue-600 hover:underline ml-auto"
+                    className="link-accent ml-auto text-xs"
                   >
                     Booking
                   </Link>
                 </div>
                 {r.comment && (
-                  <p className="text-sm text-gray-700">{r.comment}</p>
+                  <p className="text-sm text-slate-700">{r.comment}</p>
                 )}
               </div>
             ))}

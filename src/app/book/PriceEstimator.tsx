@@ -21,11 +21,11 @@ export default function PriceEstimator({
   const deposit = Math.round((total * depositPercent) / 100);
 
   return (
-    <label className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <Clock className="h-5 w-5 text-accent" strokeWidth={1.5} />
-        <span className="text-sm font-medium text-slate-900">How many hours?</span>
-      </div>
+    <label className="flex flex-col gap-2.5">
+      <span className="form-label">
+        <Clock className="h-4 w-4 text-accent" strokeWidth={1.75} />
+        How many hours?
+      </span>
       <div className="flex items-center gap-3">
         <input
           type="number"
@@ -40,19 +40,24 @@ export default function PriceEstimator({
         />
         <span className="text-slate-600">hours</span>
       </div>
-      <p className="text-sm text-slate-500">
-        Estimated total:{" "}
-        <span className="font-semibold text-slate-800">
-          {currency} ${total.toFixed(2)}
-        </span>{" "}
-        for {safeHours || 0} hr{safeHours === 1 ? "" : "s"}
-        <br />
-        Deposit due today:{" "}
-        <span className="font-semibold text-slate-800">
-          {currency} ${deposit}
-        </span>{" "}
-        ({depositPercent}%)
-      </p>
+      <div className="surface-muted mt-1 flex divide-x divide-slate-200">
+        <div className="flex-1 px-4 py-3.5">
+          <p className="stat-label">Estimated total</p>
+          <p className="amount-lg mt-0.5">
+            {currency} ${total.toFixed(2)}
+          </p>
+          <p className="stat-sub mt-0.5">
+            for {safeHours || 0} hr{safeHours === 1 ? "" : "s"}
+          </p>
+        </div>
+        <div className="flex-1 px-4 py-3.5">
+          <p className="stat-label">Deposit due today</p>
+          <p className="amount-lg mt-0.5 text-accent">
+            {currency} ${deposit}
+          </p>
+          <p className="stat-sub mt-0.5">{depositPercent}%</p>
+        </div>
+      </div>
     </label>
   );
 }

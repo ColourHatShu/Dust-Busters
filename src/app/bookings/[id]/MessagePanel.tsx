@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { sendMessage } from "./message-actions";
-import { Send } from "lucide-react";
+import { Send, MessageSquare } from "lucide-react";
 
 type Message = {
   id: string;
@@ -111,17 +111,23 @@ export default function MessagePanel({
   }
 
   return (
-    <div className="card flex flex-col gap-0 p-0 overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
-        <h2 className="font-semibold text-slate-800 text-sm">Messages</h2>
+    <div className="card card-flush flex flex-col overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+        <MessageSquare className="h-4 w-4 text-accent" strokeWidth={1.75} />
+        <h2 className="text-sm font-semibold text-slate-800">Messages</h2>
       </div>
 
       {/* Message thread */}
       <div className="flex flex-col gap-3 p-4 overflow-y-auto max-h-72 min-h-32">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-slate-400 my-4">
-            No messages yet. Say hello to your cleaner!
-          </p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center">
+            <span className="empty-state-icon h-11 w-11">
+              <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <p className="text-sm text-slate-400">
+              No messages yet. Say hello to your cleaner!
+            </p>
+          </div>
         )}
         {messages.map((msg) => {
           const isOwn = msg.sender_id === currentUserId;
@@ -130,15 +136,15 @@ export default function MessagePanel({
               key={msg.id}
               className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}
             >
-              <span className="text-xs text-slate-400">
+              <span className="px-1 text-xs text-slate-400">
                 {isOwn ? "You" : msg.profiles?.name ?? "Cleaner"}
                 {mounted && <> &middot; {formatTime(msg.created_at)}</>}
               </span>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2 text-sm leading-relaxed ${
                   isOwn
-                    ? "rounded-tr-sm bg-accent text-white"
-                    : "rounded-tl-sm bg-slate-100 text-slate-800"
+                    ? "rounded-tr-sm bg-accent text-white shadow-sm"
+                    : "rounded-tl-sm border border-slate-200 bg-slate-50 text-slate-800"
                 }`}
               >
                 {msg.body}

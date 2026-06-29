@@ -1,7 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import AdminSearch from "../AdminSearch";
+
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
 
 export default async function AdminCustomersPage({
   searchParams,
@@ -46,52 +54,96 @@ export default async function AdminCustomersPage({
     }
   }
 
+  const customerList = customers ?? [];
+
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin" className="text-sm text-blue-600 hover:underline">
-          ← Admin
+      <div className="mb-6">
+        <Link
+          href="/admin"
+          className="link-subtle inline-flex items-center gap-1 text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Admin
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+        <div className="mt-2 flex items-center gap-3">
+          <span className="icon-tile" aria-hidden="true">
+            <Users className="h-5 w-5" strokeWidth={1.75} />
+          </span>
+          <div>
+            <h1 className="page-title">Customers</h1>
+            <p className="page-subtitle">
+              {customerList.length}{" "}
+              {customerList.length === 1 ? "customer" : "customers"}
+            </p>
+          </div>
+        </div>
       </div>
+
       <AdminSearch placeholder="Search customers by name or phone" defaultValue={q} />
-      <div className="card p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-gray-50 text-left text-gray-500">
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Phone</th>
-              <th className="p-3 font-medium">Bookings</th>
-              <th className="p-3 font-medium">Total Spent</th>
-              <th className="p-3 font-medium">Joined</th>
-              <th className="p-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {(customers ?? []).map((c) => {
-              const stats = statsMap[c.id] ?? { count: 0, total: 0 };
-              return (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="p-3 font-medium">{c.name ?? "—"}</td>
-                  <td className="p-3 text-gray-600">{c.phone ?? "—"}</td>
-                  <td className="p-3">{stats.count}</td>
-                  <td className="p-3">${stats.total.toFixed(2)}</td>
-                  <td className="p-3 text-gray-500 text-xs">
-                    {new Date(c.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="p-3">
-                    <Link
-                      href={`/admin/customers/${c.id}`}
-                      className="text-blue-600 hover:underline text-xs"
-                    >
-                      View
-                    </Link>
-                  </td>
+
+      <div className="card card-flush overflow-hidden">
+        {customerList.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon" aria-hidden="true">
+              <Users className="h-7 w-7" strokeWidth={1.5} />
+            </span>
+            <p className="empty-state-title">No customers found</p>
+            <p className="empty-state-text">
+              {q
+                ? "Try a different name or phone number."
+                : "Customers will appear here once they sign up."}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th className="num">Bookings</th>
+                  <th className="num">Total Spent</th>
+                  <th>Joined</th>
+                  <th className="num"></th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {customerList.map((c) => {
+                  const stats = statsMap[c.id] ?? { count: 0, total: 0 };
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <span className="avatar h-9 w-9 text-xs" aria-hidden="true">
+                            {getInitials(c.name)}
+                          </span>
+                          <span className="font-medium text-slate-900">
+                            {c.name ?? "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>{c.phone ?? "—"}</td>
+                      <td className="num">{stats.count}</td>
+                      <td className="num">${stats.total.toFixed(2)}</td>
+                      <td className="whitespace-nowrap text-slate-500">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="num">
+                        <Link
+                          href={`/admin/customers/${c.id}`}
+                          className="link-accent text-xs"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </main>
   );

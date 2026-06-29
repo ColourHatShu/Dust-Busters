@@ -7,6 +7,8 @@ import { payDeposit, payBalance } from "./payment-actions";
 import { cancelBooking } from "./cancel-actions";
 import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import { toggleFavorite } from "./favorite-actions";
+import { bookingBadgeClass, bookingStatusLabel, paymentBadgeClass } from "@/lib/status";
+import { STATUS_LABEL } from "@/lib/types";
 import {
   Calendar,
   Clock,
@@ -22,32 +24,10 @@ import {
   Receipt,
   Heart,
   Pencil,
+  ShieldCheck,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
-
-const STATUS_LABEL: Record<string, string> = {
-  broadcasting: "Finding a cleaner near you...",
-  accepted: "Cleaner found! Confirm with your deposit.",
-  deposit_paid: "Deposit paid. Your cleaner is booked.",
-  in_progress: "Your cleaning is in progress.",
-  completed: "Cleaning complete. Please pay the balance.",
-  balance_paid: "Paid in full. Thank you!",
-  closed: "Closed.",
-  cancelled: "Cancelled.",
-  no_cleaner_found: "Sorry, no cleaner was available for this slot.",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  broadcasting: "bg-blue-100 text-blue-700",
-  accepted: "bg-yellow-100 text-yellow-700",
-  deposit_paid: "bg-green-100 text-green-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-orange-100 text-orange-700",
-  balance_paid: "bg-green-100 text-green-700",
-  closed: "bg-gray-100 text-gray-700",
-  cancelled: "bg-red-100 text-red-700",
-  no_cleaner_found: "bg-red-100 text-red-700",
-};
 
 const CANCEL_ALLOWED = ["broadcasting", "accepted", "deposit_paid"];
 const DISPUTE_ALLOWED = ["deposit_paid", "in_progress", "completed"];
@@ -207,70 +187,82 @@ export default async function BookingStatusPage({
       )}
 
       {actionError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {actionError}
+        <div className="alert alert-error">
+          <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
+          <span>{actionError}</span>
         </div>
       )}
       {cancelled === "refunded" && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-          Booking cancelled. Your deposit has been refunded to your original
-          payment method (allow a few business days to appear).
+        <div className="alert alert-success">
+          <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
+          <span>
+            Booking cancelled. Your deposit has been refunded to your original
+            payment method (allow a few business days to appear).
+          </span>
         </div>
       )}
       {cancelled === "forfeit" && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Booking cancelled. As this was within 24 hours of the appointment, the
-          deposit was non-refundable per our cancellation policy.
+        <div className="alert alert-warning">
+          <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
+          <span>
+            Booking cancelled. As this was within 24 hours of the appointment, the
+            deposit was non-refundable per our cancellation policy.
+          </span>
         </div>
       )}
       {cancelled === "1" && (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-          Booking cancelled.
+        <div className="alert alert-info">
+          <Info className="h-5 w-5" strokeWidth={1.5} />
+          <span>Booking cancelled.</span>
         </div>
       )}
 
       {/* Status header */}
-      <div className="space-y-3">
-        <h1 className="text-2xl font-bold text-slate-900">Your booking</h1>
-        <span
-          className={`inline-block rounded-full px-4 py-1.5 text-sm font-medium ${STATUS_COLOR[booking.status] ?? "bg-slate-100 text-slate-700"}`}
-        >
-          {STATUS_LABEL[booking.status] ?? booking.status}
-        </span>
-      </div>
+      <header className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="page-title">Your booking</h1>
+          <span className={bookingBadgeClass(booking.status)}>
+            {bookingStatusLabel(booking.status)}
+          </span>
+        </div>
+        <p className="page-subtitle">
+          {STATUS_LABEL[booking.status as keyof typeof STATUS_LABEL] ??
+            booking.status}
+        </p>
+      </header>
 
       {/* Booking details card */}
-      <div className="card space-y-4">
-        <div className="flex justify-between items-start border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Calendar className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span>When</span>
-          </div>
-          <span className="font-medium text-right">
+      <div className="card">
+        <div className="detail-row">
+          <span className="detail-label">
+            <Calendar className="h-4 w-4 text-accent" strokeWidth={1.75} />
+            When
+          </span>
+          <span className="detail-value">
             {new Date(booking.scheduled_at).toLocaleString()}
           </span>
         </div>
-        <div className="flex justify-between items-start border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Clock className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span>Hours</span>
-          </div>
-          <span className="font-medium">{booking.hours}h</span>
+        <div className="detail-row">
+          <span className="detail-label">
+            <Clock className="h-4 w-4 text-accent" strokeWidth={1.75} />
+            Hours
+          </span>
+          <span className="detail-value">{booking.hours}h</span>
         </div>
-        <div className="flex justify-between items-start border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-2 text-slate-600">
-            <MapPin className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <span>Area</span>
-          </div>
-          <span className="font-medium">{booking.area}</span>
+        <div className="detail-row">
+          <span className="detail-label">
+            <MapPin className="h-4 w-4 text-accent" strokeWidth={1.75} />
+            Area
+          </span>
+          <span className="detail-value">{booking.area}</span>
         </div>
         {address?.full_address && (
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2 text-slate-600">
-              <Home className="h-5 w-5 text-accent" strokeWidth={1.5} />
-              <span>Address</span>
-            </div>
-            <span className="font-medium text-right max-w-xs">
+          <div className="detail-row">
+            <span className="detail-label">
+              <Home className="h-4 w-4 text-accent" strokeWidth={1.75} />
+              Address
+            </span>
+            <span className="detail-value max-w-xs">
               {address.full_address}
             </span>
           </div>
@@ -280,22 +272,24 @@ export default async function BookingStatusPage({
       {/* Cleaner card */}
       {cleaner && (
         <div className="card flex items-center gap-4">
-          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark shadow-elevation-md text-xl font-bold text-white">
+          <div className="avatar h-16 w-16 text-xl">
             {cleaner.name?.charAt(0).toUpperCase() || "C"}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="font-semibold text-slate-900">
               {cleaner.name || "Your cleaner"}
             </div>
-            {cleaner.id_verified && (
-              <div className="flex items-center gap-1 mt-1">
-                <CheckCircle className="h-4 w-4 text-green-600" strokeWidth={2} />
-                <span className="text-xs font-medium text-green-700">ID-verified</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1 mt-2 text-sm text-slate-600">
-              <Star className="h-4 w-4 text-accent" strokeWidth={1.5} />
-              <span>{cleaner.jobs_completed} jobs completed</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              {cleaner.id_verified && (
+                <span className="badge badge-success">
+                  <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                  ID-verified
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-sm text-slate-600">
+                <Star className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                {cleaner.jobs_completed} jobs completed
+              </span>
             </div>
           </div>
           {booking.cleaner_id && (
@@ -330,32 +324,32 @@ export default async function BookingStatusPage({
       )}
 
       {/* Payment card */}
-      <div className="card space-y-4">
-        <div className="border-b border-slate-200 pb-4">
-          <div className="flex justify-between">
-            <span className="text-slate-600">Total</span>
-            <span className="text-2xl font-bold text-gradient">
-              ${Number(booking.total_amount).toFixed(2)}
-            </span>
-          </div>
+      <div className="card">
+        <div className="detail-row">
+          <span className="text-sm font-semibold text-slate-700">Total</span>
+          <span className="amount-lg text-gradient">
+            ${Number(booking.total_amount).toFixed(2)}
+          </span>
         </div>
-        <div className="flex justify-between rounded-lg bg-accent-light/10 border border-accent-light p-4">
-          <span className="font-medium text-slate-900">Deposit (to confirm)</span>
-          <span className="font-bold text-accent-dark">
+        <div className="detail-row">
+          <span className="detail-label">Deposit (to confirm)</span>
+          <span className="detail-value text-accent-dark">
             ${Number(booking.deposit_amount).toFixed(2)}
           </span>
         </div>
-        <div className="flex justify-between text-slate-600">
-          <span>Balance (after the job)</span>
-          <span className="font-medium">${Number(booking.balance_amount).toFixed(2)}</span>
+        <div className="detail-row">
+          <span className="detail-label">Balance (after the job)</span>
+          <span className="detail-value">
+            ${Number(booking.balance_amount).toFixed(2)}
+          </span>
         </div>
       </div>
 
       {/* Deposit pay */}
       {showDeposit && (
         <div className="space-y-4">
-          <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm font-medium text-green-700 flex items-start gap-3">
-            <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+          <div className="alert alert-success">
+            <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
             <span>
               Pay the rest only after the cleaning is done to your satisfaction.
             </span>
@@ -398,7 +392,9 @@ export default async function BookingStatusPage({
       {showReviewPrompt && (
         <div className="card flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Star className="h-6 w-6 text-accent" strokeWidth={1.5} />
+            <span className="icon-tile icon-tile-soft icon-tile-sm">
+              <Star className="h-5 w-5" strokeWidth={1.75} />
+            </span>
             <div>
               <p className="font-semibold text-slate-900">How was your cleaning?</p>
               <p className="text-sm text-slate-500">Leave a review for your cleaner.</p>
@@ -417,9 +413,9 @@ export default async function BookingStatusPage({
       {/* Messaging panel */}
       {showMessages && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-slate-700 font-semibold">
-            <MessageSquare className="h-4 w-4 text-accent" strokeWidth={1.5} />
-            <span>Chat with your cleaner</span>
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-accent" strokeWidth={1.75} />
+            <h2 className="section-title">Chat with your cleaner</h2>
           </div>
           <MessagePanel
             bookingId={booking.id}
@@ -433,7 +429,9 @@ export default async function BookingStatusPage({
       {showDispute && (
         <div className="card flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500" strokeWidth={1.5} />
+            <span className="icon-tile icon-tile-warn icon-tile-sm">
+              <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
+            </span>
             <div>
               <p className="font-medium text-slate-900">Something wrong?</p>
               <p className="text-xs text-slate-500">Report an issue with this booking.</p>
@@ -456,8 +454,11 @@ export default async function BookingStatusPage({
             Cancel this booking
           </summary>
           <div className="mt-4 space-y-4">
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
-              <strong>Cancellation policy:</strong> Cancellations made more than 24 hours before the scheduled time receive a full deposit refund. Cancellations within 24 hours may forfeit the deposit. Balance payments are never charged for cancelled bookings.
+            <div className="alert alert-warning">
+              <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
+              <span>
+                <strong>Cancellation policy:</strong> Cancellations made more than 24 hours before the scheduled time receive a full deposit refund. Cancellations within 24 hours may forfeit the deposit. Balance payments are never charged for cancelled bookings.
+              </span>
             </div>
             <form
               action={async (formData: FormData) => {
@@ -487,10 +488,10 @@ export default async function BookingStatusPage({
 
       {/* Payment receipt */}
       {paymentRows.length > 0 && (
-        <section className="card space-y-3">
+        <section className="card space-y-4">
           <div className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-accent" strokeWidth={1.5} />
-            <h2 className="text-lg font-semibold text-slate-900">Payments</h2>
+            <Receipt className="h-5 w-5 text-accent" strokeWidth={1.75} />
+            <h2 className="section-title">Payments</h2>
           </div>
           <ul className="divide-y divide-slate-100">
             {paymentRows.map((p) => {
@@ -504,31 +505,33 @@ export default async function BookingStatusPage({
                       : p.type;
               const when = p.paid_at ?? p.created_at;
               return (
-                <li key={p.id} className="flex items-center justify-between py-2.5">
-                  <div>
+                <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-800">{label}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(when).toLocaleDateString()} ·{" "}
-                      <span className="capitalize">{p.status}</span>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {new Date(when).toLocaleDateString()}
                     </p>
                   </div>
-                  <span
-                    className={`text-sm font-semibold ${
-                      Number(p.amount) < 0 ? "text-amber-600" : "text-slate-900"
-                    }`}
-                  >
-                    {Number(p.amount) < 0 ? "−" : ""}$
-                    {Math.abs(Number(p.amount)).toFixed(2)}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`${paymentBadgeClass(p.status)} capitalize`}>
+                      {p.status}
+                    </span>
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${
+                        Number(p.amount) < 0 ? "text-amber-600" : "text-slate-900"
+                      }`}
+                    >
+                      {Number(p.amount) < 0 ? "−" : ""}$
+                      {Math.abs(Number(p.amount)).toFixed(2)}
+                    </span>
+                  </div>
                 </li>
               );
             })}
           </ul>
           <div className="flex items-center justify-between border-t border-slate-200 pt-3">
             <span className="text-sm font-medium text-slate-600">Net paid</span>
-            <span className="text-base font-bold text-slate-900">
-              ${netPaid.toFixed(2)}
-            </span>
+            <span className="amount-lg">${netPaid.toFixed(2)}</span>
           </div>
         </section>
       )}
@@ -537,7 +540,9 @@ export default async function BookingStatusPage({
       {showBookAgain && (
         <div className="card flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <RefreshCw className="h-5 w-5 text-accent" strokeWidth={1.5} />
+            <span className="icon-tile icon-tile-soft icon-tile-sm">
+              <RefreshCw className="h-5 w-5" strokeWidth={1.75} />
+            </span>
             <p className="font-medium text-slate-900">Need another clean?</p>
           </div>
           <Link

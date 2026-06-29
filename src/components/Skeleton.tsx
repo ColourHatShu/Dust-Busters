@@ -102,7 +102,7 @@ export function DashboardPage({ wide = true }: { wide?: boolean }) {
 
 function TableBlock() {
   return (
-    <div className="card overflow-hidden p-0">
+    <div className="card card-flush overflow-hidden">
       <div className="border-b border-slate-100 bg-slate-50 p-4">
         <Bar className="h-4 w-1/4" />
       </div>

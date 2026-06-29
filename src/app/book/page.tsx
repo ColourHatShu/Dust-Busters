@@ -3,7 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
 import BookingForm from "./BookingForm";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Sparkles, Wallet } from "lucide-react";
 
 export const metadata = {
   title: "Book a cleaning",
@@ -72,22 +72,32 @@ export default async function BookPage({
   return (
     <main className="mx-auto max-w-lg space-y-10 p-6">
       {/* Header + pricing note */}
-      <div className="space-y-4">
-        <h1>Book a cleaning</h1>
-        <p className="text-slate-600">
-          <span className="font-semibold text-accent">
-            From {currency} ${rate}/hr
-          </span>{" "}
-          •{" "}
-          <span className="font-semibold text-accent">
-            {depositPercent}% deposit
-          </span>{" "}
-          to confirm
-          <br />
-          <span className="text-sm">
-            Pay {depositPercent}% upfront, the rest after the job.
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <span className="page-eyebrow">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+            New booking
           </span>
-        </p>
+          <div>
+            <h1 className="page-title">Book a cleaning</h1>
+            <p className="page-subtitle">
+              Book a verified local cleaner in the Comox Valley in minutes — pick
+              your date, hours, and area.
+            </p>
+          </div>
+        </div>
+
+        <div className="alert alert-accent">
+          <Wallet className="h-5 w-5" strokeWidth={1.75} />
+          <div>
+            <p className="font-semibold">
+              From {currency} ${rate}/hr · {depositPercent}% deposit to confirm
+            </p>
+            <p className="mt-0.5 opacity-90">
+              Pay {depositPercent}% upfront, the rest after the job.
+            </p>
+          </div>
+        </div>
       </div>
 
       <BookingForm
@@ -104,8 +114,8 @@ export default async function BookPage({
 
       {/* How it works */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-800">How it works</h2>
-        <ol className="flex flex-col gap-4">
+        <h2 className="section-title">How it works</h2>
+        <ol className="card flex flex-col gap-5">
           {[
             {
               step: 1,
@@ -127,9 +137,7 @@ export default async function BookPage({
             },
           ].map(({ step, title, description }) => (
             <li key={step} className="flex items-start gap-4">
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-                {step}
-              </span>
+              <span className="icon-tile text-base font-bold">{step}</span>
               <div className="space-y-0.5">
                 <p className="font-semibold text-slate-900">{title}</p>
                 <p className="text-sm text-slate-600">{description}</p>
@@ -138,8 +146,8 @@ export default async function BookPage({
           ))}
         </ol>
 
-        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-          <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-500" strokeWidth={2} />
+        <div className="alert alert-success">
+          <CheckCircle className="h-5 w-5" strokeWidth={2} />
           <span>All cleaners are background-checked and rated by real customers.</span>
         </div>
       </section>
