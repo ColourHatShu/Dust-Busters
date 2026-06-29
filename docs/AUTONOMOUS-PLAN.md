@@ -53,7 +53,7 @@ payment_type); `bookings` has NO `updated_at`.
 ### Booking / flow correctness
 - [x] Live price estimate on `/book` now reactive via a `PriceEstimator` client component (total + deposit update with the hours input). ✅
 - [x] Booking past-date prevention: `min` on the date input + authoritative server-side validation (future ≥15min, hours 1–12 int, area whitelist, non-empty address). ✅
-- [ ] Booking time stored in server TZ not customer's Pacific — fix tz handling. (`book/actions.ts:13-19`)
+- [x] Booking time stored in server TZ not customer's Pacific → `parseBookingDate` now reads a bare `datetime-local` value as `America/Vancouver` wall-time (DST-aware via Intl), so a 2pm Pacific booking is no longer shifted to 2pm UTC on the Vercel host. TZ-qualified strings stay absolute (keeps existing tests). +5 unit tests (PST/PDT/passthrough). ✅ tsc+build+tests (20) green. (`lib/booking.ts`)
 - [ ] `deposit_deadline` never set; unpaid `accepted` bookings never auto-expire. Set it in `accept_offer` + enforce. (`0003:145`, `0008:7`)
 - [x] No notification when cleaner accepts/completes (the two transitions that require customer payment) → `acceptJob` now notifies the customer "a cleaner accepted — pay your deposit" and `completeJob` notifies "cleaning complete — pay the balance" (via `createNotification`, in the action success path). ✅ tsc+build+tests green. (`cleaner/actions.ts`)
 - [ ] Cancellation never issues a refund despite stated policy. (`0008:135-168`, `bookings/[id]/page.tsx:334`)

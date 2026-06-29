@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: booking timezone (Pacific, DST-aware)
+
+- **Item:** P1 correctness. The `<input type="datetime-local">` value has no
+  timezone, and `new Date(value)` parsed it in the *server's* zone — on Vercel
+  (UTC) a customer's "2:00 PM" was stored as 14:00 UTC = 7:00 AM Pacific. Every
+  booking time was wrong in production.
+- **Fix:** new `parseBookingDate` reads a bare local value as `America/Vancouver`
+  wall-clock time, computing the correct (DST-aware) UTC instant via
+  `Intl.DateTimeFormat` offsets; strings that already carry a timezone (…Z /
+  ±hh:mm) are treated as absolute, so the existing Z-string tests still pass.
+  `validateBooking` now uses it. Added 5 unit tests (PST winter UTC-8, PDT summer
+  UTC-7, timezone passthrough, garbage).
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** P1 — live job feed ignores the bookings table (`JobsLive.tsx`);
+  accept-offer race result (won/lost) discarded.
+
+---
+
 ## 2026-06-29 — Knight iteration: confirmation on destructive admin actions
 
 - **Item:** P1 safety. Admin actions that are impactful or irreversible — override

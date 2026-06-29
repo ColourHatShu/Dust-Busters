@@ -3,6 +3,7 @@ import {
   hoursUntil,
   isDepositRefundable,
   validateBooking,
+  parseBookingDate,
   FREE_CANCEL_HOURS,
 } from "@/lib/booking";
 
@@ -74,5 +75,34 @@ describe("validateBooking", () => {
   });
   it("rejects a too-short address", () => {
     expect(validateBooking({ ...validInput, fullAddress: "  a " }).ok).toBe(false);
+  });
+
+  it("interprets a bare datetime-local as Pacific time, not the server TZ", () => {
+    // A far-future bare local value (no Z) — must be read as America/Vancouver.
+    const r = validateBooking({ ...validInput, scheduledLocal: "2027-07-15T14:00" });
+    expect(r.ok).toBe(true);
+    // 14:00 PDT (UTC-7) -> 21:00 UTC
+    if (r.ok) expect(r.scheduledISO).toBe("2027-07-15T21:00:00.000Z");
+  });
+});
+
+describe("parseBookingDate (booking timezone)", () => {
+  it("reads a bare datetime-local as Pacific Standard Time (winter, UTC-8)", () => {
+    expect(parseBookingDate("2025-01-15T14:00").toISOString()).toBe(
+      "2025-01-15T22:00:00.000Z",
+    );
+  });
+  it("reads a bare datetime-local as Pacific Daylight Time (summer, UTC-7)", () => {
+    expect(parseBookingDate("2025-07-15T14:00").toISOString()).toBe(
+      "2025-07-15T21:00:00.000Z",
+    );
+  });
+  it("treats a timezone-qualified string as an absolute instant", () => {
+    expect(parseBookingDate("2025-07-15T21:00:00.000Z").toISOString()).toBe(
+      "2025-07-15T21:00:00.000Z",
+    );
+  });
+  it("returns an invalid date for garbage", () => {
+    expect(Number.isNaN(parseBookingDate("not-a-date").getTime())).toBe(true);
   });
 });
