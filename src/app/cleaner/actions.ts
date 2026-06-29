@@ -1,8 +1,20 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+// Short, friendly date for notification copy (e.g. "Mon, Jun 30").
+function shortDate(iso: string | null | undefined): string {
+  return iso
+    ? new Date(iso).toLocaleDateString("en-CA", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+    : "your scheduled date";
+}
 
 // Send the cleaner back to their jobs list with a friendly banner message rather
 // than crashing to the global error boundary. redirect() throws NEXT_REDIRECT, so
@@ -26,6 +38,27 @@ export async function acceptJob(bookingId: string) {
     console.error("acceptJob failed:", error.message);
     jobsError("We couldn't accept that job — it may no longer be available.");
   }
+
+  // Tell the customer a cleaner accepted so they pay the deposit — this is one of
+  // the two transitions that require customer action and previously sent nothing.
+  // (The cleaner is now the assigned cleaner, so they can read the booking row.)
+  if (data === true) {
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("customer_id, scheduled_at")
+      .eq("id", bookingId)
+      .single();
+    if (booking?.customer_id) {
+      await createNotification(
+        booking.customer_id,
+        "cleaner_accepted",
+        "A cleaner accepted your booking",
+        `Good news — a cleaner accepted your ${shortDate(booking.scheduled_at)} cleaning. Pay your deposit to lock it in.`,
+        bookingId,
+      );
+    }
+  }
+
   revalidatePath("/cleaner/jobs");
   return data === true;
 }
@@ -78,5 +111,23 @@ export async function completeJob(bookingId: string) {
     console.error("completeJob failed:", error.message);
     jobsError("We couldn't complete that job — it may have already moved on.");
   }
+
+  // Notify the customer their cleaning is done so they pay the balance — the
+  // other payment-triggering transition that previously sent no notification.
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("customer_id, scheduled_at")
+    .eq("id", bookingId)
+    .single();
+  if (booking?.customer_id) {
+    await createNotification(
+      booking.customer_id,
+      "job_completed",
+      "Your cleaning is complete",
+      `Your ${shortDate(booking.scheduled_at)} cleaning is complete. Please pay the remaining balance.`,
+      bookingId,
+    );
+  }
+
   revalidatePath("/cleaner/jobs");
 }

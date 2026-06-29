@@ -55,9 +55,9 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Booking past-date prevention: `min` on the date input + authoritative server-side validation (future ≥15min, hours 1–12 int, area whitelist, non-empty address). ✅
 - [ ] Booking time stored in server TZ not customer's Pacific — fix tz handling. (`book/actions.ts:13-19`)
 - [ ] `deposit_deadline` never set; unpaid `accepted` bookings never auto-expire. Set it in `accept_offer` + enforce. (`0003:145`, `0008:7`)
-- [ ] No notification when cleaner accepts/completes (the two transitions that require customer payment). (`cleaner/actions.ts`, `0003`)
+- [x] No notification when cleaner accepts/completes (the two transitions that require customer payment) → `acceptJob` now notifies the customer "a cleaner accepted — pay your deposit" and `completeJob` notifies "cleaning complete — pay the balance" (via `createNotification`, in the action success path). ✅ tsc+build+tests green. (`cleaner/actions.ts`)
 - [ ] Cancellation never issues a refund despite stated policy. (`0008:135-168`, `bookings/[id]/page.tsx:334`)
-- [ ] `start_job`/`complete_job` swallow errors and fail silently → surface them. (`cleaner/actions.ts:25-35`)
+- [x] `start_job`/`complete_job` swallow errors and fail silently → already surfaced: both log + `jobsError(...)` redirect to the jobs list with a friendly banner instead of swallowing. Verified. ✅ (`cleaner/actions.ts`)
 - [ ] Live job feed ignores `bookings` table → deposit-paid / lost-race states never refresh. (`cleaner/jobs/JobsLive.tsx:12-24`)
 - [ ] Accept-offer race result (won/lost) discarded → loser gets no feedback. (`cleaner/jobs/page.tsx:155-165`)
 

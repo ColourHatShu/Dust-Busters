@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: notify the customer on cleaner accept / complete
+
+- **Item:** P1 flow feedback. The two transitions that require the customer to
+  pay — a cleaner **accepting** (deposit) and **completing** (balance) — sent no
+  notification, so customers had no nudge to act (the booking could stall).
+- **Fix:** `acceptJob` now notifies the customer "a cleaner accepted — pay your
+  deposit to lock it in" on a successful accept; `completeJob` notifies
+  "your cleaning is complete — please pay the balance". Both use the existing
+  service-role `createNotification` helper in the action's success path, reading
+  the booking's `customer_id`/`scheduled_at` (the cleaner is the assigned cleaner
+  by then, so RLS allows the read). Added a small `shortDate()` copy helper.
+- Also verified + ticked the stale P1 "`start_job`/`complete_job` swallow errors"
+  item — both already log and redirect with a friendly banner via `jobsError`.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 15/15.
+- **Next up:** P1 — pending/disabled state on the pay-deposit/balance +
+  accept/start/complete forms (double-submit/double-charge guard).
+
+---
+
 ## 2026-06-29 — Knight iteration: chargeback webhook → real disputes schema
 
 - **Item:** P0 money-path correctness. The `charge.dispute.created` Stripe webhook
