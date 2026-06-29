@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: pending/disabled state on action forms
+
+- **Item:** P1 UX + money safety. The pay-deposit/balance forms and the cleaner
+  Accept/Decline/Start/Complete buttons had no pending/disabled state, so a fast
+  double-click could double-submit (worst case: double-charge a deposit/balance,
+  or double-accept a job).
+- **Fix:** new shared client `SubmitButton` (`components/SubmitButton.tsx`) using
+  `useFormStatus` — it disables itself, shows a pending label, and sets
+  `aria-busy` while its parent `<form>`'s action is in flight. Wired into the
+  deposit + balance pay forms and the cleaner accept/decline/start/complete
+  forms. Other server-action forms can adopt it incrementally.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 15/15.
+- **Next up:** P1 — confirmation on destructive admin actions; `mark-read`
+  same-origin guard; booking timezone handling.
+
+---
+
 ## 2026-06-29 — Knight iteration: notify the customer on cleaner accept / complete
 
 - **Item:** P1 flow feedback. The two transitions that require the customer to

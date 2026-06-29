@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import StatusLive from "./StatusLive";
 import MessagePanel from "./MessagePanel";
 import { payDeposit, payBalance } from "./payment-actions";
+import SubmitButton from "@/components/SubmitButton";
 import { cancelBooking } from "./cancel-actions";
 import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import { toggleFavorite } from "./favorite-actions";
@@ -474,9 +475,12 @@ export default async function BookingStatusPage({
                   await payDeposit(booking.id);
                 }}
               >
-                <button className="w-full btn-base btn-primary shadow-elevation-md">
+                <SubmitButton
+                  className="w-full btn-base btn-primary shadow-elevation-md"
+                  pendingText="Redirecting to secure checkout…"
+                >
                   Pay ${Number(booking.deposit_amount).toFixed(2)} deposit securely
-                </button>
+                </SubmitButton>
               </form>
             </div>
           )}
@@ -489,9 +493,12 @@ export default async function BookingStatusPage({
                 await payBalance(booking.id);
               }}
             >
-              <button className="w-full btn-base btn-primary shadow-elevation-md">
+              <SubmitButton
+                className="w-full btn-base btn-primary shadow-elevation-md"
+                pendingText="Redirecting to secure checkout…"
+              >
                 Pay ${Number(booking.balance_amount).toFixed(2)} balance securely
-              </button>
+              </SubmitButton>
             </form>
           )}
 

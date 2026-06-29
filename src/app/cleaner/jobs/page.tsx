@@ -10,6 +10,7 @@ import {
 } from "../actions";
 import JobsLive from "./JobsLive";
 import Countdown from "./Countdown";
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import {
@@ -296,10 +297,13 @@ export default async function CleanerJobsPage({
                         await acceptJob(b.id);
                       }}
                     >
-                      <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                      <SubmitButton
+                        className="btn-base btn-primary flex items-center gap-1.5 text-sm"
+                        pendingText="Accepting…"
+                      >
                         <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
                         Accept
-                      </button>
+                      </SubmitButton>
                     </form>
                     <form
                       action={async () => {
@@ -307,9 +311,12 @@ export default async function CleanerJobsPage({
                         await declineJob(b.id);
                       }}
                     >
-                      <button className="btn-base btn-secondary text-sm">
+                      <SubmitButton
+                        className="btn-base btn-secondary text-sm"
+                        pendingText="Declining…"
+                      >
                         Decline
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </div>
@@ -410,13 +417,16 @@ export default async function CleanerJobsPage({
                                   await startJob(b.id);
                                 }}
                               >
-                                <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                                <SubmitButton
+                                  className="btn-base btn-primary flex items-center gap-1.5 text-sm"
+                                  pendingText="Starting…"
+                                >
                                   <PlayCircle
                                     className="h-4 w-4"
                                     strokeWidth={1.5}
                                   />
                                   Start job
-                                </button>
+                                </SubmitButton>
                               </form>
                             )}
                             {b.status === "in_progress" && (
@@ -426,13 +436,16 @@ export default async function CleanerJobsPage({
                                   await completeJob(b.id);
                                 }}
                               >
-                                <button className="btn-base btn-primary flex items-center gap-1.5 text-sm">
+                                <SubmitButton
+                                  className="btn-base btn-primary flex items-center gap-1.5 text-sm"
+                                  pendingText="Completing…"
+                                >
                                   <CheckCircle
                                     className="h-4 w-4"
                                     strokeWidth={1.5}
                                   />
                                   Mark complete
-                                </button>
+                                </SubmitButton>
                               </form>
                             )}
                             <Link

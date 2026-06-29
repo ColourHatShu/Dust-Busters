@@ -62,8 +62,8 @@ payment_type); `bookings` has NO `updated_at`.
 - [ ] Accept-offer race result (won/lost) discarded → loser gets no feedback. (`cleaner/jobs/page.tsx:155-165`)
 
 ### UX feedback & forms
-- [ ] Pay-deposit/balance + all server-action forms have no pending/disabled state (double-click risk). Add `useFormStatus` pending buttons. (`bookings/[id]/page.tsx:238-263`)
-- [ ] Accept/Decline/Start/Complete buttons have no pending/disabled state. (`cleaner/jobs/page.tsx`)
+- [x] Pay-deposit/balance forms had no pending/disabled state (double-click → double-charge risk) → added a shared client `SubmitButton` (`useFormStatus`: disables + shows a pending label + `aria-busy` while the action is in flight); wired into the deposit + balance pay forms. Other forms can adopt it incrementally. ✅ (`components/SubmitButton.tsx`, `bookings/[id]/page.tsx`)
+- [x] Accept/Decline/Start/Complete buttons had no pending/disabled state → now use `SubmitButton` (Accepting…/Declining…/Starting…/Completing…). ✅ (`cleaner/jobs/page.tsx`)
 - [ ] No confirmation on destructive admin actions (cancel/refund/deactivate/override/reassign). (`admin/bookings/[id]/page.tsx`)
 - [x] Settings: now validates hourly rate (>0), deposit % and commission % (0–100) and rejects blanks instead of coercing to 0. ✅ (done with the commission cluster)
 - [ ] Add nav link to cleaner profile page. (`Nav.tsx`)
