@@ -65,7 +65,7 @@ export default async function CleanerEarningsPage() {
   const { data: jobs } = await supabase
     .from("bookings")
     .select(
-      "id, status, scheduled_at, hours, area, total_amount, balance_amount, platform_fee, cleaner_payout"
+      "id, status, scheduled_at, hours, area, total_amount, balance_amount, platform_fee, cleaner_payout, payout_paid_at"
     )
     .eq("cleaner_id", user.id)
     .in("status", ["completed", "balance_paid", "closed"])
@@ -96,6 +96,15 @@ export default async function CleanerEarningsPage() {
     (sum, j) => sum + Number(j.balance_amount ?? 0),
     0
   );
+
+  // Payout status (recorded by the admin, 0044): of the settled jobs, how much
+  // take-home has been paid out vs is still awaiting payout from the platform.
+  const awaitingPayout = paidJobs
+    .filter((j) => !j.payout_paid_at)
+    .reduce((sum, j) => sum + payoutOf(j), 0);
+  const paidOut = paidJobs
+    .filter((j) => j.payout_paid_at)
+    .reduce((sum, j) => sum + payoutOf(j), 0);
 
   // Recent (rolling) net earnings by job date, so a cleaner sees momentum, not
   // just an all-time total.
@@ -161,6 +170,16 @@ export default async function CleanerEarningsPage() {
           label="Pending balance"
           value={`$${pendingBalance.toFixed(2)}`}
           sub={`${pendingJobs.length} job${pendingJobs.length !== 1 ? "s" : ""} awaiting customer payment`}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Awaiting payout"
+          value={`$${awaitingPayout.toFixed(2)}`}
+          sub={
+            paidOut > 0
+              ? `$${paidOut.toFixed(2)} paid out to date`
+              : "take-home not yet paid out"
+          }
         />
       </div>
 
@@ -256,6 +275,7 @@ export default async function CleanerEarningsPage() {
                   <th className="num">Hours</th>
                   <th className="num">Gross</th>
                   <th className="num">Status</th>
+                  <th>Payout</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,6 +299,15 @@ export default async function CleanerEarningsPage() {
                         <span className={bookingBadgeClass(j.status)}>
                           {bookingStatusLabel(j.status)}
                         </span>
+                      </td>
+                      <td>
+                        {j.payout_paid_at ? (
+                          <span className="badge badge-success">Paid out</span>
+                        ) : ["balance_paid", "closed"].includes(j.status) ? (
+                          <span className="badge badge-info">Owed</span>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </td>
                     </tr>
                   );

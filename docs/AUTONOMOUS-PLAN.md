@@ -246,6 +246,11 @@ payment_type); `bookings` has NO `updated_at`.
   ✅ tsc + build + tests green. (`0041`, `account/{page,actions}.tsx`)
 
 ## P-OPS — Operator tooling
+- [x] **Cleaner-facing payout status** (0044 follow-up) → the cleaner earnings page
+  now shows an "Awaiting payout" stat ($ take-home from settled jobs not yet paid
+  out, + "$X paid out to date") and a per-job "Payout" column (Paid out / Owed / —),
+  using `payout_paid_at`. Closes the loop: admin marks paid → cleaner sees it.
+  Transparency on their take-home. ✅ tsc + build + tests green. (`cleaner/earnings/page.tsx`)
 - [x] **Cleaner payouts tracking** → migration `0044` (APPLIED + verified live):
   `bookings.payout_paid_at` (+ partial index) records when a cleaner's take-home
   for a settled job has been paid out off-system. New `/admin/payouts` shows

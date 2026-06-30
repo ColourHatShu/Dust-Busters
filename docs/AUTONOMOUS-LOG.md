@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner-facing payout status
+
+- **Shipped item (0044 follow-up, code-only, no migration):** the cleaner earnings
+  page now surfaces payout status from `payout_paid_at` — an **"Awaiting payout"**
+  stat ($ take-home from settled jobs not yet paid out, with "$X paid out to date")
+  and a per-job **"Payout"** column (Paid out / Owed / —). Closes the loop from the
+  admin payouts tool (0044): when the admin marks a cleaner paid, the cleaner sees
+  it. Real take-home transparency.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Status:** safe backlog genuinely complete now (payouts loop closed). Remaining:
+  founder-tied only (photos smoke-test; referral credit; launch path).
+
+---
+
 ## 2026-06-30 — FEATURE: cleaner payouts tracking (operator payroll tooling)
 
 - **Ideation found a genuinely valuable safe item** beyond the cleared UI backlog:
