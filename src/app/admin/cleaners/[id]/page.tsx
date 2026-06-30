@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
+import { specialtyLabels } from "@/lib/specialties";
 import { setCleanerVerified, setCleanerActive } from "../actions";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
 
@@ -38,7 +39,7 @@ export default async function AdminCleanerDetailPage({
   const { data: cleaner } = await supabase
     .from("profiles")
     .select(
-      "id, name, phone, created_at, cleaner_details(id_verified, active, areas_served, verified_at)"
+      "id, name, phone, created_at, cleaner_details(id_verified, active, areas_served, verified_at, bio, specialties)"
     )
     .eq("id", id)
     .eq("role", "cleaner")
@@ -197,6 +198,31 @@ export default async function AdminCleanerDetailPage({
                 </span>
               </div>
             </div>
+
+            {(d?.bio || (d?.specialties?.length ?? 0) > 0) && (
+              <div className="space-y-3">
+                {d?.bio && (
+                  <div>
+                    <p className="eyebrow-label">About</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">
+                      {d.bio}
+                    </p>
+                  </div>
+                )}
+                {(d?.specialties?.length ?? 0) > 0 && (
+                  <div>
+                    <p className="eyebrow-label">Specialties</p>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {specialtyLabels(d?.specialties ?? null).map((l) => (
+                        <span key={l} className="badge badge-neutral">
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Performance Metrics */}

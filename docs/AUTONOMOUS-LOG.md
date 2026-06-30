@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner bio/specialties on the admin detail page
+
+- **Shipped item (IDEAS batch 8 #1, code-only, no migration):** the admin cleaner
+  profile card (`/admin/cleaners/[id]`) now shows the "About" bio + specialty chips
+  (admin reads `cleaner_details` directly via RLS; added `bio, specialties` to the
+  select). Gives ops a quick read on how a cleaner presents to customers.
+- **Verify:** `tsc` clean · `vitest` 44 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** specialty chips on the customer favorites list (batch 8 #2) or
+  bio/rating/specialties on the live-map winner reveal (batch 7 #2 / 8 #3).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner specialties / tags
 
 - **Shipped item (IDEAS batch 6 #1):** migration **`0036`** adds
