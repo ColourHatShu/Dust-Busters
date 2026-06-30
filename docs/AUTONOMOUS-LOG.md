@@ -5,6 +5,28 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: transactional email/SMS channel abstraction
+
+- **Item:** P0 (top backlog). Build the transactional messaging channel now so the
+  founder only has to add keys later.
+- **Built:** `src/lib/messaging.ts` — provider-agnostic `sendEmail` (Resend REST),
+  `sendSms` (Twilio REST), plus `isEmailConfigured`/`isSmsConfigured`. All sends are
+  best-effort and never throw. Wired into `createNotification`: the key money/match
+  notification types (cleaner_found, deposit_paid, deposit_received, balance_received,
+  job_completed, booking_expired, booking_released) are mirrored to email via the
+  recipient's auth email. Documented the optional env vars in `.env.example`.
+- **Safety:** with no keys set, `createNotification` short-circuits before any user
+  lookup or network call, so behavior is byte-for-byte identical today (verified the
+  build is unchanged at runtime); it activates the instant Resend/Twilio keys land.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **⛔ Needs the founder:** add `RESEND_API_KEY` + `RESEND_FROM` (and optionally
+  the `TWILIO_*` trio) to activate email/SMS. Until then it's a safe no-op.
+- **Next up:** reconcile stale items (cancellation-refund line, Nav cleaner-profile
+  link, no_cleaner_found retry already shipped); then `vercel.json` + image
+  remotePatterns; reschedule-before-deposit.
+
+---
+
 ## 2026-06-29 — Knight iteration: deposit_deadline auto-expiry (migration 0029, founder-approved)
 
 - **Item:** P1 correctness (production DB). `deposit_deadline` (column from 0008)
