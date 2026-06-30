@@ -22,8 +22,10 @@ import {
   Star,
   ClipboardList,
   Navigation,
+  Sparkles,
 } from "lucide-react";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
+import { checklistLabels } from "@/lib/checklist";
 
 const DEPOSIT_PAID_AND_LATER = new Set([
   "deposit_paid",
@@ -56,7 +58,7 @@ export default async function CleanerJobDetailPage({
     .from("bookings")
     .select(
       `id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount,
-       cleaner_id, customer_id, notes,
+       cleaner_id, customer_id, notes, checklist,
        profiles!bookings_customer_id_fkey(name),
        booking_addresses(full_address)`
     )
@@ -83,6 +85,9 @@ export default async function CleanerJobDetailPage({
   const notes = DEPOSIT_PAID_AND_LATER.has(booking.status)
     ? (booking.notes as string | null)
     : null;
+  const scope = DEPOSIT_PAID_AND_LATER.has(booking.status)
+    ? checklistLabels(booking.checklist as string[] | null)
+    : [];
 
   // Load initial messages for MessagePanel
   const { data: rawMessages } = await supabase
@@ -220,6 +225,24 @@ export default async function CleanerJobDetailPage({
                 <p className="mt-1 whitespace-pre-wrap text-slate-900">
                   {notes}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {scope.length > 0 && (
+            <div className="card flex items-start gap-4">
+              <span className="icon-tile icon-tile-soft">
+                <Sparkles className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div>
+                <p className="eyebrow-label">Cleaning focus</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {scope.map((l) => (
+                    <span key={l} className="badge badge-neutral">
+                      {l}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}

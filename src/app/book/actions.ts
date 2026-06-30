@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AREAS } from "@/lib/areas";
 import { validateBooking } from "@/lib/booking";
+import { sanitizeChecklist } from "@/lib/checklist";
 
 export type BookingFormState = { error?: string } | undefined;
 
@@ -37,6 +38,9 @@ export async function submitBooking(
 
   const notes = String(formData.get("notes") || "").trim() || null;
 
+  // Structured cleaning scope: keep only valid task keys (never trust the client).
+  const checklist = sanitizeChecklist(formData.getAll("checklist").map(String));
+
   const { data: bookingId, error } = await supabase.rpc("request_booking", {
     p_scheduled_at: v.scheduledISO,
     p_hours: Number(formData.get("hours")),
@@ -44,6 +48,7 @@ export async function submitBooking(
     p_full_address: fullAddress,
     p_preferred_cleaner: preferredCleaner,
     p_notes: notes,
+    p_checklist: checklist.length ? checklist : null,
   });
 
   if (error) return { error: error.message };

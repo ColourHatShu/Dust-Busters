@@ -5,6 +5,30 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Feature: structured cleaning scope / checklist on a booking
+
+- **Item:** IDEAS batch 0 #1 ("room-by-room cleaning checklist") — the oldest
+  high-value product idea, un-built until now. Turns a vague "3 hours" into a
+  shared **definition of done**, cutting expectation-mismatch disputes.
+- **Shipped (one additive migration + UI, fully backward-compatible):**
+  - **Migration `0032_booking_checklist`** (APPLIED + verified live via pooler):
+    `bookings.checklist text[]` + a 7th `request_booking` param `p_checklist`
+    (DEFAULT NULL, empty → NULL). Old 6-arg signature dropped; single 7-arg
+    signature confirmed. Recorded as `0032`.
+  - **`src/lib/checklist.ts`** — canonical task taxonomy (Rooms / Tasks /
+    Deep-clean extras), `sanitizeChecklist` (server-side: keeps only valid keys,
+    dedups, canonical order — never trusts the client) + `checklistLabels`.
+  - **`/book`** — a "What should we focus on?" fieldset of design-system
+    `checkbox-card`s (grouped, responsive 2-col). Optional.
+  - **Customer booking page** — a "Cleaning focus" card (badge chips), always
+    visible to the customer who chose it.
+  - **Cleaner job page** — same scope card, gated behind `deposit_paid+` (same
+    privacy gate as the address + notes).
+- **Verify:** `tsc` clean · `vitest` **30 → 39** (new `tests/lib/checklist.test.ts`,
+  9 cases) · `next build` green. Committed + pushed to `origin/dustbusters-autonomous`.
+
+---
+
 ## 2026-06-30 — ⏸️ Knight paused: backlog exhausted (no busywork)
 
 - This firing found **no actionable, non-founder, unattended-safe item**. Per the

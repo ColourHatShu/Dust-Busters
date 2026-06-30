@@ -10,6 +10,7 @@ import { rescheduleBooking } from "./reschedule-actions";
 import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import { toggleFavorite } from "./favorite-actions";
 import { bookingBadgeClass, bookingStatusLabel, paymentBadgeClass } from "@/lib/status";
+import { checklistLabels } from "@/lib/checklist";
 import { STATUS_LABEL } from "@/lib/types";
 import {
   Calendar,
@@ -29,6 +30,7 @@ import {
   ShieldCheck,
   Info,
   CalendarClock,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -86,7 +88,7 @@ export default async function BookingStatusPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id, deposit_deadline"
+      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id, deposit_deadline, checklist"
     )
     .eq("id", id)
     .eq("customer_id", user.id)
@@ -196,6 +198,7 @@ export default async function BookingStatusPage({
   const showMessages = !!booking.cleaner_id && MESSAGE_ALLOWED.includes(booking.status);
   const showReviewPrompt = REVIEW_ALLOWED.includes(booking.status) && !hasReview;
   const showBookAgain = BOOK_AGAIN_ALLOWED.includes(booking.status);
+  const scopeLabels = checklistLabels(booking.checklist as string[] | null);
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-6">
@@ -299,6 +302,23 @@ export default async function BookingStatusPage({
               </div>
             )}
           </div>
+
+          {/* Cleaning focus (customer-selected scope) */}
+          {scopeLabels.length > 0 && (
+            <section className="card space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-accent" strokeWidth={1.75} />
+                <h2 className="section-title">Cleaning focus</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {scopeLabels.map((l) => (
+                  <span key={l} className="badge badge-neutral">
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Payment card */}
           <div className="card">

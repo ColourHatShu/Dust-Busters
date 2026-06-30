@@ -93,6 +93,7 @@ Legend — effort: trivial / small / medium / large.
 1. **Room-by-room cleaning checklist on a booking** · *value:* customer sets scope
    (kitchen, 2 baths, fridge inside…), cleaner sees exactly what's expected, fewer
    disputes · *small* · why: turns a vague "3 hrs" into a shared definition of done.
+   → **SHIPPED 2026-06-30** (migration 0032 + `lib/checklist.ts`; see plan P2 ideation).
 2. **Before/after photo proof** (Supabase Storage) attached to a job · *value:*
    trust + dispute evidence + marketing gallery · *medium* · why: in-home services
    live or die on proof; also feeds the "satisfaction guarantee".
