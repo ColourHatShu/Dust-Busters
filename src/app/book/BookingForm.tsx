@@ -25,6 +25,7 @@ export default function BookingForm({
   areas,
   prefillHours,
   prefillArea,
+  prefillCleaner,
   savedAddresses,
   favorites,
 }: {
@@ -35,6 +36,7 @@ export default function BookingForm({
   areas: readonly string[];
   prefillHours: number;
   prefillArea?: string;
+  prefillCleaner?: string;
   savedAddresses: { id: string; label: string | null; full_address: string }[];
   favorites: Fav[];
 }) {
@@ -107,7 +109,11 @@ export default function BookingForm({
             <Heart className="h-4 w-4 text-accent" strokeWidth={1.75} />
             Cleaner
           </span>
-          <select name="preferred_cleaner" className="input-modern" defaultValue="">
+          <select
+            name="preferred_cleaner"
+            className="input-modern"
+            defaultValue={prefillCleaner ?? ""}
+          >
             <option value="">Any available cleaner</option>
             {favorites.map((f) => (
               <option key={f.id} value={f.id}>

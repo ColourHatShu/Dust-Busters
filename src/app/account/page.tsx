@@ -308,15 +308,23 @@ export default async function AccountPage() {
                     )}
                   </div>
                 </div>
-                <form action={removeFavorite.bind(null, f.cleanerId)}>
-                  <button
-                    type="submit"
-                    aria-label="Remove favorite"
-                    className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <Link
+                    href={`/book?cleaner=${f.cleanerId}`}
+                    className="btn-base btn-secondary px-2.5 py-1 text-xs"
                   >
-                    <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
-                  </button>
-                </form>
+                    Book
+                  </Link>
+                  <form action={removeFavorite.bind(null, f.cleanerId)}>
+                    <button
+                      type="submit"
+                      aria-label="Remove favorite"
+                      className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <Heart className="h-4 w-4 fill-current" strokeWidth={1.5} />
+                    </button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>

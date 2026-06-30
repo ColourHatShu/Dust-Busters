@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: book-a-favorite (one-tap rebook)
+
+- **Shipped item (IDEAS batch 9 #1, code-only, no migration):** each favorite on
+  the account page now has a "Book" button → `/book?cleaner=<id>`. `/book`
+  validates the param against the customer's own favorites and preselects that
+  cleaner in the existing "Cleaner" dropdown (`prefillCleaner` → `request_booking`
+  rings only that favorite if eligible). One-tap rebook of a trusted cleaner.
+- **Verify:** `tsc` clean · `vitest` 44 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** cleaner profile preview "how customers see you" (batch 9 #2) or
+  bio/rating/specialties on the live-map winner reveal (batch 7 #2). Backlog thin
+  → next firing likely runs an ideation pass.
+
+---
+
 ## 2026-06-30 — Knight firing: specialty chips on the favorites list
 
 - **Shipped item (IDEAS batch 8 #2, code-only, no migration):** each favorite

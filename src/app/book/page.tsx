@@ -14,9 +14,10 @@ export const metadata = {
 export default async function BookPage({
   searchParams,
 }: {
-  searchParams: Promise<{ hours?: string; area?: string }>;
+  searchParams: Promise<{ hours?: string; area?: string; cleaner?: string }>;
 }) {
-  const { hours: hoursParam, area: areaParam } = await searchParams;
+  const { hours: hoursParam, area: areaParam, cleaner: cleanerParam } =
+    await searchParams;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
 
@@ -66,6 +67,12 @@ export default async function BookPage({
     }),
   );
 
+  // Book-a-favorite prefill: only honour ?cleaner= if it's one of this
+  // customer's favorites (so the dropdown can actually preselect it).
+  const prefillCleaner = favorites.some((f) => f.id === cleanerParam)
+    ? cleanerParam
+    : undefined;
+
   // Soft min for the date picker (today); the action enforces the real check.
   const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
 
@@ -97,6 +104,7 @@ export default async function BookPage({
             areas={AREAS}
             prefillHours={prefillHours}
             prefillArea={prefillArea}
+            prefillCleaner={prefillCleaner}
             savedAddresses={savedAddresses ?? []}
             favorites={favorites}
           />
