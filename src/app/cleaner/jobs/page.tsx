@@ -54,38 +54,52 @@ export default async function CleanerJobsPage({
 
   const supabase = await createClient();
 
-  // Current availability (cleaner-controlled online/offline)
-  const { data: cd } = await supabase
-    .from("cleaner_details")
-    .select("accepting_jobs")
-    .eq("profile_id", user.id)
-    .maybeSingle();
-  const accepting = cd?.accepting_jobs ?? true;
-
-  // Upcoming time off (dates the cleaner blocked) — Pacific "today" forward.
+  // Pacific "today" (time-off window) + the 7-day activity window — no awaits.
   const todayPacific = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Vancouver",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  const { data: timeOff } = await supabase
-    .from("cleaner_time_off")
-    .select("id, off_date")
-    .eq("cleaner_id", user.id)
-    .gte("off_date", todayPacific)
-    .order("off_date", { ascending: true });
-  const upcomingTimeOff = timeOff ?? [];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+
+  // These four reads are independent of each other — fetch them concurrently
+  // instead of four sequential round-trips to the remote DB.
+  const [cdRes, timeOffRes, recentOffersRes, offersRes] = await Promise.all([
+    supabase
+      .from("cleaner_details")
+      .select("accepting_jobs")
+      .eq("profile_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("cleaner_time_off")
+      .select("id, off_date")
+      .eq("cleaner_id", user.id)
+      .gte("off_date", todayPacific)
+      .order("off_date", { ascending: true }),
+    supabase
+      .from("booking_offers")
+      .select("state")
+      .eq("cleaner_id", user.id)
+      .gte("created_at", sevenDaysAgo),
+    supabase
+      .from("booking_offers")
+      .select(
+        "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount, cleaner_payout, broadcast_expires_at, customer_id)"
+      )
+      .eq("cleaner_id", user.id)
+      .eq("state", "rung"),
+  ]);
+
+  // Current availability (cleaner-controlled online/offline)
+  const accepting = cdRes.data?.accepting_jobs ?? true;
+
+  // Upcoming time off (dates the cleaner blocked) — Pacific "today" forward.
+  const upcomingTimeOff = timeOffRes.data ?? [];
 
   // Demand / activity (last 7 days): how many job requests reached this cleaner
-  // in their areas and how many they accepted. RLS scopes booking_offers to the
-  // cleaner, so this is their own offer history (one offer per eligible booking).
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
-  const { data: recentOffers } = await supabase
-    .from("booking_offers")
-    .select("state")
-    .eq("cleaner_id", user.id)
-    .gte("created_at", sevenDaysAgo);
+  // in their areas and how many they accepted (one offer per eligible booking).
+  const recentOffers = recentOffersRes.data;
   const offered7d = recentOffers?.length ?? 0;
   const accepted7d = (recentOffers ?? []).filter(
     (o) => o.state === "accepted",
@@ -94,13 +108,7 @@ export default async function CleanerJobsPage({
     offered7d > 0 ? Math.round((accepted7d / offered7d) * 100) : null;
 
   // Open offers ringing right now
-  const { data: offers } = await supabase
-    .from("booking_offers")
-    .select(
-      "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount, cleaner_payout, broadcast_expires_at, customer_id)"
-    )
-    .eq("cleaner_id", user.id)
-    .eq("state", "rung");
+  const offers = offersRes.data;
 
   const broadcastingOffers = (offers ?? []).filter((o) => {
     const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;

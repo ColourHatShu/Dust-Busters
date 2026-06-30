@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: parallelize cleaner jobs page reads
+
+- **Shipped item (IDEAS batch 11 #2, code-only, no migration):** the cleaner jobs
+  page made four independent leading reads (availability, time-off, 7-day activity,
+  open offers) sequentially; they now run in one `Promise.all` — four serial remote
+  round-trips → one. The lazy-expiry RPCs → my-jobs ordering is deliberately
+  preserved (my-jobs still read after expiries so a just-expired job doesn't
+  linger). Pure read reordering, no behaviour change.
+- **Verify:** `tsc` clean · `vitest` 55 green · `next build` compiled. Committed +
+  pushed.
+- **Ideation pass:** IDEAS Batch 12 — promoted the same perf win for the customer
+  booking page + cleaner job-detail page. Reiterated: after these the safe
+  non-founder backlog is effectively done.
+- **Next up:** parallelize the customer booking page reads (batch 12 #1).
+
+---
+
 ## 2026-06-30 — Knight firing: a11y aria-live on the live job feed
 
 - **Shipped item (IDEAS batch 11 #1, code-only, no migration):** an `sr-only`

@@ -9,6 +9,22 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 12 — ideation (2026-06-30, plan-backlog refresh)
+
+> Still in the shallow end — these are the defensible remaining code-only wins
+> (repeating the jobs-page read-parallelization on the other heavy pages):
+
+1. **Parallelize the customer booking page reads** (after the lazy expiry RPCs) ·
+   *value:* the app's most-loaded customer page loads faster · *small*.
+2. **Parallelize the cleaner job detail page reads** · *value:* faster · *small*.
+3. **Recurring/weekly bookings** · *large* · the next real customer feature —
+   needs a founder go-ahead on scope (series model + scheduling).
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 booking-page perf, #2 job-detail perf.
+> After these, the safe non-founder backlog is effectively done — see the standing
+> note: unblock the launch path (Stripe webhook secret + deploy) or pause/slow the
+> loop.
+
 ## Batch 11 — ideation (2026-06-30, plan-backlog refresh)
 
 > **Reality check:** the safe, non-founder, code-only well is now genuinely
