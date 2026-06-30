@@ -14,6 +14,7 @@ import {
   Flag,
   Tag,
   Plus,
+  Wallet,
 } from "lucide-react";
 
 export default async function AdminHomePage() {
@@ -144,6 +145,7 @@ export default async function AdminHomePage() {
     { href: "/admin/reports", label: "Reports", icon: Flag, desc: "Flagged chat messages" },
     { href: "/admin/promos", label: "Promo codes", icon: Tag, desc: "Discounts & referrals" },
     { href: "/admin/addons", label: "Add-ons", icon: Plus, desc: "Paid extras menu" },
+    { href: "/admin/payouts", label: "Payouts", icon: Wallet, desc: "Cleaner take-home owed" },
     { href: "/admin/settings", label: "Settings", icon: Settings, desc: "App configuration" },
   ];
 

@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — FEATURE: cleaner payouts tracking (operator payroll tooling)
+
+- **Ideation found a genuinely valuable safe item** beyond the cleared UI backlog:
+  cleaners are paid manually off-system (HANDOFF) with no view of who's owed.
+- **Shipped (migration `0044`):** `bookings.payout_paid_at` (+ partial index on
+  unpaid settled bookings). New **`/admin/payouts`** lists outstanding payouts per
+  cleaner (jobs · owed + grand total) with a confirm-guarded **"Mark paid"** that
+  stamps every settled (`balance_paid`/`closed`), still-owed booking of theirs.
+  **Record-keeping only — no money moves through the app** (not a transfer; within
+  the hard safety rules, like the existing refund-record rows). Dashboard nav card
+  added. Admin writes via the existing `is_admin()` bookings update policy.
+- **Verify:** applied via the pooler (column + partial index confirmed); `tsc`
+  clean · `vitest` 62 green · `next build` compiled `/admin/payouts`. Committed +
+  pushed.
+- **Next up:** genuinely down to founder-tied items (photos upload smoke-test;
+  referral credit; launch path). Future firings: minor polish or hold.
+
+---
+
 ## 📊 Milestone summary — 2026-06-30 (run total ~39 items, DB at 0043)
 
 Suite **62** tests. Since the last milestone the revenue/ops layer landed and the

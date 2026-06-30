@@ -245,6 +245,16 @@ payment_type); `bookings` has NO `updated_at`.
   in a rolled-back txn** (visit cancelled, offers 0, next_at → +1 period — PASS).
   ✅ tsc + build + tests green. (`0041`, `account/{page,actions}.tsx`)
 
+## P-OPS — Operator tooling
+- [x] **Cleaner payouts tracking** → migration `0044` (APPLIED + verified live):
+  `bookings.payout_paid_at` (+ partial index) records when a cleaner's take-home
+  for a settled job has been paid out off-system. New `/admin/payouts` shows
+  outstanding payouts per cleaner (jobs · owed, with a grand total) and a confirm-
+  guarded "Mark paid" (stamps every settled, still-owed booking of theirs) —
+  **record-keeping only, no transfer** (within the safety rules). Dashboard nav
+  card added. Gives the founder a real payroll view. ✅ tsc + build + tests green.
+  (`0044`, `admin/payouts/{page,actions}.tsx`, `admin/page.tsx`)
+
 ## ⛔ Founder-only / blocked
 > Highest leverage: add `STRIPE_WEBHOOK_SECRET` + Stripe live keys, deploy to
 > Vercel (set `NEXT_PUBLIC_BASE_URL`), add Resend/Twilio keys (email/SMS channel is
