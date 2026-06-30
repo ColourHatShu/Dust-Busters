@@ -5,6 +5,26 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: cleaner earnings CSV export
+
+- **Item:** P3 (IDEAS batch 2). Cleaners had no way to pull their job/income
+  history for bookkeeping or taxes.
+- **Shipped:** `GET /cleaner/earnings/export` route handler streams the cleaner's
+  completed/paid/closed jobs as a CSV — Date, Area, Hours, Gross, Platform fee,
+  Net payout, Status — with a UTF-8 BOM (Excel-friendly), CRLF rows, and
+  attachment headers (`dust-busters-earnings-<date>.csv`). Scoped to the
+  signed-in cleaner via the RLS server client; payout math mirrors the earnings
+  page (stored `cleaner_payout`/`platform_fee` with a commission-rate fallback).
+  Added an "Export CSV" button to the earnings header (only when jobs exist).
+- **Note:** rate limiting (next in list) was skipped — it needs a shared store on
+  serverless and Supabase-side auth limits (founder/infra), so it's not a clean
+  unattended item; reschedule-before-deposit is a riskier matching-flow change.
+- **Verify:** `tsc` clean · `next build` green (`/cleaner/earnings/export`
+  compiled) · `npm test` 20/20.
+- **Next up:** admin bookings date-range filter; chat message report/flag.
+
+---
+
 ## 2026-06-30 — Knight iteration: ideation pass + LocalBusiness JSON-LD (SEO)
 
 - **Plan hygiene:** verified + ticked three stale `[ ]` items that were already

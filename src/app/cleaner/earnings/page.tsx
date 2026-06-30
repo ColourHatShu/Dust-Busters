@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Info,
   Wallet,
+  Download,
 } from "lucide-react";
 
 function StatCard({
@@ -97,11 +98,23 @@ export default async function CleanerEarningsPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-6">
-      <div>
-        <h1 className="page-title">Earnings</h1>
-        <p className="page-subtitle">
-          Your income summary and recent job history
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="page-title">Earnings</h1>
+          <p className="page-subtitle">
+            Your income summary and recent job history
+          </p>
+        </div>
+        {allJobs.length > 0 && (
+          <a
+            href="/cleaner/earnings/export"
+            className="btn-base btn-secondary text-sm"
+            download
+          >
+            <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Export CSV
+          </a>
+        )}
       </div>
 
       {/* Summary stats */}
