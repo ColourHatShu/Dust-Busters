@@ -9,6 +9,25 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 13 — ideation (2026-06-30, post-growth-features refresh)
+
+> Recurring + referral (the two flagship growth features) are shipped. These are
+> the verifiable next items (before/after photos is high-value but its browser
+> upload can't be verified headlessly + it's privacy-sensitive → wants a founder
+> smoke-test, so it stays queued, not blind-shipped):
+
+1. **Cleaner "on my way / running late" status** · *value:* reduces day-of
+   customer anxiety/no-access · *small* · reuses notifications.
+2. **Skip the next recurring visit** (beyond pause) · *value:* one-off vacation
+   without pausing the whole plan · *small–medium* · RPC, txn-testable.
+3. **Promo usage report for admin** (who redeemed, when) · *small* · ops/marketing.
+4. **Before/after photos** · *large* · highest-value trust feature but needs a
+   founder-available upload smoke-test (Storage RLS is txn-testable; the browser
+   upload isn't headlessly verifiable).
+
+> Promoted to AUTONOMOUS-PLAN.md: #1 cleaner status, #2 skip-next. #4 photos stays
+> queued with the smoke-test caveat.
+
 ## Batch 12 — ideation (2026-06-30, plan-backlog refresh)
 
 > Still in the shallow end — these are the defensible remaining code-only wins

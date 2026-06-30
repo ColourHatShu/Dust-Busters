@@ -8,7 +8,9 @@ import {
   addAddress,
   deleteAddress,
   removeFavorite,
-  stopRecurring,
+  pauseRecurring,
+  resumeRecurring,
+  removeRecurring,
 } from "./actions";
 import Link from "next/link";
 import {
@@ -85,15 +87,21 @@ export default async function AccountPage() {
     }),
   );
 
-  // Active recurring plans (RLS scopes to the owner).
+  // Recurring plans (active + paused), RLS scopes to the owner.
   const { data: seriesRows } = await supabase
     .from("recurring_series")
-    .select("id, frequency_weeks, area, next_at")
+    .select("id, frequency_weeks, area, next_at, active")
     .eq("customer_id", user.id)
-    .eq("active", true)
+    .order("active", { ascending: false })
     .order("next_at", { ascending: true })
     .returns<
-      { id: string; frequency_weeks: number; area: string; next_at: string }[]
+      {
+        id: string;
+        frequency_weeks: number;
+        area: string;
+        next_at: string;
+        active: boolean;
+      }[]
     >();
   const recurringPlans = seriesRows ?? [];
 
@@ -282,27 +290,49 @@ export default async function AccountPage() {
                 className="flex items-start justify-between gap-3 py-2.5"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="flex items-center gap-2 text-sm font-medium text-slate-900">
                     {frequencyLabel(s.frequency_weeks)} · {s.area}
+                    {!s.active && (
+                      <span className="badge badge-neutral">Paused</span>
+                    )}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Next around {new Date(s.next_at).toLocaleDateString()}
+                    {s.active
+                      ? `Next around ${new Date(s.next_at).toLocaleDateString()}`
+                      : "Paused — no new visits until you resume"}
                   </p>
                 </div>
-                <form action={stopRecurring.bind(null, s.id)}>
-                  <button
-                    type="submit"
-                    className="btn-base btn-secondary px-2.5 py-1 text-xs"
-                  >
-                    Stop
-                  </button>
-                </form>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {s.active ? (
+                    <form action={pauseRecurring.bind(null, s.id)}>
+                      <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
+                        Pause
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={resumeRecurring.bind(null, s.id)}>
+                      <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
+                        Resume
+                      </button>
+                    </form>
+                  )}
+                  <form action={removeRecurring.bind(null, s.id)}>
+                    <button
+                      type="submit"
+                      aria-label="Remove recurring plan"
+                      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                    </button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>
           <p className="form-hint">
-            Each visit is booked automatically and paid separately. Stopping keeps
-            any visit that&apos;s already scheduled.
+            Each visit is booked automatically and paid separately. Pause for a
+            vacation and resume anytime; any visit that&apos;s already scheduled
+            stays put.
           </p>
         </div>
       )}

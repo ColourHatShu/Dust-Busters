@@ -76,18 +76,39 @@ export async function removeFavorite(cleanerId: string) {
   revalidatePath("/account");
 }
 
-// Stop a recurring plan: deactivate it (RLS scopes to the owner). Any already-
-// created upcoming booking is left untouched — the customer manages it normally.
-export async function stopRecurring(seriesId: string) {
+// Recurring-plan lifecycle (RLS scopes every op to the owner). Any already-created
+// upcoming booking is left untouched — the customer manages that one normally.
+async function setRecurringActive(seriesId: string, active: boolean) {
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
-
   const supabase = await createClient();
   await supabase
     .from("recurring_series")
-    .update({ active: false })
+    .update({ active })
     .eq("id", seriesId)
     .eq("customer_id", user.id);
+  revalidatePath("/account");
+}
 
+// Pause: stop generating new visits (resume later). Good for vacations.
+export async function pauseRecurring(seriesId: string) {
+  await setRecurringActive(seriesId, false);
+}
+
+// Resume a paused plan.
+export async function resumeRecurring(seriesId: string) {
+  await setRecurringActive(seriesId, true);
+}
+
+// Remove a plan entirely (the customer's own record).
+export async function removeRecurring(seriesId: string) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+  const supabase = await createClient();
+  await supabase
+    .from("recurring_series")
+    .delete()
+    .eq("id", seriesId)
+    .eq("customer_id", user.id);
   revalidatePath("/account");
 }

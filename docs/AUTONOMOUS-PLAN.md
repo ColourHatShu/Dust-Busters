@@ -176,10 +176,23 @@ payment_type); `bookings` has NO `updated_at`.
   deactivate. Server actions via the admin RLS (no service key); validated inputs +
   friendly duplicate/error banner; dashboard nav card added. ✅ tsc + build (route
   compiled) + tests green. (`admin/promos/{page,actions}.tsx`, `admin/page.tsx`)
-- [ ] **Before/after photos** (next big P-MAJOR) — cleaner uploads job photos
-  (Supabase Storage; bucket + RLS can be created via the pooler) shown to the
-  customer as proof. Trust + dispute evidence. Note: upload flow is hard to verify
-  without a browser — build defensively.
+- [x] **Recurring plan lifecycle (pause / resume / remove)** → the account page now
+  lists active **and** paused plans; Pause stops generating new visits (vacation),
+  Resume restarts, Remove deletes the plan — all RLS-owner-scoped. Completes the
+  recurring feature (was one-way "Stop" only). ✅ tsc + build + tests green.
+  (`account/{page,actions}.tsx`)
+- [ ] **Before/after photos** (big P-MAJOR) — cleaner uploads job photos (Supabase
+  Storage; bucket + storage.objects RLS creatable via the pooler) shown to the
+  customer as proof. Trust + dispute evidence. **⚠️ Deferred on the unattended loop:**
+  the browser upload flow can't be verified from here and it handles privacy-
+  sensitive home photos with path-scoped storage RLS — best built when the founder
+  can smoke-test the upload (or build defensively + flag for a founder smoke-test).
+- [ ] **Cleaner "on my way / running late" status** (IDEAS batch 13) — a one-tap
+  status on a deposit_paid/in_progress job that notifies the customer (reuses
+  notifications). Verifiable, real day-of value.
+- [ ] **Skip the next recurring visit** (IDEAS batch 13) — beyond pause: drop just
+  the next occurrence (cancel the upcoming pre-deposit booking + advance `next_at`
+  one period) via an RPC. Verifiable in a rolled-back txn.
 
 ## ⛔ Founder-only / blocked
 > Highest leverage: add `STRIPE_WEBHOOK_SECRET` + Stripe live keys, deploy to

@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: recurring plan lifecycle (pause/resume/remove)
+
+- **Product-owner call:** the next listed P-MAJOR was before/after photos, but its
+  core (browser file upload) can't be verified headlessly and it's privacy-
+  sensitive (home photos + path-scoped Storage RLS). Shipping that blind on the
+  unattended loop isn't prudent — deferred it with a "founder smoke-test" note and
+  shipped a **verifiable** high-value item instead: completing the recurring
+  feature's lifecycle.
+- **Shipped (code-only, no migration):** the account "Recurring plans" card now
+  lists **active + paused** plans. **Pause** stops generating new visits (the
+  vacation case), **Resume** restarts, **Remove** deletes the plan — all RLS-owner-
+  scoped (`pauseRecurring`/`resumeRecurring`/`removeRecurring`). Was previously a
+  one-way "Stop" that hid the plan with no way back.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Ideation pass:** IDEAS Batch 13 — promoted cleaner "on my way" status + skip-
+  next-recurring (both verifiable). Photos stays queued with the smoke-test caveat.
+- **Next up:** cleaner "on my way / running late" status.
+
+---
+
 ## 2026-06-30 — Knight firing: promo-code admin UI
 
 - **Shipped item (0040 follow-up, code-only, no migration):** `/admin/promos` —
