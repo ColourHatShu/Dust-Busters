@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: time-off honoured on reschedule + rebroadcast
+
+- **Skipped (logged ⛔ Needs the founder):** the top `[ ]` item, **rate limiting**,
+  is now `[blocked]` — on serverless it needs a shared store (Upstash keys or a
+  Supabase counter table) + founder-chosen thresholds, auth limits are already
+  Supabase-side, and it touches core money-path RPCs (not a safe unattended job).
+- **Shipped item (IDEAS batch 5 #2):** migration **`0034`** closes the 0033
+  follow-up. `rebroadcast_booking` (0025) and `reschedule_booking` (0031) re-ring
+  matching cleaners but ignored `cleaner_time_off`; recreated both with the same
+  "not blocked on the Pacific service date" filter as `request_booking` (0033) —
+  rebroadcast uses `b.scheduled_at`, reschedule uses the new `p_scheduled_at`. So
+  a cleaner is never rung for a date they blocked, on a re-broadcast or a new time.
+- **Verify:** applied via the pooler in a transaction; confirmed both signatures
+  intact, both bodies now reference `cleaner_time_off`, and eligibility unchanged
+  (3 Courtenay cleaners, no time-off). RPC-only (no app code). `tsc` clean ·
+  `vitest` 39 green · `next build` compiled. Committed + pushed.
+- **Next up:** demand indicator for cleaners (batch 5 #3) or deposit/balance split
+  bar (batch 5 #4).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner-side deposit-deadline visibility
 
 - **Backlog was thin** (plan `[ ]` list = rate-limiting + founder/constrained), so
