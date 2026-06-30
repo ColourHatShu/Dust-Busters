@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: admin bookings date-range filter
+
+- **Item:** P3 (IDEAS batch 2). The admin bookings list only filtered by area +
+  status — no way to scope by date.
+- **Shipped:** added `from`/`to` `<input type="date">` controls to the existing
+  JS-free GET AdminSearch form; the page validates them (YYYY-MM-DD) and filters
+  `scheduled_at` server-side with `.gte(from T00:00:00)` / `.lte(to T23:59:59.999)`
+  (whole "to" day inclusive). Combines with area + status; the subtitle shows the
+  active range. No new deps, no DB change.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** chat message report/flag (trust & safety).
+
+---
+
 ## 2026-06-30 — Knight iteration: cleaner earnings CSV export
 
 - **Item:** P3 (IDEAS batch 2). Cleaners had no way to pull their job/income

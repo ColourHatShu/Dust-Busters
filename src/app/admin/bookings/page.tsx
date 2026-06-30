@@ -22,9 +22,16 @@ const STATUSES = [
 export default async function AdminBookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
-  const { q, status } = await searchParams;
+  const { q, status, from, to } = await searchParams;
+  // Only trust well-formed YYYY-MM-DD values for the date-range filter.
+  const isDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
   const supabase = await createClient();
   const {
     data: { user },
@@ -50,6 +57,13 @@ export default async function AdminBookingsPage({
   if (status && STATUSES.includes(status)) {
     bookingsQuery = bookingsQuery.eq("status", status);
   }
+  // Date-range filter on the scheduled date (inclusive of the whole "to" day).
+  if (isDate(from)) {
+    bookingsQuery = bookingsQuery.gte("scheduled_at", `${from}T00:00:00`);
+  }
+  if (isDate(to)) {
+    bookingsQuery = bookingsQuery.lte("scheduled_at", `${to}T23:59:59.999`);
+  }
   const { data: bookings } = await bookingsQuery;
 
   const rows = bookings ?? [];
@@ -68,6 +82,9 @@ export default async function AdminBookingsPage({
         <p className="page-subtitle">
           {rows.length} {rows.length === 1 ? "booking" : "bookings"}
           {status ? ` · ${bookingStatusLabel(status)}` : ""}
+          {isDate(from) || isDate(to)
+            ? ` · ${isDate(from) ? from : "any"} → ${isDate(to) ? to : "any"}`
+            : ""}
         </p>
       </div>
 
@@ -85,6 +102,20 @@ export default async function AdminBookingsPage({
             </option>
           ))}
         </select>
+        <input
+          type="date"
+          name="from"
+          defaultValue={isDate(from) ? from : ""}
+          className="input-modern w-auto"
+          aria-label="Scheduled from date"
+        />
+        <input
+          type="date"
+          name="to"
+          defaultValue={isDate(to) ? to : ""}
+          className="input-modern w-auto"
+          aria-label="Scheduled to date"
+        />
       </AdminSearch>
 
       <div className="card card-flush overflow-x-auto">
