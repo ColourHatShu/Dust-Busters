@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle,
   FileText,
+  Gauge,
 } from "lucide-react";
 
 export default async function CleanerProfilePage() {
@@ -40,6 +41,17 @@ export default async function CleanerProfilePage() {
   const isActive = details?.active ?? false;
   const availabilityNote = details?.availability_note ?? "";
   const bio = details?.bio ?? "";
+
+  // Profile completeness — nudges cleaners to finish a credible, bookable profile.
+  const completeness = [
+    { label: "Add your full name", done: !!fullProfile?.name?.trim() },
+    { label: "Add your phone number", done: !!fullProfile?.phone?.trim() },
+    { label: "Choose your service areas", done: areasServed.length > 0 },
+    { label: "Write your “About me”", done: !!bio.trim() },
+  ];
+  const completePct = Math.round(
+    (completeness.filter((c) => c.done).length / completeness.length) * 100,
+  );
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -137,6 +149,45 @@ export default async function CleanerProfilePage() {
 
         {/* SIDEBAR: account status + availability note */}
         <aside className="order-1 space-y-6 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+          {/* Profile completeness meter */}
+          <div className="card space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="form-label">
+                <Gauge className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                Profile completeness
+              </span>
+              <span className="text-sm font-semibold text-slate-900">
+                {completePct}%
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all"
+                style={{ width: `${completePct}%` }}
+              />
+            </div>
+            {completePct < 100 ? (
+              <ul className="space-y-1.5 text-sm text-slate-500">
+                {completeness
+                  .filter((c) => !c.done)
+                  .map((c) => (
+                    <li key={c.label} className="flex items-center gap-2">
+                      <span
+                        className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400"
+                        aria-hidden="true"
+                      />
+                      {c.label}
+                    </li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="flex items-center gap-1.5 text-sm text-emerald-700">
+                <CheckCircle className="h-4 w-4" strokeWidth={1.75} />
+                Your profile looks great — customers see a complete picture.
+              </p>
+            )}
+          </div>
+
           {/* Verification / active status notices */}
           {!isVerified && (
             <div className="alert alert-warning">

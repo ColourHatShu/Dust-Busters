@@ -9,6 +9,24 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 7 — ideation (2026-06-30, plan-backlog refresh)
+
+1. **Add-to-calendar (.ics)** download on a confirmed booking (customer + cleaner)
+   · *value:* fewer no-shows; the appointment lands in their calendar · *small* ·
+   code-only `.ics` route handler.
+2. **Cleaner bio + rating on the map winner reveal** (not just the static cleaner
+   card) · *value:* the "your cleaner" moment shows the trust info · *small* ·
+   why: `get_cleaner_bio` + rating already exist.
+3. **Cleaner earnings "this week / month" summary** cards above the earnings list
+   · *value:* gig-income tracking at a glance · *small*.
+4. **Admin profile-quality column** (which cleaners have an incomplete profile) ·
+   *value:* ops nudge supply to finish profiles · *small*.
+5. **Customer cancel-reason quick chips** (instead of only free text) · *value:*
+   cleaner analytics on why people cancel · *small*.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 add-to-calendar, #2 bio/rating on the map
+> winner reveal, #3 cleaner earnings period summary. #4/#5 left in the ledger.
+
 ## Batch 6 — ideation (2026-06-30, plan-backlog refresh)
 
 Backlog thin again after batch 5 shipped out. Fresh, de-duped ideas:

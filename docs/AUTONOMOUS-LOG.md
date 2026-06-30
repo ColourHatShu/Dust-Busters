@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner onboarding completeness meter
+
+- **Shipped item (IDEAS batch 6 #4, code-only, no migration):** a "Profile
+  completeness" card on the cleaner profile sidebar — a % bar + a checklist of
+  what's still missing (name, phone, service areas, About me), or a "looks great"
+  state at 100%. Nudges cleaners to finish a credible, bookable profile (more
+  complete profiles → more trust → more accepts).
+- **Ideation pass (backlog was thin):** added IDEAS Batch 7 and promoted 3 safe
+  P3 items (add-to-calendar `.ics`, cleaner bio/rating on the map winner reveal,
+  cleaner earnings period summary).
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** cleaner specialties/tags (batch 6 #1, migration) or add-to-calendar
+  `.ics` (batch 7 #1, code-only).
+
+---
+
 ## 2026-06-30 — Knight firing: "getting ready" pre-arrival card
 
 - **Shipped item (IDEAS batch 6 #2, code-only, no migration):** a "Getting ready
