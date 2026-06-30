@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { sendMessage } from "./message-actions";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, Flag } from "lucide-react";
 
 type Message = {
   id: string;
@@ -28,6 +28,7 @@ export default function MessagePanel({
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   // Time formatting is locale/timezone-dependent (server vs browser) — render it
   // only after mount so the first client render matches the server (no hydration
   // mismatch).
@@ -87,6 +88,21 @@ export default function MessagePanel({
       supabase.removeChannel(channel);
     };
   }, [bookingId]);
+
+  async function handleReport(messageId: string) {
+    if (reportedIds.has(messageId)) return;
+    if (!window.confirm("Report this message to our team for review?")) return;
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc("report_message", {
+      p_message_id: messageId,
+      p_reason: null,
+    });
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    setReportedIds((prev) => new Set(prev).add(messageId));
+  }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -149,6 +165,17 @@ export default function MessagePanel({
               >
                 {msg.body}
               </div>
+              {!isOwn && (
+                <button
+                  type="button"
+                  onClick={() => handleReport(msg.id)}
+                  disabled={reportedIds.has(msg.id)}
+                  className="inline-flex items-center gap-1 px-1 text-[11px] text-slate-400 transition hover:text-red-500 disabled:cursor-default disabled:text-slate-300"
+                >
+                  <Flag className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
+                  {reportedIds.has(msg.id) ? "Reported" : "Report"}
+                </button>
+              )}
             </div>
           );
         })}

@@ -5,6 +5,48 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — 📊 Milestone summary (16 Knight items shipped; 8 since the last)
+
+Since the last milestone (item 8), shipped + verified + pushed to
+`origin/dustbusters-autonomous`:
+9. `591dce7` — Terms + Privacy pages
+10. `6081cbb` — a11y: live status region + nav icons
+11. `2aa78f9` — deposit_deadline auto-expiry (migration 0029)
+12. `db34579` — transactional email/SMS channel abstraction
+13. `5aad219` — LocalBusiness JSON-LD + ideation/plan hygiene
+14. `8ab0026` — cleaner earnings CSV export
+15. `0f46158` — admin bookings date-range filter
+16. `(this)` — chat message report/flag (migration 0030)
+
+Two production migrations applied this stretch (0029 deposit_deadline, 0030
+message_reports), both transactional + verified. Test suite at 20. Backlog is now
+mostly **⛔ founder-only** (Stripe live keys + webhook secret, Vercel deploy,
+email/SMS keys, Stripe Connect payouts, real ID verification) plus constrained/
+larger items (rate limiting needs a shared store; reschedule-before-deposit;
+static-gen needs a split layout). Expect more ideation passes ahead.
+
+---
+
+## 2026-06-30 — Knight iteration: chat message report / abuse flag
+
+- **Item:** trust & safety (IDEAS batch 2). Chat had no moderation path.
+- **Migration 0030** (applied + verified live via pooler): `message_reports` table
+  + unique (message_id, reported_by) + RLS (admin or own reporter can select) +
+  `report_message(message_id, reason)` SECURITY DEFINER RPC that checks the caller
+  is a participant of the message's booking before inserting (upsert refreshes a
+  repeat report).
+- **UI:** both chat panels (customer `bookings/[id]/MessagePanel`, cleaner
+  `components/MessagePanel`) now show a per-message "Report" flag on incoming
+  messages (confirm dialog, calls the RPC, marks "Reported"; fail-safe — chat is
+  unaffected on error). New admin `/admin/reports` page lists open reports (message
+  body, reporter, booking link, reason) with Mark reviewed / Dismiss actions
+  (service-role); added a "Reports" nav card on the admin dashboard.
+- **Verify:** migration verified live; `tsc` clean · `next build` green
+  (`/admin/reports` compiled) · `npm test` 20/20.
+- **Next up:** mostly founder-blocked / larger items — likely an ideation pass.
+
+---
+
 ## 2026-06-30 — Knight iteration: admin bookings date-range filter
 
 - **Item:** P3 (IDEAS batch 2). The admin bookings list only filtered by area +

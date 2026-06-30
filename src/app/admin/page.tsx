@@ -11,6 +11,7 @@ import {
   Settings,
   DollarSign,
   ShieldCheck,
+  Flag,
 } from "lucide-react";
 
 export default async function AdminHomePage() {
@@ -98,6 +99,7 @@ export default async function AdminHomePage() {
     { href: "/admin/customers", label: "Customers", icon: Users, desc: "View customer accounts" },
     { href: "/admin/cleaners", label: "Cleaners", icon: Sparkles, desc: "Manage cleaner roster" },
     { href: "/admin/disputes", label: "Disputes", icon: AlertTriangle, desc: "Resolve open disputes" },
+    { href: "/admin/reports", label: "Reports", icon: Flag, desc: "Flagged chat messages" },
     { href: "/admin/settings", label: "Settings", icon: Settings, desc: "App configuration" },
   ];
 
@@ -191,7 +193,7 @@ export default async function AdminHomePage() {
       {/* Nav Cards */}
       <div>
         <h2 className="eyebrow-label mb-3">Manage</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {navCards.map(({ href, label, icon: Icon, desc }) => (
             <Link
               key={href}
