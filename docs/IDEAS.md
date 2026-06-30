@@ -9,6 +9,24 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 15 — ideation (2026-06-30, post-revenue-trio refresh)
+
+> The growth/revenue trio (recurring · referral · add-ons) + their admin tooling +
+> a dashboard trend are all shipped. Remaining safe items are small completeness
+> polish; the big remaining value is founder-tied.
+
+1. **Add-on line items on the printable receipt** · *value:* itemized record ·
+   *small* · the total already includes them.
+2. **Add-ons on recurring series** · *value:* recurring deep-clean (extras every
+   visit) · *medium* · store on recurring_series + pass through generation.
+3. **Cleaner weekly calendar view** of upcoming jobs · *value:* plan the week ·
+   *small–medium*.
+4. **Before/after photos** · *large, founder-tied* (upload smoke-test).
+5. **Referral credit / wallet** · *large, founder-tied* (money model).
+
+> Promoted to AUTONOMOUS-PLAN.md: #1 receipt add-on lines, #2 recurring add-ons.
+> #3 calendar left; #4/#5 founder-tied.
+
 ## Batch 14 — ideation (2026-06-30, post-growth-features refresh)
 
 1. **Service add-ons / paid extras** · *value:* upsell → higher AOV (inside

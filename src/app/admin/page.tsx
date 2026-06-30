@@ -28,10 +28,10 @@ export default async function AdminHomePage() {
     .from("bookings")
     .select("id", { count: "exact", head: true });
 
-  // 2. Bookings by status
+  // 2. Bookings by status (+ created_at for the weekly trend below)
   const { data: allBookings } = await supabase
     .from("bookings")
-    .select("status");
+    .select("status, created_at");
   const statusCounts: Record<string, number> = {};
   for (const b of allBookings ?? []) {
     statusCounts[b.status] = (statusCounts[b.status] ?? 0) + 1;
@@ -78,6 +78,36 @@ export default async function AdminHomePage() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+
+  // Weekly trend (last 8 rolling 7-day windows): bookings created + revenue paid.
+  const WEEKS = 8;
+  const WEEK_MS = 7 * 86_400_000;
+  const nowMs = Date.now();
+  const bookingsByWeek = new Array(WEEKS).fill(0);
+  const revenueByWeek = new Array(WEEKS).fill(0);
+  for (const b of allBookings ?? []) {
+    if (!b.created_at) continue;
+    const w = Math.floor((nowMs - new Date(b.created_at).getTime()) / WEEK_MS);
+    if (w >= 0 && w < WEEKS) bookingsByWeek[WEEKS - 1 - w] += 1;
+  }
+  for (const p of paidPayments ?? []) {
+    if (!p.paid_at) continue;
+    const w = Math.floor((nowMs - new Date(p.paid_at).getTime()) / WEEK_MS);
+    if (w >= 0 && w < WEEKS) revenueByWeek[WEEKS - 1 - w] += Number(p.amount ?? 0);
+  }
+  const maxBookings = Math.max(1, ...bookingsByWeek);
+  const trend = bookingsByWeek.map((count, i) => ({
+    count,
+    revenue: revenueByWeek[i],
+    // window-end date for the bar label
+    label: new Date(nowMs - (WEEKS - 1 - i) * WEEK_MS).toLocaleDateString(
+      "en-CA",
+      { month: "numeric", day: "numeric" },
+    ),
+    barPx: Math.max(4, Math.round((count / maxBookings) * 96)),
+  }));
+  const trendBookings = bookingsByWeek.reduce((s, n) => s + n, 0);
+  const trendRevenue = revenueByWeek.reduce((s, n) => s + n, 0);
 
   // 4. Active cleaners: profiles with role='cleaner' joined cleaner_details where active=true
   const { count: activeCleaners } = await supabase
@@ -225,6 +255,36 @@ export default async function AdminHomePage() {
           ))}
         </div>
       </div>
+
+      {/* Weekly trend */}
+      <section className="card space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="section-title">Last 8 weeks</h2>
+          <span className="text-sm text-slate-500">
+            {trendBookings} booking{trendBookings === 1 ? "" : "s"} · $
+            {money(trendRevenue)}
+          </span>
+        </div>
+        <div className="flex items-end gap-2" style={{ height: "120px" }}>
+          {trend.map((t, i) => (
+            <div
+              key={i}
+              className="flex flex-1 flex-col items-center justify-end gap-1"
+              title={`${t.count} booking${t.count === 1 ? "" : "s"} · $${money(t.revenue)}`}
+            >
+              <span className="text-xs font-medium text-slate-500">{t.count}</span>
+              <div
+                className="w-full rounded-t bg-emerald-400"
+                style={{ height: `${t.barPx}px` }}
+              />
+              <span className="text-[0.65rem] text-slate-400">{t.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="form-hint">
+          Bookings created per week (hover a bar for its revenue).
+        </p>
+      </section>
 
       {/* Recent Bookings + Booking Status Breakdown */}
       <div className="grid gap-6 lg:grid-cols-3">

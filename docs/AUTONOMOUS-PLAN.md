@@ -216,8 +216,16 @@ payment_type); `bookings` has NO `updated_at`.
   inputs + friendly duplicate banner; dashboard nav card added. The paid-extras
   menu is now fully self-serve. ✅ tsc + build (route compiled) + tests green.
   (`admin/addons/{page,actions}.tsx`, `admin/page.tsx`)
-- [ ] **Admin bookings/revenue trend** (IDEAS batch 14) — a simple weekly
-  bookings + revenue mini-chart on the dashboard. Read-only, verifiable.
+- [x] **Admin bookings/revenue trend** (IDEAS batch 14) → a "Last 8 weeks" mini bar
+  chart on the admin dashboard — bookings created per rolling 7-day window (bars,
+  CSS only, no lib), each bar's revenue on hover, with an 8-week total header.
+  Reuses the existing payments/bookings fetches (added `created_at`). Read-only.
+  ✅ tsc + build + tests green. (`admin/page.tsx`)
+- [ ] **Add-on line items on the printable receipt** (IDEAS batch 15) — list each
+  paid add-on on `/bookings/[id]/receipt` (the total already includes them). Small.
+- [ ] **Add-ons on recurring series** (IDEAS batch 15) — let a recurring plan carry
+  add-ons applied to every occurrence (store on `recurring_series`, pass through
+  generation). Medium, money-path (verifiable).
 - [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`
   (APPLIED + verified live): `skip_next_occurrence(series)` cancels the upcoming
   not-yet-committed booking (offers cleared; no deposit = no refund) and advances

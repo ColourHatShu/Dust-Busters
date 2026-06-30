@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: admin bookings/revenue trend
+
+- **Shipped item (IDEAS batch 14 #2, code-only, no migration):** a "Last 8 weeks"
+  mini bar chart on the admin dashboard — bookings created per rolling 7-day window
+  (CSS bars, no chart lib), each bar's revenue on hover, with an 8-week total
+  header. Reuses the existing payments + bookings fetches (added `created_at` to
+  the bookings select). Read-only ops trend visibility ("are we growing?").
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Ideation pass:** IDEAS Batch 15 — promoted receipt add-on line items +
+  add-ons-on-recurring. Noted the growth/revenue trio + tooling are complete; the
+  remaining big value is founder-tied (photos upload smoke-test; referral credit).
+- **Next up:** add-on line items on the receipt (small).
+
+---
+
 ## 2026-06-30 — Knight firing: admin add-ons CRUD
 
 - **Shipped item (0042 follow-up, code-only, no migration):** `/admin/addons` — the
