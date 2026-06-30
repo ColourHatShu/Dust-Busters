@@ -9,6 +9,24 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 10 — ideation (2026-06-30, plan-backlog refresh)
+
+> Note: the safe, non-founder code-only well is getting shallow — most remaining
+> big value is founder-gated (referral/discount + tips need money plumbing,
+> recurring bookings is large, before/after photos needs Storage, email/SMS needs
+> keys). These are solid smaller wins:
+
+1. **Admin bookings search by customer/cleaner name** (today: area/status/date) ·
+   *value:* ops find a booking fast · *small*.
+2. **Printable receipt view** `/bookings/[id]/receipt` (itemized, save-as-PDF via
+   the browser) · *value:* customers expense/keep a record · *small–medium*.
+3. **Bio/rating/specialties on the live-map winner reveal** · *small–medium*
+   (already queued batch 7 #2).
+4. **Admin roster: areas + specialties columns** on the cleaners table · *small*.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 admin booking name search, #2 printable
+> receipt. #3 already queued; #4 left.
+
 ## Batch 9 — ideation (2026-06-30, plan-backlog refresh)
 
 1. **"Book" button on each favorite + `/book?cleaner=` prefill** · *value:*

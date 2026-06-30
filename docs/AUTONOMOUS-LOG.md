@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner profile preview ("how customers see you")
+
+- **Shipped item (IDEAS batch 9 #2, code-only, no migration):** a read-only
+  preview card on the cleaner profile sidebar that mirrors the customer-facing
+  booking card — avatar, name, ID-verified badge, jobs + rating (from
+  `get_cleaner_card`), plus the saved bio + specialty chips, with a prompt when
+  empty. Lets cleaners see exactly how they present and motivates polishing it.
+- **Ideation pass (backlog thin):** IDEAS Batch 10; promoted 2 safe P3 items
+  (admin booking name search, printable receipt view). Noted the safe code-only
+  well is getting shallow — bigger remaining value is founder-gated.
+- **Verify:** `tsc` clean · `vitest` 44 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** admin bookings name search (batch 10 #1) or printable receipt
+  (batch 10 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: book-a-favorite (one-tap rebook)
 
 - **Shipped item (IDEAS batch 9 #1, code-only, no migration):** each favorite on

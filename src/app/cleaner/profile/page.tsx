@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
-import { SPECIALTIES } from "@/lib/specialties";
+import { SPECIALTIES, specialtyLabels } from "@/lib/specialties";
 import { updateCleanerProfile } from "./actions";
 import {
   User,
@@ -15,6 +15,8 @@ import {
   FileText,
   Gauge,
   Award,
+  Eye,
+  Star,
 } from "lucide-react";
 
 export default async function CleanerProfilePage() {
@@ -55,6 +57,19 @@ export default async function CleanerProfilePage() {
   const completePct = Math.round(
     (completeness.filter((c) => c.done).length / completeness.length) * 100,
   );
+
+  // The exact public card a customer sees (name, verified, jobs, rating) — so the
+  // cleaner can preview "how customers see you".
+  const { data: cardData } = await supabase.rpc("get_cleaner_card", {
+    p_cleaner: user.id,
+  });
+  const card = (Array.isArray(cardData) ? cardData[0] : cardData) as {
+    name: string | null;
+    id_verified: boolean | null;
+    jobs_completed: number | null;
+    avg_rating: number | null;
+  } | null;
+  const specialtyChips = specialtyLabels(specialties);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -208,6 +223,62 @@ export default async function CleanerProfilePage() {
               <p className="flex items-center gap-1.5 text-sm text-emerald-700">
                 <CheckCircle className="h-4 w-4" strokeWidth={1.75} />
                 Your profile looks great — customers see a complete picture.
+              </p>
+            )}
+          </div>
+
+          {/* How customers see you — mirrors the booking cleaner card */}
+          <div className="card space-y-4">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+              <h2 className="section-title">How customers see you</h2>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="avatar h-14 w-14 text-lg" aria-hidden="true">
+                {(card?.name ?? fullProfile?.name ?? "")
+                  .charAt(0)
+                  .toUpperCase() || "C"}
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-900">
+                  {card?.name ?? fullProfile?.name ?? "Your name"}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  {card?.id_verified && (
+                    <span className="badge badge-success">
+                      <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                      ID-verified
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1 text-sm text-slate-600">
+                    <Star className="h-4 w-4 text-accent" strokeWidth={1.75} />
+                    {card?.jobs_completed ?? 0} jobs
+                  </span>
+                  {card?.avg_rating != null && (
+                    <span className="flex items-center gap-1 text-sm text-slate-600">
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      {card.avg_rating}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {bio && (
+              <p className="whitespace-pre-wrap text-sm text-slate-600">{bio}</p>
+            )}
+            {specialtyChips.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {specialtyChips.map((l) => (
+                  <span key={l} className="badge badge-neutral">
+                    {l}
+                  </span>
+                ))}
+              </div>
+            )}
+            {!bio && specialtyChips.length === 0 && (
+              <p className="form-hint">
+                Add an &ldquo;About me&rdquo; and specialties so customers get to
+                know you before they book.
               </p>
             )}
           </div>
