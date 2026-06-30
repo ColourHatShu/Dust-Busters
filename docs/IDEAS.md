@@ -9,6 +9,31 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 5 — ideation (2026-06-30, plan-backlog refresh)
+
+The plan's `[ ]` list ran thin (rate-limiting + founder/constrained items), so this
+pass promotes safe, non-founder ideas into `AUTONOMOUS-PLAN.md` to keep the loop fed.
+
+1. **Cleaner-side deposit-deadline visibility** on accepted (awaiting-deposit)
+   jobs · *value:* the cleaner holds the slot but couldn't see when it frees ·
+   *small* · why: mirrors the customer-side 0029 deadline. → **SHIPPED this firing.**
+2. **Reschedule / rebroadcast respect `cleaner_time_off`** · *value:* finishes the
+   0033 time-off feature so a cleaner isn't rung for a blocked date on a *new*
+   date either · *small–medium* · why: closes the logged 0033 follow-up.
+3. **Demand / coverage indicator for cleaners** ("N requests in your areas in the
+   last 7 days; you accepted M") · *value:* pulls supply toward demand, motivates
+   staying online · *small* · read-only aggregation, no schema change.
+4. **Deposit/balance split bar** on the customer booking page (visual % like the
+   landing pricing) · *value:* clearer money breakdown · *trivial–small*.
+5. **Saved-address picker reused on the reschedule form** · *value:* faster, fewer
+   typos · *small* · why: the `<datalist>` already exists for /book.
+6. **Cleaner weekly recurring availability** (work days/hours) beyond time-off ·
+   *value:* only ring genuinely-free cleaners · *medium* (DST-aware day/time in SQL).
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #2 time-off on reschedule/rebroadcast, #3
+> demand indicator, #4 deposit/balance split bar, #5 saved-address on reschedule.
+> #1 shipped this firing; #6 (weekly schedule) left in the ledger (larger).
+
 ## Batch 4 — ideation (2026-06-30, backlog refresh)
 
 1. **Deposit-deadline urgency on the booking detail** · *value:* customers see

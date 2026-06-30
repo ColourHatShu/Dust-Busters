@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner-side deposit-deadline visibility
+
+- **Backlog was thin** (plan `[ ]` list = rate-limiting + founder/constrained), so
+  ran an **ideation pass first**: added IDEAS.md Batch 5 and promoted 4 safe items
+  into the plan (time-off on reschedule/rebroadcast, demand indicator, deposit/
+  balance split bar, saved-address on reschedule).
+- **Shipped item (IDEAS batch 5 #1, display-only, no migration):** when a cleaner
+  has won a job but the customer hasn't paid yet (status `accepted`), they now see
+  "Awaiting the customer's deposit — they must confirm by <Pacific date/time> or
+  this slot is released" on **both** `/cleaner/jobs` (job card) and the job-detail
+  customer card. Mirrors the customer-side 0029 deadline so the cleaner knows when
+  a held slot may free up (falls back to a generic line if no deadline is set).
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed to `origin/dustbusters-autonomous`.
+- **Next up:** time-off on reschedule/rebroadcast (0033 follow-up) or the demand
+  indicator.
+
+---
+
 ## 2026-06-30 — Feature: PWA installability (Add to Home Screen)
 
 - **Item:** IDEAS batch 1 #6 (install half) — a mobile-first marketplace should be

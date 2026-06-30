@@ -58,7 +58,7 @@ export default async function CleanerJobDetailPage({
     .from("bookings")
     .select(
       `id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount,
-       cleaner_id, customer_id, notes, checklist,
+       cleaner_id, customer_id, notes, checklist, deposit_deadline,
        profiles!bookings_customer_id_fkey(name),
        booking_addresses(full_address)`
     )
@@ -266,6 +266,34 @@ export default async function CleanerJobDetailPage({
                 <Lock className="h-4 w-4" strokeWidth={1.5} />
                 <span>
                   Full address revealed once the customer pays the deposit
+                </span>
+              </div>
+            )}
+            {booking.status === "accepted" && (
+              <div className="alert alert-warning">
+                <Clock className="h-4 w-4" strokeWidth={1.5} />
+                <span>
+                  {booking.deposit_deadline ? (
+                    <>
+                      Awaiting the customer&apos;s deposit — they must confirm by{" "}
+                      <strong>
+                        {new Date(booking.deposit_deadline).toLocaleString(
+                          "en-CA",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            timeZone: "America/Vancouver",
+                          },
+                        )}
+                      </strong>{" "}
+                      or this slot is released.
+                    </>
+                  ) : (
+                    <>Awaiting the customer&apos;s deposit to confirm this booking.</>
+                  )}
                 </span>
               </div>
             )}

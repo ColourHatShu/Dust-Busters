@@ -134,7 +134,7 @@ export default async function CleanerJobsPage({
   const { data: myJobsRaw } = await supabase
     .from("bookings")
     .select(
-      `id, status, scheduled_at, hours, area, total_amount, deposit_amount,
+      `id, status, scheduled_at, hours, area, total_amount, deposit_amount, deposit_deadline,
        customer_id,
        profiles!bookings_customer_id_fkey(name),
        booking_addresses(full_address)`
@@ -158,6 +158,7 @@ export default async function CleanerJobsPage({
     area: string;
     total_amount: number;
     deposit_amount: number;
+    deposit_deadline: string | null;
     customer_id: string;
     customerName: string;
     address: string | null;
@@ -176,6 +177,7 @@ export default async function CleanerJobsPage({
       area: b.area,
       total_amount: b.total_amount,
       deposit_amount: b.deposit_amount,
+      deposit_deadline: b.deposit_deadline ?? null,
       customer_id: b.customer_id,
       customerName:
         (profileData as { name: string } | null)?.name ?? "Customer",
@@ -522,6 +524,40 @@ export default async function CleanerJobsPage({
                             <div className="alert alert-success">
                               <Home className="h-4 w-4" strokeWidth={1.5} />
                               <span>{b.address}</span>
+                            </div>
+                          )}
+
+                          {/* Awaiting the customer's deposit — the slot is held
+                              until the deadline, then auto-released (0029). */}
+                          {b.status === "accepted" && (
+                            <div className="alert alert-warning">
+                              <Clock className="h-4 w-4" strokeWidth={1.5} />
+                              <span>
+                                {b.deposit_deadline ? (
+                                  <>
+                                    Awaiting the customer&apos;s deposit — they
+                                    must confirm by{" "}
+                                    <strong>
+                                      {new Date(
+                                        b.deposit_deadline,
+                                      ).toLocaleString("en-CA", {
+                                        weekday: "short",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        timeZone: "America/Vancouver",
+                                      })}
+                                    </strong>{" "}
+                                    or this slot is released.
+                                  </>
+                                ) : (
+                                  <>
+                                    Awaiting the customer&apos;s deposit to
+                                    confirm this booking.
+                                  </>
+                                )}
+                              </span>
                             </div>
                           )}
 
