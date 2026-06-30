@@ -187,9 +187,12 @@ payment_type); `bookings` has NO `updated_at`.
   the browser upload flow can't be verified from here and it handles privacy-
   sensitive home photos with path-scoped storage RLS — best built when the founder
   can smoke-test the upload (or build defensively + flag for a founder smoke-test).
-- [ ] **Cleaner "on my way / running late" status** (IDEAS batch 13) — a one-tap
-  status on a deposit_paid/in_progress job that notifies the customer (reuses
-  notifications). Verifiable, real day-of value.
+- [x] **Cleaner "on my way / running late" status** (IDEAS batch 13) → an "Update
+  the customer" card on the cleaner job page (deposit_paid/in_progress) with two
+  one-tap buttons that send the customer an in-app notification ("on the way" /
+  "running ~15 min late") via the service-role `createNotification` (re-checks
+  cleaner ownership + status; new `cleaner_update` type, in-app only). Reduces
+  day-of anxiety/no-access. ✅ tsc + build + tests green. (`cleaner/jobs/[id]/arrival-actions.ts`, `cleaner/jobs/[id]/page.tsx`)
 - [ ] **Skip the next recurring visit** (IDEAS batch 13) — beyond pause: drop just
   the next occurrence (cancel the upcoming pre-deposit booking + advance `next_at`
   one period) via an RPC. Verifiable in a rolled-back txn.

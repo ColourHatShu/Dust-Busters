@@ -5,6 +5,41 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 📊 Milestone summary — 2026-06-30 (run total ~31 items)
+
+Branch `dustbusters-autonomous`; DB at migration **0040**; tests **62** (4→62 this
+run). Two flagship growth features shipped this stretch + supporting work:
+
+- **Growth / big features:** recurring bookings (`0039`, lazy cron-free generation
+  + pause/resume/remove lifecycle), referral / first-clean discount (`0040`,
+  platform-absorbs, money math functionally tested) + promo-code admin UI.
+- **Marketplace depth (earlier this run):** cleaning checklist, cleaner time-off +
+  weekly work-days (all 3 dispatch paths), bio + specialties (everywhere), PWA.
+- **UX/perf/a11y:** map coverage-ring + auto-fit, deposit/balance bar, add-to-
+  calendar, printable receipt, "getting ready" card, jobs/booking read
+  parallelization, aria-live job feed, cleaner "on my way / late" status.
+- **⛔ Needs the founder (unchanged, highest leverage):** Stripe webhook secret +
+  live keys, Vercel deploy, email/SMS keys, Stripe Connect, ID verification.
+- **Queued (verifiable):** skip-next-recurring; admin promo usage report. **Wants a
+  founder smoke-test:** before/after photos (Storage; browser upload not headlessly
+  verifiable).
+
+---
+
+## 2026-06-30 — Knight firing: cleaner "on my way / running late" status
+
+- **Shipped item (IDEAS batch 13 #1, code-only, no migration):** an "Update the
+  customer" card on the cleaner job page (deposit_paid/in_progress) with two
+  one-tap buttons — **On my way** / **Running ~15 min late** — that send the
+  customer an in-app notification via the service-role `createNotification` (new
+  `cleaner_update` type, in-app only). The action re-checks the cleaner owns the
+  job + the status before sending. Reduces day-of customer anxiety / no-access.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** skip-next-recurring (verifiable) or the admin promo-usage report.
+
+---
+
 ## 2026-06-30 — Knight firing: recurring plan lifecycle (pause/resume/remove)
 
 - **Product-owner call:** the next listed P-MAJOR was before/after photos, but its

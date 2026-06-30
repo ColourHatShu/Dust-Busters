@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { startJob, completeJob } from "../../actions";
 import { reportProblem } from "./report-actions";
+import { sendArrivalStatus } from "./arrival-actions";
 import { submitCustomerReview } from "./customer-review-actions";
 import StarRating from "@/app/bookings/[id]/review/StarRating";
 import MessagePanel from "@/components/MessagePanel";
@@ -44,10 +45,14 @@ export default async function CleanerJobDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ reported?: string; reportError?: string }>;
+  searchParams: Promise<{
+    reported?: string;
+    reportError?: string;
+    statusSent?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { reported, reportError } = await searchParams;
+  const { reported, reportError, statusSent } = await searchParams;
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "cleaner") redirect("/cleaner/onboard");
@@ -350,6 +355,36 @@ export default async function CleanerJobDetailPage({
                   </button>
                 </form>
               )}
+            </div>
+          )}
+
+          {/* Quick arrival status → customer notification */}
+          {(showStart || showComplete) && (
+            <div className="card space-y-3">
+              <h2 className="section-title">Update the customer</h2>
+              {statusSent === "1" && (
+                <div className="alert alert-success">
+                  <CheckCircle className="h-4 w-4" strokeWidth={1.5} />
+                  <span>Heads-up sent to the customer.</span>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <form action={sendArrivalStatus.bind(null, id, "on_my_way")}>
+                  <button className="btn-base btn-secondary text-sm">
+                    <Navigation className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                    On my way
+                  </button>
+                </form>
+                <form action={sendArrivalStatus.bind(null, id, "late")}>
+                  <button className="btn-base btn-secondary text-sm">
+                    <Clock className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                    Running ~15 min late
+                  </button>
+                </form>
+              </div>
+              <p className="form-hint">
+                Sends the customer a quick heads-up in the app.
+              </p>
             </div>
           )}
 
