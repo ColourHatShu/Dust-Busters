@@ -5,6 +5,28 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Map improvements (live cleaner map)
+
+- **Context:** founder asked to "see how to improve the maps as well." Assessed the
+  Uber-style `MatchingMap` (dark CARTO tiles, fuzzed pins, radar sweep, SVG
+  fallback) and shipped the highest-impact, safe upgrades:
+  - **Coverage ring:** a translucent emerald `Circle` (~2.2 km) around the area
+    center so "cleaners near you" reads at a glance.
+  - **Auto-fit framing:** a `FitBounds` helper (`useMap` + `fitBounds`, padding,
+    `maxZoom: 14`) frames the area center + every cleaner pin instead of a fixed
+    zoom — and only re-fits when the *set* of pins changes (a stable signature),
+    so the view doesn't jump on every 2.5s poll.
+  - **a11y:** the map region now has `role="img"` + a descriptive `aria-label`
+    ("Live map showing N cleaners near <area>" / matched / area). (Radar already
+    respects reduced-motion via globals.css.)
+- **Verify:** `tsc` clean · `vitest` 60 green · `next build` compiled. Committed +
+  pushed.
+- **Map shortlist (not yet done):** pan/zoom focus to the winner pin on accept;
+  an on-map "N cleaners nearby" chip; pin clustering if a dense market; live
+  cleaner ETA/approach (needs real location sharing → larger/founder).
+
+---
+
 ## 2026-06-30 — ⭐ FEATURE: Recurring bookings (product-owner pick)
 
 - **Context:** founder said "do what seems fit — the knight has to think like a

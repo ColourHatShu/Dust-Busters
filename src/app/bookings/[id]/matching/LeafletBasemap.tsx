@@ -6,7 +6,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 
 export type Pin = { k: string; lat: number; lng: number; state: string };
 
@@ -25,6 +25,34 @@ const centerIcon = L.divIcon({
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
+
+// Auto-frame the map to fit the area center + every cleaner pin, so nearby
+// cleaners are always in view regardless of how the fuzzed positions spread.
+// Re-fits only when the *set* of pins changes (stable across the 2.5s polls), so
+// the view doesn't jump on every refresh.
+function FitBounds({
+  center,
+  pins,
+}: {
+  center: { lat: number; lng: number };
+  pins: Pin[];
+}) {
+  const map = useMap();
+  const sig = pins.map((p) => p.k).sort().join("|");
+  useEffect(() => {
+    const pts: [number, number][] = [
+      [center.lat, center.lng],
+      ...pins.map((p) => [p.lat, p.lng] as [number, number]),
+    ];
+    if (pts.length <= 1) {
+      map.setView([center.lat, center.lng], 13);
+      return;
+    }
+    map.fitBounds(L.latLngBounds(pts), { padding: [44, 44], maxZoom: 14 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, sig, center.lat, center.lng]);
+  return null;
+}
 
 export default function LeafletBasemap({
   center,
@@ -69,10 +97,24 @@ export default function LeafletBasemap({
           },
         }}
       />
+      {/* Coverage ring around the customer's area — makes "cleaners near you"
+          read at a glance (positions are fuzzed within the service area). */}
+      <Circle
+        center={[center.lat, center.lng]}
+        radius={2200}
+        pathOptions={{
+          color: "#10b981",
+          weight: 1,
+          opacity: 0.5,
+          fillColor: "#10b981",
+          fillOpacity: 0.06,
+        }}
+      />
       <Marker position={[center.lat, center.lng]} icon={centerIcon} />
       {pins.map((p) => (
         <Marker key={p.k} position={[p.lat, p.lng]} icon={pinIcon(p.state)} />
       ))}
+      <FitBounds center={center} pins={pins} />
     </MapContainer>
   );
 }

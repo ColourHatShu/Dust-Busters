@@ -128,7 +128,17 @@ export default function MatchingMap({
       </div>
 
       {/* Map */}
-      <div className="matching-wrap">
+      <div
+        className="matching-wrap"
+        role="img"
+        aria-label={
+          broadcasting
+            ? `Live map showing ${data.notified} cleaner${data.notified === 1 ? "" : "s"} near ${data.area}`
+            : accepted
+              ? `Map showing your matched cleaner near ${data.area}`
+              : `Map of ${data.area}`
+        }
+      >
         {tilesFailed ? (
           <SvgBasemap center={data.center} pins={data.pins} />
         ) : (
