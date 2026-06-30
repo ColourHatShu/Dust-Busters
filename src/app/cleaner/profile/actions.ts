@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeSpecialties } from "@/lib/specialties";
+import { sanitizeWorkDays } from "@/lib/weekdays";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -29,6 +30,8 @@ export async function updateCleanerProfile(formData: FormData) {
   const specialties = sanitizeSpecialties(
     formData.getAll("specialties").map(String),
   );
+  // Work days — valid DOW values (0–6); empty = available any day.
+  const workDays = sanitizeWorkDays(formData.getAll("work_days").map(String));
 
   // Update profile name + phone
   const { error: profileError } = await supabase
@@ -45,6 +48,7 @@ export async function updateCleanerProfile(formData: FormData) {
       areas_served: areasRaw,
       bio: bio || null,
       specialties: specialties.length ? specialties : null,
+      work_days: workDays.length ? workDays : null,
     })
     .eq("profile_id", user.id);
 

@@ -5,6 +5,29 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner weekly recurring availability
+
+- **Shipped item (the "ambitious-but-grounded" pick as the safe well thinned):**
+  migration **`0037`** adds `cleaner_details.work_days int[]` (Postgres DOW 0–6)
+  and recreates `request_booking` to also skip a cleaner whose `work_days` don't
+  include the booking's **Pacific** weekday — both match branches, preserving the
+  0033 checklist + time-off logic. New `src/lib/weekdays.ts` (taxonomy +
+  `sanitizeWorkDays`/`workDayLabels`, +6 tests). Cleaners pick days as
+  checkbox-cards on their profile; NULL/empty = available any day (backward
+  compatible). The recurring complement to one-off time-off — improves match
+  quality + cuts wasted offers.
+- **Verify:** applied via the pooler in a transaction; confirmed the column,
+  single `request_booking` signature, all three filters present (work_days +
+  time_off + checklist), eligibility unchanged (3 Courtenay cleaners, no
+  work_days). `tsc` clean · `vitest` **49 → 55** · `next build` compiled.
+- **Also:** deferred the map-winner-reveal trust item (`[~]`) — redundant with the
+  static "About" card + would need a privacy-surface change to `get_booking_matching`.
+- **Next up:** work-days on reschedule/rebroadcast (0034-style follow-up). The
+  safe, non-founder code-only backlog is now genuinely shallow — remaining value
+  is founder-gated or larger (recurring bookings, referral/discount).
+
+---
+
 ## 2026-06-30 — Knight firing: printable receipt view
 
 - **Shipped item (IDEAS batch 10 #2, code-only, no migration):** `/bookings/[id]/receipt`

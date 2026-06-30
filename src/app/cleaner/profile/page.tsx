@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS } from "@/lib/areas";
 import { SPECIALTIES, specialtyLabels } from "@/lib/specialties";
+import { WEEKDAYS } from "@/lib/weekdays";
 import { updateCleanerProfile } from "./actions";
 import {
   User,
@@ -17,6 +18,7 @@ import {
   Award,
   Eye,
   Star,
+  CalendarDays,
 } from "lucide-react";
 
 export default async function CleanerProfilePage() {
@@ -36,12 +38,15 @@ export default async function CleanerProfilePage() {
   // Fetch cleaner_details
   const { data: details } = await supabase
     .from("cleaner_details")
-    .select("areas_served, id_verified, active, availability_note, bio, specialties")
+    .select(
+      "areas_served, id_verified, active, availability_note, bio, specialties, work_days",
+    )
     .eq("profile_id", user.id)
     .single();
 
   const areasServed: string[] = details?.areas_served ?? [];
   const specialties: string[] = details?.specialties ?? [];
+  const workDays: number[] = details?.work_days ?? [];
   const isVerified = details?.id_verified ?? false;
   const isActive = details?.active ?? false;
   const availabilityNote = details?.availability_note ?? "";
@@ -157,6 +162,31 @@ export default async function CleanerProfilePage() {
                   </label>
                 ))}
               </div>
+            </fieldset>
+
+            {/* Days you work — recurring weekly availability */}
+            <fieldset className="flex flex-col gap-2">
+              <legend className="form-label">
+                <CalendarDays className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                Days you work
+              </legend>
+              <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-3">
+                {WEEKDAYS.map((d) => (
+                  <label key={d.value} className="checkbox-card">
+                    <input
+                      type="checkbox"
+                      name="work_days"
+                      value={d.value}
+                      defaultChecked={workDays.includes(d.value)}
+                    />
+                    <span>{d.long}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="form-hint">
+                Leave all unchecked if you&apos;re available any day — we&apos;ll
+                only send you jobs on the days you select.
+              </p>
             </fieldset>
 
             {/* About me — shown to customers on the booking cleaner card */}

@@ -96,6 +96,9 @@ Backlog thin again after batch 5 shipped out. Fresh, de-duped ideas:
 6. **Customer in-app notification preferences** (mute types) · *value:* control ·
    *medium* · why: ties into the messaging channel once founder keys are added.
 
+> 2026-06-30 update: #5 **cleaner weekly recurring availability** SHIPPED
+> (migration 0037 + `lib/weekdays.ts`; "Days you work" picker + dispatch filter).
+
 > Promoted to AUTONOMOUS-PLAN.md (P3): #1 specialties/tags, #2 what-to-expect card,
 > #3 customer rating on the offer card, #4 onboarding completeness meter.
 > #5 recurring bookings + #6 notif prefs left in the ledger (larger/founder-tied).
