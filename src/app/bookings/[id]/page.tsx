@@ -32,6 +32,7 @@ import {
   CalendarClock,
   Sparkles,
   ListChecks,
+  CalendarPlus,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -317,6 +318,15 @@ export default async function BookingStatusPage({
                   {address.full_address}
                 </span>
               </div>
+            )}
+            {showPrep && (
+              <a
+                href={`/bookings/${id}/calendar`}
+                className="link-accent mt-3 inline-flex items-center gap-1.5 text-sm font-medium"
+              >
+                <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Add to calendar
+              </a>
             )}
           </div>
 

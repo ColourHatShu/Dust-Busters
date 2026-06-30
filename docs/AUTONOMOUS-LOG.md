@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: add-to-calendar (.ics)
+
+- **Shipped item (IDEAS batch 7 #1, code-only, no migration):** a new
+  `GET /bookings/[id]/calendar` route streams an RFC-5545 `.ics` for the
+  appointment (escaped text fields, UTC timestamps, DTEND = start + hours,
+  location = the address when RLS lets the caller read it else the area, plus a
+  link back). RLS-aware — only the booking's customer or assigned cleaner can
+  download it. "Add to calendar" links added to the customer booking page and the
+  cleaner job page (shown for `accepted`/`deposit_paid`/`in_progress`). Reduces
+  no-shows on both sides.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled the new
+  `/bookings/[id]/calendar` route. Committed + pushed.
+- **Next up:** cleaner bio/rating on the map winner reveal (batch 7 #2) or cleaner
+  specialties/tags (batch 6 #1, migration).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner onboarding completeness meter
 
 - **Shipped item (IDEAS batch 6 #4, code-only, no migration):** a "Profile

@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Navigation,
   Sparkles,
+  CalendarPlus,
 } from "lucide-react";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import { checklistLabels } from "@/lib/checklist";
@@ -108,6 +109,9 @@ export default async function CleanerJobDetailPage({
 
   const showStart = booking.status === "deposit_paid";
   const showComplete = booking.status === "in_progress";
+  const showCalendar = ["accepted", "deposit_paid", "in_progress"].includes(
+    booking.status,
+  );
 
   // Two-way reviews: once the job is done, the cleaner can rate the customer.
   const REVIEWABLE = new Set(["completed", "balance_paid", "closed"]);
@@ -189,6 +193,16 @@ export default async function CleanerJobDetailPage({
                 ${Number(booking.total_amount).toFixed(2)}
               </span>
             </div>
+
+            {showCalendar && (
+              <a
+                href={`/bookings/${id}/calendar`}
+                className="link-accent mt-3 inline-flex items-center gap-1.5 text-sm font-medium"
+              >
+                <CalendarPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Add to calendar
+              </a>
+            )}
           </div>
 
           {/* Address card (deposit_paid and later) */}
