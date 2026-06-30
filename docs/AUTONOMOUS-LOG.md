@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: demand/activity indicator for cleaners
+
+- **Shipped item (IDEAS batch 5 #3, code-only, no migration):** a "Last 7 days"
+  card on `/cleaner/jobs` showing **Requests / Accepted / Accept-rate** from the
+  cleaner's own `booking_offers` in the trailing 7 days (RLS scopes the table to
+  the cleaner; one offer per eligible booking ≈ requests in their areas). When
+  there were none, it shows a "staying online helps you catch new jobs" nudge —
+  turning the empty state into a supply-side prompt.
+- **Why offers (not all area bookings):** RLS lets a cleaner read only their own
+  offers, so a true market-wide count would need a SECURITY DEFINER RPC; the idea
+  was scoped "no schema change", so this uses the RLS-safe offer history.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** deposit/balance split bar (batch 5 #4), or an ideation pass — the
+  plan's actionable `[ ]` list is getting short again.
+
+---
+
 ## 2026-06-30 — Knight firing: time-off honoured on reschedule + rebroadcast
 
 - **Skipped (logged ⛔ Needs the founder):** the top `[ ]` item, **rate limiting**,

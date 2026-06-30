@@ -30,6 +30,7 @@ import {
   Briefcase,
   CalendarOff,
   X,
+  TrendingUp,
 } from "lucide-react";
 
 const DEPOSIT_PAID_AND_LATER = new Set([
@@ -74,6 +75,22 @@ export default async function CleanerJobsPage({
     .gte("off_date", todayPacific)
     .order("off_date", { ascending: true });
   const upcomingTimeOff = timeOff ?? [];
+
+  // Demand / activity (last 7 days): how many job requests reached this cleaner
+  // in their areas and how many they accepted. RLS scopes booking_offers to the
+  // cleaner, so this is their own offer history (one offer per eligible booking).
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const { data: recentOffers } = await supabase
+    .from("booking_offers")
+    .select("state")
+    .eq("cleaner_id", user.id)
+    .gte("created_at", sevenDaysAgo);
+  const offered7d = recentOffers?.length ?? 0;
+  const accepted7d = (recentOffers ?? []).filter(
+    (o) => o.state === "accepted",
+  ).length;
+  const acceptRate7d =
+    offered7d > 0 ? Math.round((accepted7d / offered7d) * 100) : null;
 
   // Open offers ringing right now
   const { data: offers } = await supabase
@@ -308,6 +325,49 @@ export default async function CleanerJobsPage({
           </div>
         ) : (
           <p className="text-xs text-slate-400">No upcoming time off scheduled.</p>
+        )}
+      </div>
+
+      {/* Demand / activity — job requests in your areas over the last 7 days */}
+      <div className="card card-sm space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <TrendingUp className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-semibold text-slate-900">Last 7 days</p>
+            <p className="text-xs text-slate-500">
+              Job requests in your areas and how you responded.
+            </p>
+          </div>
+        </div>
+
+        {offered7d === 0 ? (
+          <p className="text-xs text-slate-400">
+            No job requests in the last 7 days — staying online helps you catch
+            new jobs as they come in.
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-slate-900">
+                {offered7d}
+              </p>
+              <p className="eyebrow-label mt-0.5">Requests</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-emerald-700">
+                {accepted7d}
+              </p>
+              <p className="eyebrow-label mt-0.5">Accepted</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-slate-900">
+                {acceptRate7d}%
+              </p>
+              <p className="eyebrow-label mt-0.5">Accept rate</p>
+            </div>
+          </div>
         )}
       </div>
 
