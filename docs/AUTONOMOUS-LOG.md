@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: cleaner "Get directions" link
+
+- **Item:** P3 (IDEAS batch 3). Cleaners had the service address but no quick way
+  to navigate to it.
+- **Shipped:** added a "Get directions" link to the job-detail address card — a
+  Google Maps universal link (`maps/search/?api=1&query=<encoded address>`) that
+  opens in a new tab on desktop and the Maps app on mobile. Only renders when the
+  address is revealed (deposit_paid and later), reusing the existing gate.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** admin "this month vs all-time" revenue on the dashboard.
+
+---
+
 ## 2026-06-30 — Knight iteration: admin bookings CSV export + ideation
 
 - **Ideation pass** (safe actionable backlog had thinned to <3): added IDEAS.md

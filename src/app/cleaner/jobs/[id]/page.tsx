@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Star,
   ClipboardList,
+  Navigation,
 } from "lucide-react";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 
@@ -194,6 +195,17 @@ export default async function CleanerJobDetailPage({
               <div>
                 <p className="eyebrow-label">Service address</p>
                 <p className="mt-1 text-slate-900">{address}</p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    address,
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-accent mt-2 inline-flex items-center gap-1 text-sm font-medium"
+                >
+                  <Navigation className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  Get directions
+                </a>
               </div>
             </div>
           )}
