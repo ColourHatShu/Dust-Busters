@@ -170,8 +170,12 @@ payment_type); `bookings` has NO `updated_at`.
   receipt. Seeded `WELCOME15` (15%) + `FIRST20` ($20, first-clean). New
   `lib/promo.ts` (+2 tests, suite 60→62). ✅ tsc + build + tests green.
   (`0040`, `lib/promo.ts`, `book/*`, `bookings/[id]/page.tsx`, `…/receipt/page.tsx`)
-- [ ] **Promo-code admin UI** (follow-up to 0040) — an `/admin/promos` page to
-  create/deactivate codes + see usage (today they're seeded/managed via SQL). Small.
+- [x] **Promo-code admin UI** (follow-up to 0040) → `/admin/promos` — admin page to
+  create codes (code, percent/amount + value, optional max-uses & expiry,
+  first-clean-only), see usage (`used / max`, expiry, status), and activate/
+  deactivate. Server actions via the admin RLS (no service key); validated inputs +
+  friendly duplicate/error banner; dashboard nav card added. ✅ tsc + build (route
+  compiled) + tests green. (`admin/promos/{page,actions}.tsx`, `admin/page.tsx`)
 - [ ] **Before/after photos** (next big P-MAJOR) — cleaner uploads job photos
   (Supabase Storage; bucket + RLS can be created via the pooler) shown to the
   customer as proof. Trust + dispute evidence. Note: upload flow is hard to verify

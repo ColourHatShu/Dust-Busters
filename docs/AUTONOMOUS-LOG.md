@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: promo-code admin UI
+
+- **Shipped item (0040 follow-up, code-only, no migration):** `/admin/promos` —
+  the founder can now create promo codes (code, percent/amount + value, optional
+  max-uses & expiry, first-clean-only), view usage (`used / max`, expiry, active),
+  and activate/deactivate — no more SQL. Server actions go through the admin RLS on
+  `promo_codes` (no service key); inputs validated with a friendly duplicate/error
+  banner; added a "Promo codes" card to the admin dashboard.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled the new
+  `/admin/promos` route. Committed + pushed.
+- **Next up (P-MAJOR):** before/after photos (Supabase Storage) — build defensively
+  since the upload flow can't be browser-verified here.
+
+---
+
 ## 2026-06-30 — ⭐ FEATURE: Referral / first-clean discount (promo codes)
 
 - **The second big growth feature** (after recurring), per the product-owner
