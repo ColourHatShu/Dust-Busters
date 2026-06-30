@@ -11,6 +11,7 @@ import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import { toggleFavorite } from "./favorite-actions";
 import { bookingBadgeClass, bookingStatusLabel, paymentBadgeClass } from "@/lib/status";
 import { checklistLabels } from "@/lib/checklist";
+import { specialtyLabels } from "@/lib/specialties";
 import { STATUS_LABEL } from "@/lib/types";
 import {
   Calendar,
@@ -142,6 +143,7 @@ export default async function BookingStatusPage({
     null;
   let isFavorite = false;
   let cleanerBio: string | null = null;
+  let cleanerSpecialties: string[] = [];
   if (booking.cleaner_id) {
     const { data } = await supabase.rpc("get_cleaner_card", {
       p_cleaner: booking.cleaner_id,
@@ -152,6 +154,11 @@ export default async function BookingStatusPage({
       p_cleaner: booking.cleaner_id,
     });
     cleanerBio = (typeof bio === "string" ? bio : null) || null;
+
+    const { data: specs } = await supabase.rpc("get_cleaner_specialties", {
+      p_cleaner: booking.cleaner_id,
+    });
+    cleanerSpecialties = specialtyLabels(specs as string[] | null);
 
     const { data: fav } = await supabase
       .from("customer_favorites")
@@ -629,15 +636,28 @@ export default async function BookingStatusPage({
             </div>
           )}
 
-          {/* Cleaner "About me" bio */}
-          {cleaner && cleanerBio && (
-            <div className="card">
-              <p className="eyebrow-label">
-                About {cleaner.name?.split(" ")[0] || "your cleaner"}
-              </p>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-600">
-                {cleanerBio}
-              </p>
+          {/* Cleaner "About me" bio + specialties */}
+          {cleaner && (cleanerBio || cleanerSpecialties.length > 0) && (
+            <div className="card space-y-3">
+              <div>
+                <p className="eyebrow-label">
+                  About {cleaner.name?.split(" ")[0] || "your cleaner"}
+                </p>
+                {cleanerBio && (
+                  <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-600">
+                    {cleanerBio}
+                  </p>
+                )}
+              </div>
+              {cleanerSpecialties.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {cleanerSpecialties.map((l) => (
+                    <span key={l} className="badge badge-neutral">
+                      {l}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

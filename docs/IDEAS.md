@@ -9,6 +9,22 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 8 — ideation (2026-06-30, plan-backlog refresh)
+
+Now that cleaner bio (0035) + specialties (0036) exist, spread the trust info:
+
+1. **Bio + specialties on the admin cleaner detail page** · *value:* ops can see a
+   cleaner's self-presentation at a glance · *small* · code-only.
+2. **Specialty chips on the customer favorites list** (account page) · *value:*
+   remember why you favorited them · *small* · `get_cleaner_specialties` exists.
+3. **Bio/rating/specialties on the live-map winner reveal** (the "your cleaner"
+   moment) · *small–medium* · client fetch of the existing readers on reveal.
+4. **Filter "book a favorite" / browse by specialty** · *medium* · uses the new
+   taxonomy for matching.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 admin bio/specialties, #2 favorites
+> specialty chips. #3 already queued (batch 7 #2, extend to specialties); #4 left.
+
 ## Batch 7 — ideation (2026-06-30, plan-backlog refresh)
 
 1. **Add-to-calendar (.ics)** download on a confirmed booking (customer + cleaner)

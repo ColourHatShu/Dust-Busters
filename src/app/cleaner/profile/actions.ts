@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeSpecialties } from "@/lib/specialties";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -24,6 +25,10 @@ export async function updateCleanerProfile(formData: FormData) {
   const areasRaw = formData.getAll("areas").map(String);
   // "About me" shown to customers — trim + cap length (the column is free text).
   const bio = (formData.get("bio")?.toString().trim() ?? "").slice(0, 600);
+  // Specialties — keep only valid taxonomy keys (never trust the client).
+  const specialties = sanitizeSpecialties(
+    formData.getAll("specialties").map(String),
+  );
 
   // Update profile name + phone
   const { error: profileError } = await supabase
@@ -33,10 +38,14 @@ export async function updateCleanerProfile(formData: FormData) {
 
   if (profileError) throw new Error(profileError.message);
 
-  // Update areas_served + bio in cleaner_details
+  // Update areas_served + bio + specialties in cleaner_details
   const { error: detailsError } = await supabase
     .from("cleaner_details")
-    .update({ areas_served: areasRaw, bio: bio || null })
+    .update({
+      areas_served: areasRaw,
+      bio: bio || null,
+      specialties: specialties.length ? specialties : null,
+    })
     .eq("profile_id", user.id);
 
   if (detailsError) throw new Error(detailsError.message);

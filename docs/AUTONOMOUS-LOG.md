@@ -5,6 +5,26 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner specialties / tags
+
+- **Shipped item (IDEAS batch 6 #1):** migration **`0036`** adds
+  `cleaner_details.specialties text[]` + a `get_cleaner_specialties(uuid)` SECURITY
+  DEFINER reader (mirrors `get_cleaner_bio`). New `src/lib/specialties.ts`
+  (canonical taxonomy: deep clean, move-in/out, pet-friendly, eco, windows,
+  laundry, post-reno, office, organizing + `sanitizeSpecialties`/`specialtyLabels`,
+  +5 unit tests). Cleaners pick them as checkbox-cards on their profile (saved via
+  RLS); shown as chips in the "About <name>" card on the booking page. Trust +
+  future filtering.
+- **Ideation pass (backlog thin):** IDEAS Batch 8; promoted 2 safe P3 items (admin
+  bio/specialties view, favorites specialty chips).
+- **Verify:** applied via the pooler in a transaction (column + reader confirmed,
+  sample call null/no error); `tsc` clean · `vitest` **39 → 44** · `next build`
+  compiled. Committed + pushed.
+- **Next up:** admin cleaner bio/specialties view (batch 8 #1) or favorites
+  specialty chips (batch 8 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner earnings period summary
 
 - **Shipped item (IDEAS batch 7 #3, code-only, no migration):** two rolling
