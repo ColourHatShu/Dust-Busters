@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: parallelize customer booking page reads
+
+- **Shipped item (IDEAS batch 12 #1, code-only, no migration):** on the money-path
+  booking page, the two lazy-expiry RPCs now run as one `Promise.all` (independent —
+  they target different states) before the booking read, and the four cleaner-
+  cluster reads (`get_cleaner_card` + `get_cleaner_bio` + `get_cleaner_specialties`
+  + favorite) — all keyed only on the cleaner id — now run concurrently instead of
+  four serial round-trips. Booking-first ordering and every downstream variable
+  preserved; pure read reordering, no behaviour change. (Left the conditional
+  matching/review/messages reads as-is to keep the refactor low-risk.)
+- **Verify:** `tsc` clean · `vitest` 55 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** parallelize the cleaner job-detail page reads (batch 12 #2) — the
+  last queued safe item; after it the safe non-founder backlog is done.
+
+---
+
 ## 2026-06-30 — Knight firing: parallelize cleaner jobs page reads
 
 - **Shipped item (IDEAS batch 11 #2, code-only, no migration):** the cleaner jobs

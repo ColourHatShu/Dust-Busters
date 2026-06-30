@@ -85,9 +85,12 @@ export default async function BookingStatusPage({
   const supabase = await createClient();
   // Self-healing timeouts (no cron): flip a broadcast that's past its window to
   // no_cleaner_found, and cancel an 'accepted' booking whose deposit deadline
-  // passed without payment — before we read it.
-  await supabase.rpc("expire_booking_if_stale", { p_booking_id: id });
-  await supabase.rpc("expire_unpaid_acceptance", { p_booking_id: id });
+  // passed without payment — before we read it. Independent (different states),
+  // so run them together, then read the (possibly updated) booking.
+  await Promise.all([
+    supabase.rpc("expire_booking_if_stale", { p_booking_id: id }),
+    supabase.rpc("expire_unpaid_acceptance", { p_booking_id: id }),
+  ]);
   const { data: booking } = await supabase
     .from("bookings")
     .select(
@@ -145,28 +148,24 @@ export default async function BookingStatusPage({
   let cleanerBio: string | null = null;
   let cleanerSpecialties: string[] = [];
   if (booking.cleaner_id) {
-    const { data } = await supabase.rpc("get_cleaner_card", {
-      p_cleaner: booking.cleaner_id,
-    });
-    cleaner = Array.isArray(data) ? data[0] : data;
-
-    const { data: bio } = await supabase.rpc("get_cleaner_bio", {
-      p_cleaner: booking.cleaner_id,
-    });
-    cleanerBio = (typeof bio === "string" ? bio : null) || null;
-
-    const { data: specs } = await supabase.rpc("get_cleaner_specialties", {
-      p_cleaner: booking.cleaner_id,
-    });
-    cleanerSpecialties = specialtyLabels(specs as string[] | null);
-
-    const { data: fav } = await supabase
-      .from("customer_favorites")
-      .select("cleaner_id")
-      .eq("customer_id", user.id)
-      .eq("cleaner_id", booking.cleaner_id)
-      .maybeSingle();
-    isFavorite = !!fav;
+    // The cleaner card, bio, specialties, and favorite flag all depend only on
+    // the cleaner id — fetch them concurrently rather than four serial calls.
+    const [cardRes, bioRes, specsRes, favRes] = await Promise.all([
+      supabase.rpc("get_cleaner_card", { p_cleaner: booking.cleaner_id }),
+      supabase.rpc("get_cleaner_bio", { p_cleaner: booking.cleaner_id }),
+      supabase.rpc("get_cleaner_specialties", { p_cleaner: booking.cleaner_id }),
+      supabase
+        .from("customer_favorites")
+        .select("cleaner_id")
+        .eq("customer_id", user.id)
+        .eq("cleaner_id", booking.cleaner_id)
+        .maybeSingle(),
+    ]);
+    cleaner = Array.isArray(cardRes.data) ? cardRes.data[0] : cardRes.data;
+    cleanerBio =
+      (typeof bioRes.data === "string" ? bioRes.data : null) || null;
+    cleanerSpecialties = specialtyLabels(specsRes.data as string[] | null);
+    isFavorite = !!favRes.data;
   }
 
   const { data: address } = await supabase
