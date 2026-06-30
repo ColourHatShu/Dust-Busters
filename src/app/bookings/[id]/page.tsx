@@ -213,6 +213,12 @@ export default async function BookingStatusPage({
   const showReviewPrompt = REVIEW_ALLOWED.includes(booking.status) && !hasReview;
   const showBookAgain = BOOK_AGAIN_ALLOWED.includes(booking.status);
   const scopeLabels = checklistLabels(booking.checklist as string[] | null);
+  const { data: addonRows } = await supabase
+    .from("booking_addons")
+    .select("label, price")
+    .eq("booking_id", id)
+    .returns<{ label: string; price: number }[]>();
+  const bookingAddons = addonRows ?? [];
   // "Getting ready" prep tips — shown once a cleaner is matched + the job is
   // upcoming/ongoing (not before a match, not after it's done).
   const showPrep = ["accepted", "deposit_paid", "in_progress"].includes(
@@ -384,6 +390,16 @@ export default async function BookingStatusPage({
                 ${Number(booking.balance_amount).toFixed(2)}
               </span>
             </div>
+            {bookingAddons.length > 0 && (
+              <div className="detail-row">
+                <span className="detail-label">Add-ons</span>
+                <span className="detail-value max-w-xs text-right text-slate-600">
+                  {bookingAddons
+                    .map((a) => `${a.label} (+$${Number(a.price).toFixed(0)})`)
+                    .join(", ")}
+                </span>
+              </div>
+            )}
 
             {totalAmt > 0 && (
               <div className="mt-4">

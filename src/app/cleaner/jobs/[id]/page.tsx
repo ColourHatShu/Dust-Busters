@@ -25,6 +25,7 @@ import {
   Navigation,
   Sparkles,
   CalendarPlus,
+  Plus,
 } from "lucide-react";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import { checklistLabels } from "@/lib/checklist";
@@ -94,6 +95,18 @@ export default async function CleanerJobDetailPage({
   const scope = DEPOSIT_PAID_AND_LATER.has(booking.status)
     ? checklistLabels(booking.checklist as string[] | null)
     : [];
+
+  // Paid add-ons the customer purchased (the extra services to perform), shown
+  // once the deposit is paid (same gate as the address/notes/scope).
+  let addons: { label: string; price: number }[] = [];
+  if (DEPOSIT_PAID_AND_LATER.has(booking.status)) {
+    const { data: addonRows } = await supabase
+      .from("booking_addons")
+      .select("label, price")
+      .eq("booking_id", id)
+      .returns<{ label: string; price: number }[]>();
+    addons = addonRows ?? [];
+  }
 
   const showStart = booking.status === "deposit_paid";
   const showComplete = booking.status === "in_progress";
@@ -268,6 +281,29 @@ export default async function CleanerJobDetailPage({
                     </span>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {addons.length > 0 && (
+            <div className="card flex items-start gap-4">
+              <span className="icon-tile icon-tile-soft">
+                <Plus className="h-5 w-5" strokeWidth={1.5} />
+              </span>
+              <div>
+                <p className="eyebrow-label">Paid add-ons to include</p>
+                <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                  {addons.map((a) => (
+                    <li key={a.label} className="flex items-center gap-1.5">
+                      <CheckCircle
+                        className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500"
+                        strokeWidth={1.75}
+                        aria-hidden="true"
+                      />
+                      {a.label}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           )}

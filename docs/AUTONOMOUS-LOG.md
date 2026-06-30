@@ -5,6 +5,30 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — ⭐ FEATURE: Service add-ons / paid extras
+
+- **Next P-MAJOR (AOV upsell).** Migration **`0042`** (APPLIED + verified live):
+  - `service_addons` menu (admin-RLS; seeded: inside fridge/oven $25, interior
+    windows $30, laundry $20) + `booking_addons` (snapshots label+price at booking
+    time so later edits don't rewrite past bookings).
+  - `request_booking` recreated with `p_addons` (9th arg): `total = base
+    (hours·rate) + add-ons`; cleaner payout on the FULL total (they do the extra
+    work); promo + commission apply to the new total (consistent with 0040). Only
+    valid active add-ons count; snapshot rows inserted.
+- **Pricing functionally tested** in a rolled-back txn: 3h ($60) + fridge $25 +
+  windows $30 = total $115, deposit $69, balance $46, payout $97.75, 2 snapshot
+  rows — **PASS**, nothing persisted.
+- **UI:** add-on checkbox cards live in `PriceEstimator` (estimated total + deposit
+  update as you tick them); shown on the booking page payment card and the cleaner
+  job page (after deposit, as the extras to perform). Promo + add-ons are one-time-
+  booking only (clear inline message on recurring).
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** admin add-ons CRUD (mirror the promo admin page); then the founder-
+  tied items (photos upload smoke-test; referral-credit model).
+
+---
+
 ## 2026-06-30 — Knight firing: admin promo-usage report
 
 - **Shipped item (IDEAS batch 13 #3, code-only, no migration):** a "Recent

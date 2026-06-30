@@ -31,6 +31,7 @@ export default function BookingForm({
   prefillCleaner,
   savedAddresses,
   favorites,
+  addons,
 }: {
   rate: number;
   currency: string;
@@ -42,6 +43,7 @@ export default function BookingForm({
   prefillCleaner?: string;
   savedAddresses: { id: string; label: string | null; full_address: string }[];
   favorites: Fav[];
+  addons: { key: string; label: string; price: number }[];
 }) {
   const [state, action, pending] = useActionState<BookingFormState, FormData>(
     submitBooking,
@@ -101,6 +103,7 @@ export default function BookingForm({
         depositPercent={depositPercent}
         currency={currency}
         defaultHours={prefillHours}
+        addons={addons}
       />
 
       <hr className="hr-soft" />

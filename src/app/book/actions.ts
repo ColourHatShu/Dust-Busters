@@ -49,16 +49,22 @@ export async function submitBooking(
   // occurrence); otherwise a one-time booking. Both return the first booking id.
   const frequencyWeeks = parseFrequencyWeeks(formData.get("repeat") as string);
 
-  // Promo code (one-time bookings only). Validate up front so a typo'd/expired
-  // code shows inline instead of silently booking at full price.
+  // Paid add-ons (validated server-side by request_booking against the menu).
+  const addons = Array.from(new Set(formData.getAll("addons").map(String))).filter(
+    Boolean,
+  );
+
+  // Promo + add-ons apply to one-time bookings only (recurring goes through
+  // create_recurring_series, which doesn't take them).
   const promo = normalizePromoCode(formData.get("promo_code") as string);
+  if (frequencyWeeks && (promo || addons.length)) {
+    return {
+      error:
+        "Promo codes and add-ons apply to one-time bookings — set Repeat to One-time to use them.",
+    };
+  }
   if (promo) {
-    if (frequencyWeeks) {
-      return {
-        error:
-          "Promo codes apply to one-time bookings — remove the code or set Repeat to One-time.",
-      };
-    }
+    // Validate up front so a typo'd/expired code shows inline.
     const { data: vp } = await supabase.rpc("validate_promo", { p_code: promo });
     const v0 = Array.isArray(vp) ? vp[0] : vp;
     if (!v0?.valid) {
@@ -86,6 +92,7 @@ export async function submitBooking(
         p_notes: notes,
         p_checklist: checklistArg,
         p_promo_code: promo || null,
+        p_addons: addons.length ? addons : null,
       });
 
   if (error) return { error: error.message };

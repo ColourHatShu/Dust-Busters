@@ -73,6 +73,19 @@ export default async function BookPage({
     ? cleanerParam
     : undefined;
 
+  // Active paid add-ons menu (RLS exposes active rows).
+  const { data: addonRows } = await supabase
+    .from("service_addons")
+    .select("key, label, price")
+    .eq("active", true)
+    .order("sort", { ascending: true })
+    .returns<{ key: string; label: string; price: number }[]>();
+  const addons = (addonRows ?? []).map((a) => ({
+    key: a.key,
+    label: a.label,
+    price: Number(a.price),
+  }));
+
   // Soft min for the date picker (today); the action enforces the real check.
   const minDate = new Date().toISOString().slice(0, 10) + "T00:00";
 
@@ -107,6 +120,7 @@ export default async function BookPage({
             prefillCleaner={prefillCleaner}
             savedAddresses={savedAddresses ?? []}
             favorites={favorites}
+            addons={addons}
           />
         </div>
 

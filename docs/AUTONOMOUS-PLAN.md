@@ -198,10 +198,21 @@ payment_type); `bookings` has NO `updated_at`.
   header summary (N uses · $ total discounted). Read-only; admin RLS on bookings.
   Marketing visibility into the promo feature. ✅ tsc + build + tests green.
   (`admin/promos/page.tsx`)
-- [ ] **Service add-ons / paid extras** (IDEAS batch 14, next P-MAJOR) — admin-
-  defined add-ons (e.g. inside fridge/oven/windows +$X) the customer can add at
-  booking; total = hours·rate + add-ons, then discount/commission on the new total.
-  Money-path (verifiable like promo via rolled-back txn).
+- [x] **Service add-ons / paid extras** ⭐ → migration `0042` (APPLIED + verified
+  live): `service_addons` menu (admin-RLS; seeded inside fridge/oven $25, interior
+  windows $30, laundry $20) + `booking_addons` snapshot (label+price at booking
+  time) + `request_booking` recreated with `p_addons` (9th arg): `total = base +
+  add-ons`, cleaner payout on the FULL total (they do the extra work), promo +
+  commission then apply (consistent with 0040). **Pricing functionally tested in a
+  rolled-back txn** (3h + fridge $25 + windows $30 = $115; deposit $69; payout
+  $97.75; 2 snapshot rows — PASS). UI: add-on checkbox cards in the live
+  `PriceEstimator` (total updates), shown on the booking page payment card +
+  cleaner job page (after deposit). Promo/add-ons one-time only. AOV upsell. ✅
+  tsc + build + tests green. (`0042`, `book/{page,BookingForm,PriceEstimator,actions}`,
+  `bookings/[id]/page.tsx`, `cleaner/jobs/[id]/page.tsx`)
+- [ ] **Admin add-ons CRUD** (follow-up to 0042) — an `/admin/addons` page to
+  create/price/deactivate add-ons (today seeded/managed via SQL). Small (mirrors
+  the promo admin page).
 - [ ] **Admin bookings/revenue trend** (IDEAS batch 14) — a simple weekly
   bookings + revenue mini-chart on the dashboard. Read-only, verifiable.
 - [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`
