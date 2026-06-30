@@ -54,13 +54,12 @@ export async function submitBooking(
     Boolean,
   );
 
-  // Promo + add-ons apply to one-time bookings only (recurring goes through
-  // create_recurring_series, which doesn't take them).
+  // Promo codes are one-time only; add-ons now carry through a recurring series.
   const promo = normalizePromoCode(formData.get("promo_code") as string);
-  if (frequencyWeeks && (promo || addons.length)) {
+  if (frequencyWeeks && promo) {
     return {
       error:
-        "Promo codes and add-ons apply to one-time bookings — set Repeat to One-time to use them.",
+        "Promo codes apply to one-time bookings — remove the code or set Repeat to One-time.",
     };
   }
   if (promo) {
@@ -82,6 +81,7 @@ export async function submitBooking(
         p_preferred_cleaner: preferredCleaner,
         p_notes: notes,
         p_checklist: checklistArg,
+        p_addons: addons.length ? addons : null,
       })
     : await supabase.rpc("request_booking", {
         p_scheduled_at: v.scheduledISO,

@@ -225,9 +225,13 @@ payment_type); `bookings` has NO `updated_at`.
   now itemizes each paid add-on (label · price) in its own "Add-ons" block above
   the payments (the total already includes them). Code-only. ✅ tsc + build + tests
   green. (`bookings/[id]/receipt/page.tsx`)
-- [ ] **Add-ons on recurring series** (IDEAS batch 15) — let a recurring plan carry
-  add-ons applied to every occurrence (store on `recurring_series`, pass through
-  generation). Medium, money-path (verifiable).
+- [x] **Add-ons on recurring series** (IDEAS batch 15) → migration `0043` (APPLIED +
+  verified live): `recurring_series.addons` + `create_recurring_series` (9th param
+  `p_addons`) + `generate_due_recurring` recreated to pass the series' add-ons to
+  every occurrence (via `request_booking` named args, so promo stays default-NULL).
+  `/book` now allows add-ons on recurring (promo still one-time). **Verified in a
+  rolled-back txn** (weekly + interior windows → first booking $90, add-on row,
+  series.addons stored — PASS). ✅ tsc + build + tests green. (`0043`, `book/actions.ts`)
 - [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`
   (APPLIED + verified live): `skip_next_occurrence(series)` cancels the upcoming
   not-yet-committed booking (offers cleared; no deposit = no refund) and advances

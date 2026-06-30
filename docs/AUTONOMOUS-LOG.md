@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: add-ons on recurring series
+
+- **Shipped item (IDEAS batch 15 #2):** migration **`0043`** — `recurring_series.addons`
+  + `create_recurring_series` gains a 9th param `p_addons` (stores on the series +
+  applies to the first occurrence) + `generate_due_recurring` recreated to pass the
+  series' add-ons to every generated occurrence. Calls `request_booking` via named
+  args so the promo param stays default-NULL. `/book` now allows add-ons on a
+  recurring plan (promo codes remain one-time-only).
+- **Verify:** applied via the pooler; **functionally tested in a rolled-back txn**:
+  a weekly series with interior windows → first booking total $90 ($60 + $30),
+  booking_addons row present, `series.addons` stored — PASS, nothing persisted.
+  `tsc` clean · `vitest` 62 green · `next build` compiled. Committed + pushed.
+- **Next up:** the safe backlog is essentially complete (cleaner weekly calendar
+  view is the last small promoted idea). Remaining big value is founder-tied
+  (before/after photos upload smoke-test; referral-credit model).
+
+---
+
 ## 2026-06-30 — Knight firing: add-on line items on the receipt
 
 - **Shipped item (IDEAS batch 15 #1, code-only, no migration):** the printable
