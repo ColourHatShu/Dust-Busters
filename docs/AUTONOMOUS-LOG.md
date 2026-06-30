@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: add-on line items on the receipt
+
+- **Shipped item (IDEAS batch 15 #1, code-only, no migration):** the printable
+  receipt (`/bookings/[id]/receipt`) now itemizes each paid add-on (label · price)
+  in its own "Add-ons" block above the payments — completes the add-ons surface
+  (the total already included them). Fetches `booking_addons` (RLS-scoped).
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** add-ons on recurring series (batch 15 #2). Remaining big items
+  founder-tied (photos upload smoke-test; referral credit).
+
+---
+
 ## 2026-06-30 — Knight firing: admin bookings/revenue trend
 
 - **Shipped item (IDEAS batch 14 #2, code-only, no migration):** a "Last 8 weeks"

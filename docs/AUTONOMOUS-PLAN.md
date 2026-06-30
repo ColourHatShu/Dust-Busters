@@ -221,8 +221,10 @@ payment_type); `bookings` has NO `updated_at`.
   CSS only, no lib), each bar's revenue on hover, with an 8-week total header.
   Reuses the existing payments/bookings fetches (added `created_at`). Read-only.
   ✅ tsc + build + tests green. (`admin/page.tsx`)
-- [ ] **Add-on line items on the printable receipt** (IDEAS batch 15) — list each
-  paid add-on on `/bookings/[id]/receipt` (the total already includes them). Small.
+- [x] **Add-on line items on the printable receipt** (IDEAS batch 15) → the receipt
+  now itemizes each paid add-on (label · price) in its own "Add-ons" block above
+  the payments (the total already includes them). Code-only. ✅ tsc + build + tests
+  green. (`bookings/[id]/receipt/page.tsx`)
 - [ ] **Add-ons on recurring series** (IDEAS batch 15) — let a recurring plan carry
   add-ons applied to every occurrence (store on `recurring_series`, pass through
   generation). Medium, money-path (verifiable).

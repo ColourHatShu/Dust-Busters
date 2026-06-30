@@ -46,6 +46,13 @@ export default async function ReceiptPage({
     .returns<PaymentRow[]>();
   const rows = payments ?? [];
 
+  const { data: addonRows } = await supabase
+    .from("booking_addons")
+    .select("label, price")
+    .eq("booking_id", id)
+    .returns<{ label: string; price: number }[]>();
+  const bookingAddons = addonRows ?? [];
+
   // A refunded deposit nets to $0 (the negative refund row is for display only).
   const netPaid = rows
     .filter((p) => p.status === "paid" && p.type !== "refund")
@@ -120,6 +127,26 @@ export default async function ReceiptPage({
             </p>
           </div>
         </div>
+
+        {/* Add-ons */}
+        {bookingAddons.length > 0 && (
+          <div className="border-t border-slate-200 pt-5">
+            <p className="eyebrow-label mb-2">Add-ons</p>
+            <ul className="space-y-1.5 text-sm">
+              {bookingAddons.map((a, i) => (
+                <li
+                  key={`${a.label}-${i}`}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <span className="text-slate-700">{a.label}</span>
+                  <span className="tabular-nums text-slate-900">
+                    ${Number(a.price).toFixed(2)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Line items */}
         <div className="border-t border-slate-200 pt-5">
