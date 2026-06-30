@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import AdminSearch from "../AdminSearch";
 
@@ -66,17 +66,29 @@ export default async function AdminCustomersPage({
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Admin
         </Link>
-        <div className="mt-2 flex items-center gap-3">
-          <span className="icon-tile" aria-hidden="true">
-            <Users className="h-5 w-5" strokeWidth={1.75} />
-          </span>
-          <div>
-            <h1 className="page-title">Customers</h1>
-            <p className="page-subtitle">
-              {customerList.length}{" "}
-              {customerList.length === 1 ? "customer" : "customers"}
-            </p>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="icon-tile" aria-hidden="true">
+              <Users className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h1 className="page-title">Customers</h1>
+              <p className="page-subtitle">
+                {customerList.length}{" "}
+                {customerList.length === 1 ? "customer" : "customers"}
+              </p>
+            </div>
           </div>
+          {customerList.length > 0 && (
+            <a
+              href={`/admin/customers/export${q ? `?q=${encodeURIComponent(q)}` : ""}`}
+              className="btn-base btn-secondary text-sm"
+              download
+            >
+              <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Export CSV
+            </a>
+          )}
         </div>
       </div>
 

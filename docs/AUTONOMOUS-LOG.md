@@ -5,6 +5,27 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: admin customers/cleaners CSV export
+
+- **Item:** P3 ops tooling (IDEAS batch 4) — completes the export trio
+  (bookings/earnings already shipped).
+- **Shipped:** `GET /admin/customers/export` (name, phone, joined, bookings,
+  total spent) and `GET /admin/cleaners/export` (name, phone, verified, active,
+  areas served). Both honour the list `q` (name/phone) filter and add an
+  "Export CSV" button to their list page. UTF-8 BOM + attachment; RLS via the
+  admin server client.
+- **Verify:** `tsc` clean · `next build` green (both routes compiled) ·
+  `npm test` 30/30.
+- **⚠️ Backlog status:** the non-founder, unattended-safe backlog is now
+  EXHAUSTED. Everything remaining is founder-gated (Stripe live keys +
+  STRIPE_WEBHOOK_SECRET, Vercel deploy, email/SMS keys, Stripe Connect payouts,
+  real ID verification) or wants the founder in the loop (rate limiter on core
+  RPCs). Further firings would be ideation/marginal polish only — recommend
+  pausing the loop and doing a founder action (Stripe webhook secret + deploy)
+  for the next real step.
+
+---
+
 ## 2026-06-30 — Knight iteration: surface the deposit deadline (pay-by urgency)
 
 - **Item:** customer value — pairs with the 0029 deposit auto-expiry. An

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Star, Users } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Star, Users, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { setCleanerVerified, setCleanerActive } from "./actions";
 import AdminSearch from "../AdminSearch";
@@ -116,16 +116,28 @@ export default async function AdminCleanersPage({
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Admin
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="icon-tile">
-            <Users className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h1 className="page-title">Cleaners</h1>
-            <p className="page-subtitle">
-              {roster.length} {roster.length === 1 ? "cleaner" : "cleaners"} on the roster
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="icon-tile">
+              <Users className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div>
+              <h1 className="page-title">Cleaners</h1>
+              <p className="page-subtitle">
+                {roster.length} {roster.length === 1 ? "cleaner" : "cleaners"} on the roster
+              </p>
+            </div>
           </div>
+          {roster.length > 0 && (
+            <a
+              href={`/admin/cleaners/export${q ? `?q=${encodeURIComponent(q)}` : ""}`}
+              className="btn-base btn-secondary text-sm"
+              download
+            >
+              <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+              Export CSV
+            </a>
+          )}
         </div>
       </div>
 
