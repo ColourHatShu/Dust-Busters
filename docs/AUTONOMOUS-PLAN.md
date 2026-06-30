@@ -137,13 +137,34 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] **Perf: parallelize the customer booking page reads** (IDEAS batch 12 #1) → the two lazy-expiry RPCs now run as one `Promise.all` (independent, different states) before the booking read, and the four cleaner-cluster reads (card + bio + specialties + favorite) — all keyed only on the cleaner id — now run concurrently instead of four serial calls. Booking-first ordering preserved; pure read reordering, no behaviour change. Code-only, no migration. ✅ tsc + build + tests green. (`bookings/[id]/page.tsx`)
 - [x] **Perf: parallelize the cleaner job detail page reads** (IDEAS batch 12 #2) → after the booking read, messages + (when reviewable) the existing-review check + the customer rating now run in one `Promise.all` (conditional reads fall back to a resolved `{data:null}`) instead of three serial round-trips. Pure read reordering, no behaviour change. Code-only, no migration. ✅ tsc + build + tests green. (`cleaner/jobs/[id]/page.tsx`)
 
-> 🟑 **Safe, non-founder, code-only backlog is now exhausted** (2026-06-30). All
-> remaining work is **⛔ founder-gated** (see below) or **large/needs sign-off**
-> (recurring/weekly bookings; referral/first-clean discount — both touch money or
-> are multi-week). The Knight should NOT manufacture marginal busywork to fill
-> 10-minute firings (quality bar). Until the founder unblocks the launch path or
-> approves a large feature, firings should ideate only (no-op ship) — or the loop
-> should be paused/slowed.
+> 🟢 **2026-06-30 — founder granted product-owner latitude** ("do what seems fit…
+> decide what improvement to bring"). So the Knight now takes on the larger,
+> ambitious-but-grounded features it had been deferring (not just small polish).
+
+## P-MAJOR — Big features (founder-approved product-owner initiative)
+- [x] **Recurring bookings** ⭐ → migration `0039` (APPLIED + verified live):
+  `recurring_series` table (RLS owner-scoped) + `bookings.series_id` + two RPCs —
+  `create_recurring_series` (creates the series + first occurrence via
+  `request_booking`) and `generate_due_recurring` (lazy, cron-free: ensures the
+  next occurrence within a 10-day lead window, guarded against duplicates/runaway
+  by an "no live booking for series" check + a bounded roll-forward; missed dates
+  skipped, not back-filled). Each occurrence is a normal booking paid per the
+  existing deposit/balance flow — **nothing founder-gated** (no auto-charge/saved
+  cards). UI: a "Repeat" select on `/book` (one-time / 1 / 2 / 4 weeks); `/bookings`
+  generates due occurrences on load + shows a "Recurring" badge; the account page
+  lists active plans with a "Stop" action. New `lib/recurring.ts` (+5 tests). The
+  retention/predictable-revenue engine for a cleaning marketplace. ✅ tsc + build +
+  tests (55→60) green. (`0039`, `lib/recurring.ts`, `book/*`, `bookings/page.tsx`,
+  `account/*`, `tests/lib/recurring.test.ts`)
+- [ ] **Referral / first-clean discount** (the other big growth feature) — promo
+  codes (percent/amount, max-uses, expiry, first-clean-only) applied at booking
+  (reduces total/deposit/balance) + an admin to create them. Touches the money math
+  (test-mode safe; no live keys needed). Next P-MAJOR candidate.
+
+## ⛔ Founder-only / blocked
+> Highest leverage: add `STRIPE_WEBHOOK_SECRET` + Stripe live keys, deploy to
+> Vercel (set `NEXT_PUBLIC_BASE_URL`), add Resend/Twilio keys (email/SMS channel is
+> built), Stripe Connect (tips/payouts), real ID verification, rate-limit thresholds.
 - [x] **Customer "what to expect" pre-arrival card** (IDEAS batch 6 #2) → a "Getting ready for your clean" checklist on the booking page (secure pets, parking/access, put away valuables, cleaner brings supplies, watch chat), shown once a cleaner is matched and the job is upcoming/ongoing (`accepted`/`deposit_paid`/`in_progress`). Reduces day-of access hiccups & no-shows. Code-only, no migration. ✅ tsc + build + tests green. (`bookings/[id]/page.tsx`)
 - [x] **Show the customer's rating on the cleaner's offer card** (IDEAS batch 6 #3) → each open-offer card on `/cleaner/jobs` now shows "Customer: ⭐ X.X (N)" (or "New customer") from `get_customer_rating` (SECURITY DEFINER; fetched per unique offer customer via Promise.all — the offer list is small). Added `customer_id` to the offers query. Lets a cleaner accept informed (two-way reviews). Code-only, no migration. ✅ tsc + build + tests green. (`cleaner/jobs/page.tsx`)
 - [x] **Cleaner onboarding completeness meter** (IDEAS batch 6 #4) → a "Profile completeness" card on the cleaner profile sidebar with a % bar + a checklist of what's missing (name, phone, areas, About me), or a "looks great" state at 100%. Nudges cleaners to finish a credible, bookable profile. Code-only, no migration. ✅ tsc + build + tests green. (`cleaner/profile/page.tsx`)

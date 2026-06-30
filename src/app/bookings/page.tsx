@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
-import { Calendar, Clock, ChevronRight, Sparkles, Plus } from "lucide-react";
+import { Calendar, Clock, ChevronRight, Sparkles, Plus, Repeat } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -12,6 +12,7 @@ type Booking = {
   scheduled_at: string;
   hours: number;
   total_amount: number;
+  series_id: string | null;
 };
 
 const ACTIVE_STATUSES = new Set([
@@ -57,9 +58,11 @@ export default async function BookingsPage({
   if (!user) redirect("/login");
 
   const supabase = await createClient();
+  // Lazily ensure any due recurring occurrences exist before listing (cron-free).
+  await supabase.rpc("generate_due_recurring", { p_customer: user.id });
   const { data } = await supabase
     .from("bookings")
-    .select("id, status, area, scheduled_at, hours, total_amount")
+    .select("id, status, area, scheduled_at, hours, total_amount, series_id")
     .order("created_at", { ascending: false });
 
   const all = (data ?? []) as Booking[];
@@ -159,6 +162,12 @@ export default async function BookingsPage({
                     <span className={bookingBadgeClass(b.status)}>
                       {bookingStatusLabel(b.status)}
                     </span>
+                    {b.series_id && (
+                      <span className="badge badge-neutral" title="Part of a recurring plan">
+                        <Repeat className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
+                        Recurring
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
                     <span className="flex items-center gap-1">

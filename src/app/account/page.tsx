@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { specialtyLabels } from "@/lib/specialties";
+import { frequencyLabel } from "@/lib/recurring";
 import {
   updateProfile,
   addAddress,
   deleteAddress,
   removeFavorite,
+  stopRecurring,
 } from "./actions";
 import Link from "next/link";
 import {
@@ -22,6 +24,7 @@ import {
   Heart,
   ShieldCheck,
   Star,
+  Repeat,
 } from "lucide-react";
 
 type FavCard = {
@@ -81,6 +84,18 @@ export default async function AccountPage() {
       };
     }),
   );
+
+  // Active recurring plans (RLS scopes to the owner).
+  const { data: seriesRows } = await supabase
+    .from("recurring_series")
+    .select("id, frequency_weeks, area, next_at")
+    .eq("customer_id", user.id)
+    .eq("active", true)
+    .order("next_at", { ascending: true })
+    .returns<
+      { id: string; frequency_weeks: number; area: string; next_at: string }[]
+    >();
+  const recurringPlans = seriesRows ?? [];
 
   const name = fullProfile?.name ?? profile?.name ?? "";
   const phone = fullProfile?.phone ?? "";
@@ -251,6 +266,47 @@ export default async function AccountPage() {
         </div>
 
         <aside className="space-y-6">
+      {/* Recurring plans */}
+      {recurringPlans.length > 0 && (
+        <div className="card space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="icon-tile icon-tile-sm icon-tile-soft">
+              <Repeat className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            </span>
+            <h2 className="section-title">Recurring plans</h2>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {recurringPlans.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-start justify-between gap-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900">
+                    {frequencyLabel(s.frequency_weeks)} · {s.area}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Next around {new Date(s.next_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <form action={stopRecurring.bind(null, s.id)}>
+                  <button
+                    type="submit"
+                    className="btn-base btn-secondary px-2.5 py-1 text-xs"
+                  >
+                    Stop
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+          <p className="form-hint">
+            Each visit is booked automatically and paid separately. Stopping keeps
+            any visit that&apos;s already scheduled.
+          </p>
+        </div>
+      )}
+
       {/* Favorite cleaners */}
       {favorites.length > 0 && (
         <div className="card space-y-4">

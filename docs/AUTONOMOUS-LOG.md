@@ -5,6 +5,42 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — ⭐ FEATURE: Recurring bookings (product-owner pick)
+
+- **Context:** founder said "do what seems fit — the knight has to think like a
+  product owner and decide what improvement to bring." So instead of small polish,
+  built the highest-leverage feature for a cleaning marketplace: **recurring
+  bookings** (most cleans are weekly/biweekly — retention + predictable revenue).
+- **Shipped (migration `0039`, APPLIED + verified live):**
+  - `recurring_series` table (RLS owner-scoped: select/update/delete; inserts only
+    via RPC) + `bookings.series_id`.
+  - `create_recurring_series(...)` — inserts the series and creates the first
+    occurrence by calling `request_booking` (so all pricing/matching/checklist/
+    time-off/work-days logic is reused), tags the booking with `series_id`,
+    returns the first booking id.
+  - `generate_due_recurring(customer)` — **lazy, cron-free** generation: rolls
+    each active series' `next_at` forward to the future (bounded), then creates the
+    next occurrence only when it's within a 10-day lead window AND the series has
+    no live booking (`broadcasting`→`completed`). This guarantees at most one
+    booking per series per call → no duplicates, no runaway. Missed occurrences are
+    skipped, not back-filled.
+  - **No founder-gated pieces:** each occurrence is a normal booking paid via the
+    existing deposit/balance flow (no auto-charge, no saved cards, no Connect).
+  - **UI:** `/book` gets a "Repeat" select (one-time / every 1·2·4 weeks);
+    `submitBooking` branches to `create_recurring_series` when a cadence is chosen;
+    `/bookings` calls `generate_due_recurring` on load and badges series bookings
+    "Recurring"; the account page lists active plans with a "Stop" (deactivate)
+    action. New `lib/recurring.ts` (RECURRENCE_OPTIONS + `parseFrequencyWeeks` +
+    `frequencyLabel`, +5 tests).
+- **Verify:** applied via the pooler in a transaction; confirmed table + `series_id`
+  + 3 RLS policies + both RPC signatures + interval math (structural only — did NOT
+  run a live functional test that would create real bookings + ring cleaners).
+  `tsc` clean · `vitest` **55 → 60** · `next build` compiled. Committed + pushed.
+- **Next up (P-MAJOR):** referral / first-clean discount. Also: founder, the map
+  has an improvement shortlist queued (see IDEAS / next entry).
+
+---
+
 ## 2026-06-30 — Knight firing: parallelize cleaner job-detail reads (+ safe backlog now exhausted)
 
 - **Shipped item (IDEAS batch 12 #2, code-only, no migration):** on the cleaner

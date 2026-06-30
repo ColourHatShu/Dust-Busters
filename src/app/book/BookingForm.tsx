@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import PriceEstimator from "./PriceEstimator";
 import { submitBooking, type BookingFormState } from "./actions";
 import { CLEANING_TASK_GROUPS } from "@/lib/checklist";
+import { RECURRENCE_OPTIONS } from "@/lib/recurring";
 import {
   Calendar,
   MapPin,
@@ -13,6 +14,7 @@ import {
   Heart,
   ClipboardList,
   Sparkles,
+  Repeat,
 } from "lucide-react";
 
 type Fav = { id: string; name: string };
@@ -73,6 +75,24 @@ export default function BookingForm({
             } catch {}
           }}
         />
+      </label>
+
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <Repeat className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          Repeat
+        </span>
+        <select name="repeat" className="input-modern" defaultValue="0">
+          {RECURRENCE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="form-hint">
+          Set up a recurring clean — each visit is booked for you automatically
+          and paid separately.
+        </span>
       </label>
 
       <PriceEstimator

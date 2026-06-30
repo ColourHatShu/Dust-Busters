@@ -75,3 +75,19 @@ export async function removeFavorite(cleanerId: string) {
 
   revalidatePath("/account");
 }
+
+// Stop a recurring plan: deactivate it (RLS scopes to the owner). Any already-
+// created upcoming booking is left untouched — the customer manages it normally.
+export async function stopRecurring(seriesId: string) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+
+  const supabase = await createClient();
+  await supabase
+    .from("recurring_series")
+    .update({ active: false })
+    .eq("id", seriesId)
+    .eq("customer_id", user.id);
+
+  revalidatePath("/account");
+}

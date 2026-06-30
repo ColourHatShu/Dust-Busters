@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { AREAS } from "@/lib/areas";
 import { validateBooking } from "@/lib/booking";
 import { sanitizeChecklist } from "@/lib/checklist";
+import { parseFrequencyWeeks } from "@/lib/recurring";
 
 export type BookingFormState = { error?: string } | undefined;
 
@@ -40,16 +41,33 @@ export async function submitBooking(
 
   // Structured cleaning scope: keep only valid task keys (never trust the client).
   const checklist = sanitizeChecklist(formData.getAll("checklist").map(String));
+  const checklistArg = checklist.length ? checklist : null;
+  const hours = Number(formData.get("hours"));
 
-  const { data: bookingId, error } = await supabase.rpc("request_booking", {
-    p_scheduled_at: v.scheduledISO,
-    p_hours: Number(formData.get("hours")),
-    p_area: area,
-    p_full_address: fullAddress,
-    p_preferred_cleaner: preferredCleaner,
-    p_notes: notes,
-    p_checklist: checklist.length ? checklist : null,
-  });
+  // Recurring? A valid cadence creates a series (which also creates the first
+  // occurrence); otherwise a one-time booking. Both return the first booking id.
+  const frequencyWeeks = parseFrequencyWeeks(formData.get("repeat") as string);
+
+  const { data: bookingId, error } = frequencyWeeks
+    ? await supabase.rpc("create_recurring_series", {
+        p_first_scheduled_at: v.scheduledISO,
+        p_frequency_weeks: frequencyWeeks,
+        p_hours: hours,
+        p_area: area,
+        p_full_address: fullAddress,
+        p_preferred_cleaner: preferredCleaner,
+        p_notes: notes,
+        p_checklist: checklistArg,
+      })
+    : await supabase.rpc("request_booking", {
+        p_scheduled_at: v.scheduledISO,
+        p_hours: hours,
+        p_area: area,
+        p_full_address: fullAddress,
+        p_preferred_cleaner: preferredCleaner,
+        p_notes: notes,
+        p_checklist: checklistArg,
+      });
 
   if (error) return { error: error.message };
   redirect(`/bookings/${bookingId}`);
