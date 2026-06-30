@@ -5,6 +5,45 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 📊 Milestone summary — 2026-06-30 (19 items shipped this run)
+
+Branch `dustbusters-autonomous`; DB at migration **0036**; test suite **49** (4→49
+across the run). All green. The loop has been productive and is now into smaller,
+safe polish — the high-value remaining work is founder-gated.
+
+- **New modules:** cleaning scope/checklist (0032), cleaner time-off (0033/0034),
+  PWA install, cleaner bio (0035) + specialties (0036) — surfaced to customers,
+  admin, favorites, and a self "preview" card.
+- **Cleaner UX:** deposit-deadline visibility, demand "last 7 days" card, earnings
+  7/30-day summary, profile completeness meter, customer rating on offer cards.
+- **Customer UX:** deposit/balance split bar, "getting ready" pre-arrival card,
+  add-to-calendar .ics, one-tap book-a-favorite.
+- **Ops:** admin sees cleaner bio/specialties; bookings searchable by
+  customer/cleaner name (+ export parity).
+- **⛔ Needs the founder (unchanged):** Stripe live keys + `STRIPE_WEBHOOK_SECRET`,
+  Vercel deploy, email/SMS keys (channel built), Stripe Connect (tips/payouts),
+  real ID verification, rate limiting (deploy-env + thresholds).
+- **Queued (safe P3):** printable receipt; bio/rating/specialties on the live-map
+  winner reveal; admin roster areas/specialties columns. The safe code-only well
+  is getting shallow — flagged in IDEAS Batch 10.
+
+---
+
+## 2026-06-30 — Knight firing: admin bookings search by customer/cleaner name
+
+- **Shipped item (IDEAS batch 10 #1, code-only, no migration):** the admin
+  bookings `q` filter now matches **area / customer name / cleaner name** (was
+  area-only). Shared `bookingMatchesQuery` (`lib/admin-bookings`) applied in JS
+  after the fetch — PostgREST can't OR a base column against two embedded profiles
+  — and the **same predicate runs in the CSV export**, so "export what you see"
+  still holds. Placeholder updated; +5 unit tests.
+- **Verify:** `tsc` clean · `vitest` **44 → 49** · `next build` compiled. Committed
+  + pushed.
+- **Next up:** printable receipt view (batch 10 #2) or the live-map winner reveal
+  trust info (batch 7 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner profile preview ("how customers see you")
 
 - **Shipped item (IDEAS batch 9 #2, code-only, no migration):** a read-only

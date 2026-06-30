@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ChevronLeft, ClipboardList, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
+import { bookingMatchesQuery } from "@/lib/admin-bookings";
 import AdminSearch from "../AdminSearch";
 
 // Real booking_status enum values (no 'pending'/'confirmed').
@@ -53,7 +54,6 @@ export default async function AdminBookingsPage({
        cleaner:profiles!bookings_cleaner_id_fkey(name)`
     )
     .order("created_at", { ascending: false });
-  if (q) bookingsQuery = bookingsQuery.ilike("area", `%${q}%`);
   if (status && STATUSES.includes(status)) {
     bookingsQuery = bookingsQuery.eq("status", status);
   }
@@ -66,7 +66,20 @@ export default async function AdminBookingsPage({
   }
   const { data: bookings } = await bookingsQuery;
 
-  const rows = bookings ?? [];
+  // Free-text q matches area / customer name / cleaner name (applied in JS — see
+  // lib/admin-bookings; PostgREST can't OR across the two embedded profiles).
+  const rows = (bookings ?? []).filter((b) => {
+    const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
+    const cleaner = Array.isArray(b.cleaner) ? b.cleaner[0] : b.cleaner;
+    return bookingMatchesQuery(
+      {
+        area: b.area,
+        customerName: (customer as { name?: string } | null)?.name,
+        cleanerName: (cleaner as { name?: string } | null)?.name,
+      },
+      q,
+    );
+  });
 
   // Carry the active filters into the CSV export so it exports what's shown.
   const exportParams = new URLSearchParams();
@@ -106,7 +119,10 @@ export default async function AdminBookingsPage({
         )}
       </div>
 
-      <AdminSearch placeholder="Search bookings by area" defaultValue={q}>
+      <AdminSearch
+        placeholder="Search by area, customer, or cleaner"
+        defaultValue={q}
+      >
         <select
           name="status"
           defaultValue={status ?? ""}

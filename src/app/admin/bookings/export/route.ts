@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { bookingStatusLabel } from "@/lib/status";
+import { bookingMatchesQuery } from "@/lib/admin-bookings";
 
 const STATUSES = [
   "broadcasting",
@@ -51,12 +52,21 @@ export async function GET(req: Request) {
        cleaner:profiles!bookings_cleaner_id_fkey(name)`,
     )
     .order("created_at", { ascending: false });
-  if (q) query = query.ilike("area", `%${q}%`);
   if (status && STATUSES.includes(status)) query = query.eq("status", status);
   if (isDate(from)) query = query.gte("scheduled_at", `${from}T00:00:00`);
   if (isDate(to)) query = query.lte("scheduled_at", `${to}T23:59:59.999`);
   const { data } = await query;
-  const rows = data ?? [];
+  // Same area/customer/cleaner free-text match as the list page (export what you see).
+  const rows = (data ?? []).filter((b) =>
+    bookingMatchesQuery(
+      {
+        area: b.area,
+        customerName: one(b.customer)?.name,
+        cleanerName: one(b.cleaner)?.name,
+      },
+      q,
+    ),
+  );
 
   const header = [
     "Booking ID",
