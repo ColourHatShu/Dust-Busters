@@ -9,6 +9,21 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 14 — ideation (2026-06-30, post-growth-features refresh)
+
+1. **Service add-ons / paid extras** · *value:* upsell → higher AOV (inside
+   fridge/oven/windows/laundry as priced add-ons) · *medium–large* · money-path but
+   verifiable like promo (rolled-back txn). Next P-MAJOR.
+2. **Admin bookings/revenue trend** (weekly mini-chart on the dashboard) ·
+   *value:* spot trends at a glance · *small–medium* · read-only.
+3. **Customer referral program** (give $X / get $X credit) · *value:* growth loop ·
+   *large* · needs an account-credit/wallet model (money) — founder-ish.
+4. **Before/after photos** · *large* · highest-value trust feature; wants a founder
+   upload smoke-test (Storage RLS txn-testable; browser upload isn't headless).
+
+> Promoted to AUTONOMOUS-PLAN.md: #1 service add-ons (next P-MAJOR), #2 revenue
+> trend. #3 credit/referral + #4 photos stay queued (founder-tied).
+
 ## Batch 13 — ideation (2026-06-30, post-growth-features refresh)
 
 > Recurring + referral (the two flagship growth features) are shipped. These are

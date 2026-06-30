@@ -5,6 +5,23 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: admin promo-usage report
+
+- **Shipped item (IDEAS batch 13 #3, code-only, no migration):** a "Recent
+  redemptions" section on `/admin/promos` — a table of bookings that applied a code
+  (code · customer · discount · date · booking link) plus a header summary
+  (N uses · $ total discounted across the recent 100). Read-only via admin RLS on
+  bookings. Gives the founder marketing visibility into how the promo feature is
+  being used.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Ideation pass:** IDEAS Batch 14 — promoted service add-ons (next P-MAJOR,
+  upsell/AOV) + an admin revenue/bookings trend. Photos + referral-credit stay
+  founder-tied.
+- **Next up:** service add-ons / paid extras (next P-MAJOR).
+
+---
+
 ## 2026-06-30 — Knight firing: skip the next recurring visit
 
 - **Shipped item (IDEAS batch 13 #2):** migration **`0041`** —

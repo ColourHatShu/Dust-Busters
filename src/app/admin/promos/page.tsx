@@ -48,6 +48,30 @@ export default async function AdminPromosPage({
     .returns<Promo[]>();
   const rows = promos ?? [];
 
+  // Recent redemptions (bookings that applied a code) — marketing visibility.
+  const { data: redemptions } = await supabase
+    .from("bookings")
+    .select(
+      "id, promo_code, discount_amount, created_at, customer:profiles!bookings_customer_id_fkey(name)",
+    )
+    .not("promo_code", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .returns<
+      {
+        id: string;
+        promo_code: string | null;
+        discount_amount: number;
+        created_at: string;
+        customer: { name: string | null } | { name: string | null }[] | null;
+      }[]
+    >();
+  const redemptionRows = redemptions ?? [];
+  const totalDiscount = redemptionRows.reduce(
+    (sum, r) => sum + Number(r.discount_amount ?? 0),
+    0,
+  );
+
   const fmtValue = (p: Promo) =>
     p.kind === "percent" ? `${Number(p.value)}% off` : `$${Number(p.value)} off`;
 
@@ -217,6 +241,62 @@ export default async function AdminPromosPage({
           )}
         </div>
       </div>
+
+      {/* Recent redemptions */}
+      {redemptionRows.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="section-title">Recent redemptions</h2>
+            <span className="text-sm text-slate-500">
+              {redemptionRows.length} use
+              {redemptionRows.length === 1 ? "" : "s"} · $
+              {totalDiscount.toFixed(2)} discounted
+            </span>
+          </div>
+          <div className="card card-flush overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Customer</th>
+                  <th className="num">Discount</th>
+                  <th>When</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {redemptionRows.map((r) => {
+                  const c = Array.isArray(r.customer)
+                    ? r.customer[0]
+                    : r.customer;
+                  return (
+                    <tr key={r.id}>
+                      <td className="font-mono text-slate-900">
+                        {r.promo_code}
+                      </td>
+                      <td>{c?.name ?? "—"}</td>
+                      <td className="num text-emerald-700">
+                        −${Number(r.discount_amount).toFixed(2)}
+                      </td>
+                      <td className="whitespace-nowrap text-slate-500">
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="num">
+                        <Link
+                          href={`/admin/bookings/${r.id}`}
+                          className="link-accent text-xs"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

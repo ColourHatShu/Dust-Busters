@@ -193,6 +193,17 @@ payment_type); `bookings` has NO `updated_at`.
   "running ~15 min late") via the service-role `createNotification` (re-checks
   cleaner ownership + status; new `cleaner_update` type, in-app only). Reduces
   day-of anxiety/no-access. ✅ tsc + build + tests green. (`cleaner/jobs/[id]/arrival-actions.ts`, `cleaner/jobs/[id]/page.tsx`)
+- [x] **Admin promo-usage report** (IDEAS batch 13 #3) → a "Recent redemptions"
+  table on `/admin/promos` (code · customer · discount · date · booking link) + a
+  header summary (N uses · $ total discounted). Read-only; admin RLS on bookings.
+  Marketing visibility into the promo feature. ✅ tsc + build + tests green.
+  (`admin/promos/page.tsx`)
+- [ ] **Service add-ons / paid extras** (IDEAS batch 14, next P-MAJOR) — admin-
+  defined add-ons (e.g. inside fridge/oven/windows +$X) the customer can add at
+  booking; total = hours·rate + add-ons, then discount/commission on the new total.
+  Money-path (verifiable like promo via rolled-back txn).
+- [ ] **Admin bookings/revenue trend** (IDEAS batch 14) — a simple weekly
+  bookings + revenue mini-chart on the dashboard. Read-only, verifiable.
 - [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`
   (APPLIED + verified live): `skip_next_occurrence(series)` cancels the upcoming
   not-yet-committed booking (offers cleared; no deposit = no refund) and advances
