@@ -210,9 +210,12 @@ payment_type); `bookings` has NO `updated_at`.
   cleaner job page (after deposit). Promo/add-ons one-time only. AOV upsell. ✅
   tsc + build + tests green. (`0042`, `book/{page,BookingForm,PriceEstimator,actions}`,
   `bookings/[id]/page.tsx`, `cleaner/jobs/[id]/page.tsx`)
-- [ ] **Admin add-ons CRUD** (follow-up to 0042) — an `/admin/addons` page to
-  create/price/deactivate add-ons (today seeded/managed via SQL). Small (mirrors
-  the promo admin page).
+- [x] **Admin add-ons CRUD** (follow-up to 0042) → `/admin/addons` — admin page to
+  create add-ons (label, key, price, sort) and activate/deactivate, mirroring the
+  promo admin page. Server actions via the admin RLS (no service key); validated
+  inputs + friendly duplicate banner; dashboard nav card added. The paid-extras
+  menu is now fully self-serve. ✅ tsc + build (route compiled) + tests green.
+  (`admin/addons/{page,actions}.tsx`, `admin/page.tsx`)
 - [ ] **Admin bookings/revenue trend** (IDEAS batch 14) — a simple weekly
   bookings + revenue mini-chart on the dashboard. Read-only, verifiable.
 - [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`

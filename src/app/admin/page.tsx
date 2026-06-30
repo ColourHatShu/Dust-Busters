@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Flag,
   Tag,
+  Plus,
 } from "lucide-react";
 
 export default async function AdminHomePage() {
@@ -112,6 +113,7 @@ export default async function AdminHomePage() {
     { href: "/admin/disputes", label: "Disputes", icon: AlertTriangle, desc: "Resolve open disputes" },
     { href: "/admin/reports", label: "Reports", icon: Flag, desc: "Flagged chat messages" },
     { href: "/admin/promos", label: "Promo codes", icon: Tag, desc: "Discounts & referrals" },
+    { href: "/admin/addons", label: "Add-ons", icon: Plus, desc: "Paid extras menu" },
     { href: "/admin/settings", label: "Settings", icon: Settings, desc: "App configuration" },
   ];
 

@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: admin add-ons CRUD
+
+- **Shipped item (0042 follow-up, code-only, no migration):** `/admin/addons` — the
+  founder can create paid extras (label, key, price, sort) and activate/deactivate,
+  mirroring `/admin/promos`. Server actions via the admin RLS on `service_addons`
+  (no service key); validated inputs (key normalized to a slug) + friendly
+  duplicate banner; added an "Add-ons" card to the admin dashboard. The upsell menu
+  is now fully self-serve (no SQL).
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled the new
+  `/admin/addons` route. Committed + pushed.
+- **Next up:** the safe backlog is largely complete; remaining big items are
+  founder-tied (before/after photos upload smoke-test; referral-credit/wallet
+  model). Next firings: small polish / ideation, or those when the founder's around.
+
+---
+
 ## 2026-06-30 — ⭐ FEATURE: Service add-ons / paid extras
 
 - **Next P-MAJOR (AOV upsell).** Migration **`0042`** (APPLIED + verified live):
