@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: skip the next recurring visit
+
+- **Shipped item (IDEAS batch 13 #2):** migration **`0041`** —
+  `skip_next_occurrence(series)` cancels the upcoming not-yet-committed booking for
+  a series (offers cleared; no deposit paid = nothing to refund) and advances
+  `next_at` past the skipped slot to the following occurrence. Owner-only. UI: a
+  "Skip next" button on the account recurring-plans list (active plans), alongside
+  Pause / Resume / Remove — so a customer away one week can skip just that visit
+  without pausing the whole plan.
+- **Verify:** applied via the pooler; **functionally tested in a rolled-back txn**
+  (faked `request.jwt.claims`): created a series + first booking, skipped it →
+  booking `cancelled`, offers 0, `next_at` advanced one period — PASS, nothing
+  persisted. `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** admin promo-usage report (verifiable). Photos still wants a founder
+  smoke-test.
+
+---
+
 ## 📊 Milestone summary — 2026-06-30 (run total ~31 items)
 
 Branch `dustbusters-autonomous`; DB at migration **0040**; tests **62** (4→62 this

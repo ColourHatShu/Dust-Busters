@@ -193,9 +193,13 @@ payment_type); `bookings` has NO `updated_at`.
   "running ~15 min late") via the service-role `createNotification` (re-checks
   cleaner ownership + status; new `cleaner_update` type, in-app only). Reduces
   day-of anxiety/no-access. ✅ tsc + build + tests green. (`cleaner/jobs/[id]/arrival-actions.ts`, `cleaner/jobs/[id]/page.tsx`)
-- [ ] **Skip the next recurring visit** (IDEAS batch 13) — beyond pause: drop just
-  the next occurrence (cancel the upcoming pre-deposit booking + advance `next_at`
-  one period) via an RPC. Verifiable in a rolled-back txn.
+- [x] **Skip the next recurring visit** (IDEAS batch 13) → migration `0041`
+  (APPLIED + verified live): `skip_next_occurrence(series)` cancels the upcoming
+  not-yet-committed booking (offers cleared; no deposit = no refund) and advances
+  `next_at` past the skipped slot to the following occurrence. Owner-only. A "Skip
+  next" button on the account recurring list (active plans). **Functionally tested
+  in a rolled-back txn** (visit cancelled, offers 0, next_at → +1 period — PASS).
+  ✅ tsc + build + tests green. (`0041`, `account/{page,actions}.tsx`)
 
 ## ⛔ Founder-only / blocked
 > Highest leverage: add `STRIPE_WEBHOOK_SECRET` + Stripe live keys, deploy to

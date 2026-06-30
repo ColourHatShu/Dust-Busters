@@ -100,6 +100,16 @@ export async function resumeRecurring(seriesId: string) {
   await setRecurringActive(seriesId, true);
 }
 
+// Skip just the next visit (cancels the upcoming pre-deposit booking + advances
+// the series to the following occurrence). See migration 0041.
+export async function skipNextRecurring(seriesId: string) {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
+  const supabase = await createClient();
+  await supabase.rpc("skip_next_occurrence", { p_series: seriesId });
+  revalidatePath("/account");
+}
+
 // Remove a plan entirely (the customer's own record).
 export async function removeRecurring(seriesId: string) {
   const { user } = await getSessionProfile();

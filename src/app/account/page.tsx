@@ -11,6 +11,7 @@ import {
   pauseRecurring,
   resumeRecurring,
   removeRecurring,
+  skipNextRecurring,
 } from "./actions";
 import Link from "next/link";
 import {
@@ -304,11 +305,18 @@ export default async function AccountPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {s.active ? (
-                    <form action={pauseRecurring.bind(null, s.id)}>
-                      <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
-                        Pause
-                      </button>
-                    </form>
+                    <>
+                      <form action={skipNextRecurring.bind(null, s.id)}>
+                        <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
+                          Skip next
+                        </button>
+                      </form>
+                      <form action={pauseRecurring.bind(null, s.id)}>
+                        <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
+                          Pause
+                        </button>
+                      </form>
+                    </>
                   ) : (
                     <form action={resumeRecurring.bind(null, s.id)}>
                       <button className="btn-base btn-secondary px-2.5 py-1 text-xs">
