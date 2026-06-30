@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: harden the test safety net
+
+- **Item:** the high-value non-founder feature backlog is essentially done, so
+  rather than manufacture busywork or unilaterally touch core RPCs (rate limiter,
+  which the founder wants to do together), strengthen the verify gate the loop
+  relies on — pure, zero-risk, real value.
+- **Added:** `tests/lib/status.test.ts` (bookingBadgeClass tone mapping +
+  fallback, bookingStatusLabel compact labels + underscore-prettify fallback +
+  "every status has a label" guard, paymentBadgeClass) and
+  `tests/lib/messaging.test.ts` (isEmailConfigured/isSmsConfigured gating — proves
+  email/SMS stay a no-op until keys are set). No app code touched.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` **30/30**
+  (was 20) across 4 files.
+- **Next up:** remaining backlog is founder-gated (Stripe keys/deploy, email/SMS
+  keys, Stripe Connect) or needs the founder in the loop (rate limiter). Likely
+  ideation / a pause recommendation.
+
+---
+
 ## 2026-06-30 — Knight iteration: reschedule a booking before deposit
 
 - **Item:** P2 customer value (took on a larger item — small-polish backlog was
