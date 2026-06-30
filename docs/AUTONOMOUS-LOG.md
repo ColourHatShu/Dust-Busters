@@ -5,6 +5,41 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## ⏸️ 2026-06-30 — Knight paused: safe roadmap complete (no busywork)
+
+This firing found **no actionable, non-founder, unattended-safe item with real
+value** — and per the playbook quality bar ("only ship changes with real value —
+no busywork, no bikeshedding"), I did NOT manufacture filler. Stopping the
+recurring cron rather than burn 10-minute cycles on marginal work.
+
+**What shipped this run (~42 verified+pushed items; DB 0031 → 0044; tests 4 → 62):**
+- **Growth/revenue (money-math functionally tested):** recurring bookings (`0039`,
+  + pause/resume/skip-next/remove + add-ons-on-series `0043`), referral/first-clean
+  discount (`0040`), service add-ons (`0042`).
+- **Marketplace depth:** cleaning scope/checklist (`0032`), cleaner time-off (`0033`)
+  + weekly work-days (`0037`) honoured across all dispatch paths (`0034`/`0038`),
+  bio (`0035`) + specialties (`0036`), PWA install.
+- **Operator tooling:** admin promos + add-ons CRUD, promo redemptions report,
+  8-week bookings/revenue trend, payouts tracking + payroll view + CSV (`0044`),
+  bookings name search.
+- **UX/perf/a11y:** map coverage-ring + auto-fit, deposit/balance bar, add-to-
+  calendar, printable receipt (+ add-on lines), getting-ready card, cleaner "on my
+  way" status, "your week" agenda, demand card, read-parallelization on the heavy
+  pages, aria-live job feed.
+
+**⛔ Everything left needs the founder — the real next steps:**
+1. **Launch path (highest leverage):** add `STRIPE_WEBHOOK_SECRET` + Stripe live
+   keys; deploy to Vercel (set `NEXT_PUBLIC_BASE_URL`). Turns the app on.
+2. **Activate built channels:** Resend/Twilio keys (email/SMS), Stripe Connect
+   (tips/payouts), real ID verification (Storage/Identity).
+3. **Wants founder in the loop:** before/after photos (browser-upload smoke-test);
+   referral-credit/wallet (money model); rate-limit thresholds.
+
+**Resume anytime:** say "make the knight run" (recreates the ~10-min cron) — ideally
+after a founder action above unlocks real launch-grade work.
+
+---
+
 ## 2026-06-30 — Knight firing: admin payouts CSV export
 
 - **Shipped item (payout ops tooling, code-only, no migration):**
