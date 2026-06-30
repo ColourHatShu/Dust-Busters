@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { specialtyLabels } from "@/lib/specialties";
 import {
   updateProfile,
   addAddress,
@@ -29,6 +30,7 @@ type FavCard = {
   id_verified: boolean | null;
   jobs_completed: number | null;
   avg_rating: number | null;
+  specialties: string[];
 };
 
 export default async function AccountPage() {
@@ -62,15 +64,20 @@ export default async function AccountPage() {
       const { data } = await supabase.rpc("get_cleaner_card", {
         p_cleaner: f.cleaner_id,
       });
-      const card = (Array.isArray(data) ? data[0] : data) as
-        | Omit<FavCard, "cleanerId">
-        | null;
+      const card = (Array.isArray(data) ? data[0] : data) as Omit<
+        FavCard,
+        "cleanerId" | "specialties"
+      > | null;
+      const { data: specs } = await supabase.rpc("get_cleaner_specialties", {
+        p_cleaner: f.cleaner_id,
+      });
       return {
         cleanerId: f.cleaner_id,
         name: card?.name ?? null,
         id_verified: card?.id_verified ?? null,
         jobs_completed: card?.jobs_completed ?? null,
         avg_rating: card?.avg_rating ?? null,
+        specialties: specialtyLabels(specs as string[] | null),
       };
     }),
   );
@@ -257,7 +264,7 @@ export default async function AccountPage() {
             {favorites.map((f) => (
               <li
                 key={f.cleanerId}
-                className="flex items-center justify-between gap-3 py-2.5"
+                className="flex items-start justify-between gap-3 py-2.5"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="avatar h-10 w-10 text-sm">
@@ -282,6 +289,23 @@ export default async function AccountPage() {
                       )}
                       <span>{f.jobs_completed ?? 0} jobs</span>
                     </p>
+                    {f.specialties.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {f.specialties.slice(0, 3).map((l) => (
+                          <span
+                            key={l}
+                            className="badge badge-neutral text-[0.65rem]"
+                          >
+                            {l}
+                          </span>
+                        ))}
+                        {f.specialties.length > 3 && (
+                          <span className="self-center text-[0.65rem] text-slate-400">
+                            +{f.specialties.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <form action={removeFavorite.bind(null, f.cleanerId)}>

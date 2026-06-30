@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: specialty chips on the favorites list
+
+- **Shipped item (IDEAS batch 8 #2, code-only, no migration):** each favorite
+  cleaner on the customer account page now shows up to 3 specialty chips (+N more)
+  via `get_cleaner_specialties`, so customers remember why they favorited someone.
+- **Ideation pass (backlog thin):** IDEAS Batch 9; promoted 2 safe P3 items
+  (book-a-favorite button + `/book?cleaner=` prefill, cleaner profile preview).
+- **Verify:** `tsc` clean · `vitest` 44 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** book-a-favorite button (batch 9 #1) or cleaner profile preview
+  (batch 9 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner bio/specialties on the admin detail page
 
 - **Shipped item (IDEAS batch 8 #1, code-only, no migration):** the admin cleaner

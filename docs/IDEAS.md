@@ -9,6 +9,21 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 9 — ideation (2026-06-30, plan-backlog refresh)
+
+1. **"Book" button on each favorite + `/book?cleaner=` prefill** · *value:*
+   one-tap rebook a trusted cleaner from the favorites list · *small* · why: the
+   favorites list only has "remove" today; the book-a-favorite dropdown exists.
+2. **Cleaner profile preview ("how customers see you")** · *value:* cleaners see
+   their public card (bio + specialties + verified) and are motivated to polish it
+   · *small* · code-only.
+3. **Bio/rating/specialties on the live-map winner reveal** · *small–medium*
+   (already queued batch 7 #2 — extend to specialties).
+4. **Areas + specialties columns on the admin cleaner roster list** · *small* ops.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 book-a-favorite button, #2 cleaner
+> profile preview. #3 already queued; #4 left in the ledger.
+
 ## Batch 8 — ideation (2026-06-30, plan-backlog refresh)
 
 Now that cleaner bio (0035) + specialties (0036) exist, spread the trust info:
