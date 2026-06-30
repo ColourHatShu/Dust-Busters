@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: printable receipt view
+
+- **Shipped item (IDEAS batch 10 #2, code-only, no migration):** `/bookings/[id]/receipt`
+  — a clean, paper-style receipt (branded header, billed-to/service/scheduled
+  meta, itemized payments, Net paid total) RLS-scoped to the customer's own
+  booking, with a "Print / Save as PDF" button (`window.print()`). Added a global
+  `@media print` rule that hides the `nav`/`footer`/`.print-hide` chrome + the body
+  gradient so it prints to clean paper, and a "View printable receipt" link in the
+  booking Payments section.
+- **Verify:** `tsc` clean · `vitest` 49 green · `next build` compiled the new
+  `/bookings/[id]/receipt` route. Committed + pushed.
+- **Next up:** bio/rating/specialties on the live-map winner reveal (batch 7 #2) —
+  the last queued safe item; after that an ideation pass / the well is shallow.
+
+---
+
 ## 📊 Milestone summary — 2026-06-30 (19 items shipped this run)
 
 Branch `dustbusters-autonomous`; DB at migration **0036**; test suite **49** (4→49

@@ -2086,3 +2086,11 @@ p {
   .card, .card-interactive, .stat-card, .btn-primary, .seg-item { transition: none !important; }
   .card-interactive:hover, .stat-card:hover, .btn-primary:hover { transform: none !important; }
 }
+
+/* ---- Print (e.g. the booking receipt: drop app chrome, flatten to paper) ---- */
+@media print {
+  nav, footer, .print-hide { display: none !important; }
+  body { background: #ffffff !important; }
+  body::before, body::after { display: none !important; }
+  .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+}

@@ -446,6 +446,13 @@ export default async function BookingStatusPage({
                 <span className="text-sm font-medium text-slate-600">Net paid</span>
                 <span className="amount-lg">${netPaid.toFixed(2)}</span>
               </div>
+              <Link
+                href={`/bookings/${id}/receipt`}
+                className="link-accent inline-flex items-center gap-1.5 text-sm font-medium"
+              >
+                <Receipt className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                View printable receipt
+              </Link>
             </section>
           )}
 
