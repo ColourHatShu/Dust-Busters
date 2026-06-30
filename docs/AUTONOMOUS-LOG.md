@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: admin bookings CSV export + ideation
+
+- **Ideation pass** (safe actionable backlog had thinned to <3): added IDEAS.md
+  Batch 3 and promoted three — admin bookings CSV export (shipped), cleaner
+  "Get directions" link, admin month-vs-all-time revenue.
+- **Shipped:** `GET /admin/bookings/export` route streams the bookings list as a
+  CSV (Booking ID, Created, Scheduled, Status, Area, Customer, Cleaner, Hours,
+  Total) honouring the same q/status/from/to filters as the list page, so admins
+  "export what they see". Added an "Export CSV" button that carries the active
+  filters into the export URL. UTF-8 BOM + attachment headers; RLS via the admin
+  server client. Pairs with the date-range filter shipped earlier.
+- **Verify:** `tsc` clean · `next build` green (`/admin/bookings/export`
+  compiled) · `npm test` 20/20.
+- **Next up:** cleaner "Get directions" link (trivial); admin month-vs-all-time
+  revenue.
+
+---
+
 ## 2026-06-30 — 📊 Milestone summary (16 Knight items shipped; 8 since the last)
 
 Since the last milestone (item 8), shipped + verified + pushed to

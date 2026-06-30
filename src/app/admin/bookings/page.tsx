@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ClipboardList } from "lucide-react";
+import { ChevronLeft, ClipboardList, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { bookingBadgeClass, bookingStatusLabel } from "@/lib/status";
 import AdminSearch from "../AdminSearch";
@@ -68,6 +68,16 @@ export default async function AdminBookingsPage({
 
   const rows = bookings ?? [];
 
+  // Carry the active filters into the CSV export so it exports what's shown.
+  const exportParams = new URLSearchParams();
+  if (q) exportParams.set("q", q);
+  if (status && STATUSES.includes(status)) exportParams.set("status", status);
+  if (isDate(from)) exportParams.set("from", from!);
+  if (isDate(to)) exportParams.set("to", to!);
+  const exportHref = `/admin/bookings/export${
+    exportParams.toString() ? `?${exportParams}` : ""
+  }`;
+
   return (
     <main className="mx-auto max-w-6xl p-6">
       <Link
@@ -77,15 +87,23 @@ export default async function AdminBookingsPage({
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         Admin
       </Link>
-      <div className="mb-6">
-        <h1 className="page-title">Bookings</h1>
-        <p className="page-subtitle">
-          {rows.length} {rows.length === 1 ? "booking" : "bookings"}
-          {status ? ` · ${bookingStatusLabel(status)}` : ""}
-          {isDate(from) || isDate(to)
-            ? ` · ${isDate(from) ? from : "any"} → ${isDate(to) ? to : "any"}`
-            : ""}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="page-title">Bookings</h1>
+          <p className="page-subtitle">
+            {rows.length} {rows.length === 1 ? "booking" : "bookings"}
+            {status ? ` · ${bookingStatusLabel(status)}` : ""}
+            {isDate(from) || isDate(to)
+              ? ` · ${isDate(from) ? from : "any"} → ${isDate(to) ? to : "any"}`
+              : ""}
+          </p>
+        </div>
+        {rows.length > 0 && (
+          <a href={exportHref} className="btn-base btn-secondary text-sm" download>
+            <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Export CSV
+          </a>
+        )}
       </div>
 
       <AdminSearch placeholder="Search bookings by area" defaultValue={q}>

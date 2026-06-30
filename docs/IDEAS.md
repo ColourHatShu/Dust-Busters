@@ -9,6 +9,27 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 3 — ideation (2026-06-30, backlog refresh)
+
+1. **Admin bookings CSV export** (respecting the current filters) · *value:* ops
+   pulls a filtered booking set for accounting/reporting · *small* · why: pairs
+   with the new date-range filter; mirrors the cleaner earnings export. → **SHIPPED
+   this batch**.
+2. **Cleaner "Get directions" link** on the job detail (Google/Apple Maps deep
+   link to the service address, after the deposit reveals it) · *value:* cleaners
+   navigate in one tap · *trivial* · why: address is already shown; just link it.
+3. **Admin "this month vs all-time" revenue** on the dashboard · *value:* quick
+   trend read · *small* · why: revenue stat exists; add a month window.
+4. **Customer booking detail: deposit/balance split bar** (visual % like the
+   landing pricing) · *value:* clearer money breakdown · *trivial–small*.
+5. **Cleaner availability: per-date "unavailable" (time off)** beyond on/off ·
+   *value:* don't ring cleaners on days they can't work · *medium*.
+6. **Saved-address picker on /book reused for reschedule** · *value:* faster ·
+   *small* (depends on reschedule landing first).
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): admin bookings CSV export (shipped this
+> firing), cleaner "Get directions" link, admin month-vs-all-time revenue.
+
 ## Batch 2 — ideation (2026-06-30, backlog refresh)
 
 1. **LocalBusiness JSON-LD** structured data on the landing · *value:* local SEO +
