@@ -9,6 +9,24 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 11 — ideation (2026-06-30, plan-backlog refresh)
+
+> **Reality check:** the safe, non-founder, code-only well is now genuinely
+> shallow. The remaining high-leverage work is **founder-gated** (Stripe webhook
+> secret + deploy, email/SMS keys to activate the built channel, Stripe Connect
+> for tips/payouts, real ID verification) or **large** (recurring/weekly bookings,
+> referral/discount with money plumbing). These two are the defensible smaller wins:
+
+1. **a11y: aria-live on the cleaner live job feed** · *value:* SR cleaners hear new
+   offers · *small* · code-only (the booking status region already uses this).
+2. **Perf: parallelize the cleaner jobs page's ~6 sequential DB reads** ·
+   *value:* faster page load · *small* · code-only (Promise.all independent reads).
+3. **Recurring/weekly bookings** · *large* · the next big customer feature, but a
+   real project (series model + scheduling) — flag for a founder go-ahead.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 aria-live job feed, #2 jobs-page perf.
+> #3 left in the ledger (large; wants founder sign-off on scope).
+
 ## Batch 10 — ideation (2026-06-30, plan-backlog refresh)
 
 > Note: the safe, non-founder code-only well is getting shallow — most remaining

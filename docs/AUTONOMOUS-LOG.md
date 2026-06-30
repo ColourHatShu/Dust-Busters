@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: work-days on reschedule + rebroadcast
+
+- **Shipped item (0037 follow-up):** migration **`0038`** recreates
+  `rebroadcast_booking` + `reschedule_booking` with the `work_days` weekday filter
+  on top of the 0034 time-off filter (rebroadcast resolves the weekday from
+  `b.scheduled_at`, reschedule from the new `p_scheduled_at`). The cleaner
+  availability system (online toggle + time-off + work-days) is now consistent
+  across **all three** dispatch paths.
+- **Verify:** applied via the pooler in a transaction; confirmed both functions
+  now carry **both** filters (work_days + time_off). RPC-only (no app code).
+  `tsc` clean · `vitest` 55 green · `next build` compiled.
+- **Ideation pass:** IDEAS Batch 11 — promoted 2 defensible small wins (aria-live
+  on the live job feed, jobs-page read parallelization) and flagged plainly that
+  the safe code-only well is shallow; bigger value is founder-gated or large
+  (recurring bookings).
+- **Next up:** aria-live job feed (batch 11 #1) or jobs-page perf (batch 11 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner weekly recurring availability
 
 - **Shipped item (the "ambitious-but-grounded" pick as the safe well thinned):**
