@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: customer rating on the cleaner's offer card
+
+- **Shipped item (IDEAS batch 6 #3, code-only, no migration):** each open-offer
+  card on `/cleaner/jobs` now shows "Customer: ⭐ X.X (N)" (or "New customer")
+  pulled from the existing `get_customer_rating` RPC (SECURITY DEFINER), fetched
+  per unique offer customer via `Promise.all` (the open-offer list is small).
+  Added `customer_id` to the offers query. Closes the two-way-review loop on the
+  supply side — a cleaner can now accept informed.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** "what to expect" pre-arrival card (batch 6 #2) or the onboarding
+  completeness meter (batch 6 #4).
+
+---
+
 ## 📊 Milestone summary — 2026-06-30 (8 items shipped this run)
 
 Since the loop was restarted today, 8 verified+pushed items (HEAD `~`8 commits on

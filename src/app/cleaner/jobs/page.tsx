@@ -31,6 +31,7 @@ import {
   CalendarOff,
   X,
   TrendingUp,
+  Star,
 } from "lucide-react";
 
 const DEPOSIT_PAID_AND_LATER = new Set([
@@ -96,7 +97,7 @@ export default async function CleanerJobsPage({
   const { data: offers } = await supabase
     .from("booking_offers")
     .select(
-      "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount, cleaner_payout, broadcast_expires_at)"
+      "booking_id, state, bookings(id, status, scheduled_at, hours, area, total_amount, deposit_amount, cleaner_payout, broadcast_expires_at, customer_id)"
     )
     .eq("cleaner_id", user.id)
     .eq("state", "rung");
@@ -129,6 +130,32 @@ export default async function CleanerJobsPage({
       ),
     );
   }
+
+  // Customer rating per open offer, so a cleaner can accept informed (two-way
+  // reviews). get_customer_rating is SECURITY DEFINER; the offer list is small.
+  const offerCustomerIds = Array.from(
+    new Set(
+      openOffers
+        .map((o) => {
+          const b = Array.isArray(o.bookings) ? o.bookings[0] : o.bookings;
+          return b?.customer_id as string | undefined;
+        })
+        .filter(Boolean) as string[],
+    ),
+  );
+  const customerRatings: Record<string, { avg: number | null; count: number }> = {};
+  await Promise.all(
+    offerCustomerIds.map(async (cid) => {
+      const { data } = await supabase.rpc("get_customer_rating", {
+        p_customer: cid,
+      });
+      const r = Array.isArray(data) ? data[0] : data;
+      customerRatings[cid] = {
+        avg: r?.avg_rating ?? null,
+        count: Number(r?.review_count ?? 0),
+      };
+    }),
+  );
 
   // Also cancel this cleaner's accepted jobs whose deposit deadline passed
   // unpaid — frees their schedule (the accept conflict-guard treats 'accepted'
@@ -458,6 +485,30 @@ export default async function CleanerJobsPage({
                       <div className="mt-2">
                         <Countdown expiresAt={b.broadcast_expires_at ?? null} />
                       </div>
+                      {(() => {
+                        const cid = b.customer_id as string | undefined;
+                        const cr = cid ? customerRatings[cid] : undefined;
+                        return (
+                          <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                            <span className="text-slate-400">Customer:</span>
+                            {cr && cr.avg != null ? (
+                              <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                                <Star
+                                  className="h-3.5 w-3.5 text-amber-400"
+                                  fill="currentColor"
+                                  aria-hidden="true"
+                                />
+                                {cr.avg}
+                                <span className="font-normal text-slate-400">
+                                  ({cr.count})
+                                </span>
+                              </span>
+                            ) : (
+                              <span>New customer</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="shrink-0 text-right">
                       <div className="text-xl font-bold tabular-nums text-emerald-700">
