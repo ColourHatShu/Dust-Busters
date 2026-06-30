@@ -5,6 +5,30 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Feature: cleaner time off (block specific dates)
+
+- **Item:** IDEAS batch 3 #5 — match-quality improvement. Cleaners only had an
+  on/off toggle; now they can block specific dates (vacation, appointments) so
+  the dispatcher never rings them for a day they can't work.
+- **Shipped (one additive migration + UI):**
+  - **Migration `0033_cleaner_time_off`** (APPLIED + verified live via pooler):
+    `cleaner_time_off` table (`cleaner_id`, `off_date`, unique per pair) with RLS
+    (cleaner manages own rows). `request_booking` recreated to exclude a cleaner
+    whose `off_date` equals the booking's **Pacific** service date — in both the
+    preferred-cleaner and broadcast branches. Single 7-arg signature confirmed.
+  - **Safety:** fully additive — a cleaner with no time-off rows is eligible
+    exactly as before. Verified the seeded Courtenay roster still matches **3**
+    eligible cleaners post-migration (dispatch unaffected).
+  - **UI:** a "Time off" card on `/cleaner/jobs` — add a date (min = Pacific
+    today), see upcoming blocked dates as removable chips. New `addTimeOff`
+    (idempotent upsert) + `removeTimeOff` actions.
+- **Known follow-up:** `reschedule_booking`/`rebroadcast_booking` re-ring on a new
+  date without the time-off filter yet (low impact — the cleaner can decline).
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed to `origin/dustbusters-autonomous`.
+
+---
+
 ## 2026-06-30 — Feature: structured cleaning scope / checklist on a booking
 
 - **Item:** IDEAS batch 0 #1 ("room-by-room cleaning checklist") — the oldest

@@ -71,6 +71,64 @@ export async function setAvailability(accepting: boolean) {
   revalidatePath("/cleaner/jobs");
 }
 
+// Today's date in Pacific wall-time as YYYY-MM-DD (en-CA renders ISO order).
+function todayPacific(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+// Block a date the cleaner is unavailable (vacation, appointments). The
+// dispatcher (request_booking, 0033) then won't ring them for that service date.
+export async function addTimeOff(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const date = String(formData.get("off_date") || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < todayPacific()) {
+    jobsError("Pick a valid date that isn't in the past.");
+  }
+
+  // Idempotent: re-adding the same date is a no-op (unique cleaner_id+off_date).
+  const { error } = await supabase
+    .from("cleaner_time_off")
+    .upsert(
+      { cleaner_id: user.id, off_date: date },
+      { onConflict: "cleaner_id,off_date", ignoreDuplicates: true },
+    );
+  if (error) {
+    console.error("addTimeOff failed:", error.message);
+    jobsError("We couldn't save that date off just now. Please try again.");
+  }
+  revalidatePath("/cleaner/jobs");
+}
+
+export async function removeTimeOff(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // RLS already restricts deletes to the owner; the explicit filter is belt-and-suspenders.
+  const { error } = await supabase
+    .from("cleaner_time_off")
+    .delete()
+    .eq("id", id)
+    .eq("cleaner_id", user.id);
+  if (error) {
+    console.error("removeTimeOff failed:", error.message);
+    jobsError("We couldn't remove that date off just now. Please try again.");
+  }
+  revalidatePath("/cleaner/jobs");
+}
+
 export async function declineJob(bookingId: string) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("decline_offer", {

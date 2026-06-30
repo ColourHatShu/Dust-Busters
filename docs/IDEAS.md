@@ -40,6 +40,9 @@ Legend — effort: trivial / small / medium / large.
    landing pricing) · *value:* clearer money breakdown · *trivial–small*.
 5. **Cleaner availability: per-date "unavailable" (time off)** beyond on/off ·
    *value:* don't ring cleaners on days they can't work · *medium*.
+   → **SHIPPED 2026-06-30** (migration 0033 + "Time off" card; dispatcher skips
+   blocked Pacific dates). The fuller **weekly recurring schedule** (batch 2 #6)
+   is still open.
 6. **Saved-address picker on /book reused for reschedule** · *value:* faster ·
    *small* (depends on reschedule landing first).
 

@@ -7,6 +7,8 @@ import {
   startJob,
   completeJob,
   setAvailability,
+  addTimeOff,
+  removeTimeOff,
 } from "../actions";
 import JobsLive from "./JobsLive";
 import Countdown from "./Countdown";
@@ -26,6 +28,8 @@ import {
   AlertCircle,
   BellRing,
   Briefcase,
+  CalendarOff,
+  X,
 } from "lucide-react";
 
 const DEPOSIT_PAID_AND_LATER = new Set([
@@ -55,6 +59,21 @@ export default async function CleanerJobsPage({
     .eq("profile_id", user.id)
     .maybeSingle();
   const accepting = cd?.accepting_jobs ?? true;
+
+  // Upcoming time off (dates the cleaner blocked) — Pacific "today" forward.
+  const todayPacific = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const { data: timeOff } = await supabase
+    .from("cleaner_time_off")
+    .select("id, off_date")
+    .eq("cleaner_id", user.id)
+    .gte("off_date", todayPacific)
+    .order("off_date", { ascending: true });
+  const upcomingTimeOff = timeOff ?? [];
 
   // Open offers ringing right now
   const { data: offers } = await supabase
@@ -225,6 +244,69 @@ export default async function CleanerJobsPage({
             {accepting ? "Go offline" : "Go online"}
           </button>
         </form>
+      </div>
+
+      {/* Time off — block dates you're unavailable */}
+      <div className="card card-sm space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="icon-tile icon-tile-sm icon-tile-soft">
+            <CalendarOff className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-semibold text-slate-900">Time off</p>
+            <p className="text-xs text-slate-500">
+              Block days you&apos;re away — you won&apos;t be sent requests for
+              those dates.
+            </p>
+          </div>
+        </div>
+
+        <form action={addTimeOff} className="flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-1.5">
+            <span className="form-label">Add a date</span>
+            <input
+              type="date"
+              name="off_date"
+              required
+              min={todayPacific}
+              className="input-modern"
+              aria-label="Date off"
+            />
+          </label>
+          <button className="btn-base btn-secondary text-sm">Add</button>
+        </form>
+
+        {upcomingTimeOff.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {upcomingTimeOff.map((t) => {
+              const [y, m, d] = t.off_date.split("-").map(Number);
+              const label = new Date(y, m - 1, d).toLocaleDateString("en-CA", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              });
+              return (
+                <span
+                  key={t.id}
+                  className="badge badge-neutral inline-flex items-center gap-1.5"
+                >
+                  {label}
+                  <form action={removeTimeOff.bind(null, t.id)}>
+                    <button
+                      type="submit"
+                      aria-label={`Remove ${label}`}
+                      className="-mr-1 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                    </button>
+                  </form>
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400">No upcoming time off scheduled.</p>
+        )}
       </div>
 
       {notice === "conflict" && (
