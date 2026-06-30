@@ -5,6 +5,21 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: cleaner earnings period summary
+
+- **Shipped item (IDEAS batch 7 #3, code-only, no migration):** two rolling
+  net-earnings stat cards — "Last 7 days" and "Last 30 days" (with job counts) —
+  below the existing all-time summary on the cleaner earnings page. Computed by
+  job date from the paid jobs using the same stored-payout math, so a cleaner sees
+  recent momentum, not just a lifetime total.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** cleaner specialties/tags (batch 6 #1, migration) or cleaner
+  bio/rating on the map winner reveal (batch 7 #2). Backlog thin → next firing
+  likely runs an ideation pass.
+
+---
+
 ## 2026-06-30 — Knight firing: add-to-calendar (.ics)
 
 - **Shipped item (IDEAS batch 7 #1, code-only, no migration):** a new

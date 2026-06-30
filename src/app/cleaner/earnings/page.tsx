@@ -11,6 +11,7 @@ import {
   Info,
   Wallet,
   Download,
+  CalendarDays,
 } from "lucide-react";
 
 function StatCard({
@@ -96,6 +97,23 @@ export default async function CleanerEarningsPage() {
     0
   );
 
+  // Recent (rolling) net earnings by job date, so a cleaner sees momentum, not
+  // just an all-time total.
+  const now = Date.now();
+  const DAY = 86_400_000;
+  const inLast = (iso: string, days: number) =>
+    new Date(iso).getTime() >= now - days * DAY;
+  const periodNet = (days: number) =>
+    paidJobs
+      .filter((j) => inLast(j.scheduled_at, days))
+      .reduce((sum, j) => sum + payoutOf(j), 0);
+  const periodCount = (days: number) =>
+    paidJobs.filter((j) => inLast(j.scheduled_at, days)).length;
+  const net7 = periodNet(7);
+  const net30 = periodNet(30);
+  const count7 = periodCount(7);
+  const count30 = periodCount(30);
+
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -145,6 +163,24 @@ export default async function CleanerEarningsPage() {
           sub={`${pendingJobs.length} job${pendingJobs.length !== 1 ? "s" : ""} awaiting customer payment`}
         />
       </div>
+
+      {/* Recent earnings (rolling, by job date) */}
+      {paidJobs.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            icon={CalendarDays}
+            label="Last 7 days (net)"
+            value={`$${net7.toFixed(2)}`}
+            sub={`${count7} job${count7 !== 1 ? "s" : ""}`}
+          />
+          <StatCard
+            icon={CalendarDays}
+            label="Last 30 days (net)"
+            value={`$${net30.toFixed(2)}`}
+            sub={`${count30} job${count30 !== 1 ? "s" : ""}`}
+          />
+        </div>
+      )}
 
       {/* Fee info */}
       <div className="alert alert-info">
