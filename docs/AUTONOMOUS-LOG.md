@@ -5,6 +5,28 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Feature: PWA installability (Add to Home Screen)
+
+- **Item:** IDEAS batch 1 #6 (install half) — a mobile-first marketplace should be
+  installable. Customers track live matching + pay from their phone; cleaners
+  react to offers on the go.
+- **Shipped (code-only, no DB, no secrets):**
+  - `app/manifest.ts` — standalone display, brand-dark theme/background,
+    short_name, description, categories.
+  - Generated icons (no asset files): `/icons/192` + `/icons/512` route handlers
+    (incl. a maskable 512) and `app/apple-icon.tsx` (iOS), all from a shared
+    `lib/brand-mark.tsx` (emerald "DB" monogram on #070b14, ~38% safe-zone
+    padding for maskable crops; matches opengraph-image).
+  - `viewport.themeColor = #070b14` + `appleWebApp` metadata (capable, title,
+    black-translucent status bar).
+- **Note:** the OTHER half of the idea — web push notifications — still needs
+  founder VAPID keys; logged, not attempted.
+- **Verify:** `tsc` clean · `next build` compiled `/manifest.webmanifest`,
+  `/icons/192`, `/icons/512`, `/apple-icon` (manifest + apple-icon prerendered
+  OK, so the shared render path is proven) · 39 tests green. Committed + pushed.
+
+---
+
 ## 2026-06-30 — Feature: cleaner time off (block specific dates)
 
 - **Item:** IDEAS batch 3 #5 — match-quality improvement. Cleaners only had an

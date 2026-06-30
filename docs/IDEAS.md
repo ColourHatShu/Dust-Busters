@@ -110,6 +110,8 @@ Legend — effort: trivial / small / medium / large.
 6. **PWA install + web push notifications** · *value:* "add to home screen" + push
    for cleaner-found / pay-balance / review nudges (no app store) · *medium* · why:
    the deposit→balance cash flow depends on out-of-app nudges.
+   → **INSTALL HALF SHIPPED 2026-06-30** (manifest + generated icons + theme).
+   Web push still open (needs founder VAPID keys).
 7. **Demand/coverage indicator for cleaners** ("3 jobs near you this week") ·
    *value:* pulls supply toward demand · *small* · why: balances the marketplace
    without manual ops.

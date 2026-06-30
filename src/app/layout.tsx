@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
@@ -50,6 +50,15 @@ export const metadata: Metadata = {
     title: "Dust Busters — Home Cleaning in Courtenay, BC",
     description,
   },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070b14",
 };
 
 export default function RootLayout({
