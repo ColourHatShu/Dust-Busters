@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   AlertTriangle,
   CheckCircle,
+  FileText,
 } from "lucide-react";
 
 export default async function CleanerProfilePage() {
@@ -30,7 +31,7 @@ export default async function CleanerProfilePage() {
   // Fetch cleaner_details
   const { data: details } = await supabase
     .from("cleaner_details")
-    .select("areas_served, id_verified, active, availability_note")
+    .select("areas_served, id_verified, active, availability_note, bio")
     .eq("profile_id", user.id)
     .single();
 
@@ -38,6 +39,7 @@ export default async function CleanerProfilePage() {
   const isVerified = details?.id_verified ?? false;
   const isActive = details?.active ?? false;
   const availabilityNote = details?.availability_note ?? "";
+  const bio = details?.bio ?? "";
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -105,6 +107,27 @@ export default async function CleanerProfilePage() {
                 ))}
               </div>
             </fieldset>
+
+            {/* About me — shown to customers on the booking cleaner card */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="bio" className="form-label">
+                <FileText className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
+                About me
+              </label>
+              <textarea
+                id="bio"
+                name="bio"
+                rows={4}
+                maxLength={600}
+                defaultValue={bio}
+                className="input-modern"
+                placeholder="A short intro for customers — your experience, what you specialise in, and how you like to work. (e.g. '5 years cleaning homes in the Comox Valley, pet-friendly, eco products on request.')"
+              />
+              <p className="form-hint">
+                Shown to customers when you&apos;re matched. Keep it friendly and
+                professional — no contact details.
+              </p>
+            </div>
 
             <button type="submit" className="w-full btn-base btn-primary">
               Save changes

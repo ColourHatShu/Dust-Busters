@@ -5,6 +5,45 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 📊 Milestone summary — 2026-06-30 (8 items shipped this run)
+
+Since the loop was restarted today, 8 verified+pushed items (HEAD `~`8 commits on
+`dustbusters-autonomous`); test suite 30 → 39; DB at migration **0035**.
+
+- **New product modules:** cleaning scope/checklist (`0032`), cleaner time-off
+  (`0033`, honoured across all 3 dispatch paths incl. `0034`), PWA installability,
+  cleaner "About me" bio (`0035`).
+- **Cleaner UX:** deposit-deadline visibility on awaiting-deposit jobs, demand/
+  activity "last 7 days" card.
+- **Customer UX:** deposit/balance split bar.
+- **Queued (P3, safe):** specialties/tags, "what to expect" card, customer rating
+  on the offer card, onboarding completeness meter (IDEAS batch 6).
+- **⛔ Needs the founder (unchanged):** Stripe live keys + `STRIPE_WEBHOOK_SECRET`,
+  Vercel deploy, email/SMS keys (channel built), Stripe Connect (tips/payouts),
+  real ID verification (Storage/Identity), rate limiting (deploy-env + thresholds).
+
+---
+
+## 2026-06-30 — Knight firing: cleaner "About me" bio
+
+- **Shipped item (trust feature) + ideation pass (backlog was thin):** migration
+  **`0035`** adds `cleaner_details.bio`; cleaners edit it on their profile (existing
+  RLS lets them update their own row), and a small `get_cleaner_bio(uuid)` SECURITY
+  DEFINER reader exposes just the trimmed bio to customers (they can't read
+  `cleaner_details` directly) — the same controlled-reveal pattern as
+  `get_cleaner_card`, avoiding risky changes to that RPC's return type (it's
+  consumed by `get_booking_matching`). Shown as an "About <name>" card on the
+  booking cleaner card.
+- **Ideation:** added IDEAS Batch 6 and promoted 4 safe P3 items (specialties/tags,
+  what-to-expect card, customer rating on the offer card, onboarding meter).
+- **Verify:** applied via the pooler in a transaction; confirmed the `bio` column +
+  `get_cleaner_bio` signature, sample call returns null (no error). `tsc` clean ·
+  `vitest` 39 green · `next build` compiled. Committed + pushed.
+- **Next up:** customer's rating on the cleaner's offer card (batch 6 #3) or the
+  "what to expect" card (batch 6 #2).
+
+---
+
 ## 2026-06-30 — Knight firing: deposit/balance split bar
 
 - **Shipped item (IDEAS batch 5 #4, code-only, no migration):** a two-segment

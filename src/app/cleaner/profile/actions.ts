@@ -22,6 +22,8 @@ export async function updateCleanerProfile(formData: FormData) {
   const name = formData.get("name")?.toString().trim() ?? "";
   const phone = formData.get("phone")?.toString().trim() ?? "";
   const areasRaw = formData.getAll("areas").map(String);
+  // "About me" shown to customers — trim + cap length (the column is free text).
+  const bio = (formData.get("bio")?.toString().trim() ?? "").slice(0, 600);
 
   // Update profile name + phone
   const { error: profileError } = await supabase
@@ -31,10 +33,10 @@ export async function updateCleanerProfile(formData: FormData) {
 
   if (profileError) throw new Error(profileError.message);
 
-  // Update areas_served in cleaner_details
+  // Update areas_served + bio in cleaner_details
   const { error: detailsError } = await supabase
     .from("cleaner_details")
-    .update({ areas_served: areasRaw })
+    .update({ areas_served: areasRaw, bio: bio || null })
     .eq("profile_id", user.id);
 
   if (detailsError) throw new Error(detailsError.message);

@@ -139,11 +139,17 @@ export default async function BookingStatusPage({
   let cleaner: { name: string; id_verified: boolean; jobs_completed: number } | null =
     null;
   let isFavorite = false;
+  let cleanerBio: string | null = null;
   if (booking.cleaner_id) {
     const { data } = await supabase.rpc("get_cleaner_card", {
       p_cleaner: booking.cleaner_id,
     });
     cleaner = Array.isArray(data) ? data[0] : data;
+
+    const { data: bio } = await supabase.rpc("get_cleaner_bio", {
+      p_cleaner: booking.cleaner_id,
+    });
+    cleanerBio = (typeof bio === "string" ? bio : null) || null;
 
     const { data: fav } = await supabase
       .from("customer_favorites")
@@ -576,6 +582,18 @@ export default async function BookingStatusPage({
                   </button>
                 </form>
               )}
+            </div>
+          )}
+
+          {/* Cleaner "About me" bio */}
+          {cleaner && cleanerBio && (
+            <div className="card">
+              <p className="eyebrow-label">
+                About {cleaner.name?.split(" ")[0] || "your cleaner"}
+              </p>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-600">
+                {cleanerBio}
+              </p>
             </div>
           )}
 

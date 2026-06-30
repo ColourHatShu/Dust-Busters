@@ -9,6 +9,30 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 6 — ideation (2026-06-30, plan-backlog refresh)
+
+Backlog thin again after batch 5 shipped out. Fresh, de-duped ideas:
+
+1. **Cleaner specialties / tags + years of experience** (structured, beyond the
+   free-text bio) shown on the cleaner card · *value:* sharper trust signal +
+   future filtering · *small–medium* · why: complements the new "About me" bio.
+2. **Customer "what to expect" pre-arrival card** on the booking page once a
+   cleaner is matched (secure pets, parking/access, the cleaner brings supplies,
+   etc.) · *value:* fewer day-of hiccups & access no-shows · *trivial–small*.
+3. **Show the customer's rating on the cleaner's offer card** before they accept
+   (two-way reviews already exist) · *value:* cleaners make an informed accept ·
+   *small* · why: `get_customer_rating` RPC already exists.
+4. **Cleaner onboarding completeness meter** (name, phone, areas, bio, availability)
+   · *value:* nudges cleaners to finish a credible profile · *small*.
+5. **Recurring / weekly bookings** ("book the same clean every week") · *value:*
+   predictable revenue + retention · *large* · why: scheduling + a series model.
+6. **Customer in-app notification preferences** (mute types) · *value:* control ·
+   *medium* · why: ties into the messaging channel once founder keys are added.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): #1 specialties/tags, #2 what-to-expect card,
+> #3 customer rating on the offer card, #4 onboarding completeness meter.
+> #5 recurring bookings + #6 notif prefs left in the ledger (larger/founder-tied).
+
 ## Batch 5 — ideation (2026-06-30, plan-backlog refresh)
 
 The plan's `[ ]` list ran thin (rate-limiting + founder/constrained items), so this
