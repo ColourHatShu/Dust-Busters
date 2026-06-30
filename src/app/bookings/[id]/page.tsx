@@ -31,6 +31,7 @@ import {
   Info,
   CalendarClock,
   Sparkles,
+  ListChecks,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -205,6 +206,11 @@ export default async function BookingStatusPage({
   const showReviewPrompt = REVIEW_ALLOWED.includes(booking.status) && !hasReview;
   const showBookAgain = BOOK_AGAIN_ALLOWED.includes(booking.status);
   const scopeLabels = checklistLabels(booking.checklist as string[] | null);
+  // "Getting ready" prep tips — shown once a cleaner is matched + the job is
+  // upcoming/ongoing (not before a match, not after it's done).
+  const showPrep = ["accepted", "deposit_paid", "in_progress"].includes(
+    booking.status,
+  );
   // Visual deposit/balance split (percentages always sum to 100).
   const totalAmt = Number(booking.total_amount) || 0;
   const depositPct =
@@ -423,6 +429,34 @@ export default async function BookingStatusPage({
                 <span className="text-sm font-medium text-slate-600">Net paid</span>
                 <span className="amount-lg">${netPaid.toFixed(2)}</span>
               </div>
+            </section>
+          )}
+
+          {/* Getting ready — pre-arrival tips once a cleaner is matched */}
+          {showPrep && (
+            <section className="card space-y-3">
+              <div className="flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-accent" strokeWidth={1.75} />
+                <h2 className="section-title">Getting ready for your clean</h2>
+              </div>
+              <ul className="space-y-2.5 text-sm text-slate-600">
+                {[
+                  "Secure pets, or let your cleaner know about them in the chat.",
+                  "Make sure parking and building/door access is sorted for the time slot.",
+                  "Put away anything valuable or fragile you'd rather handle yourself.",
+                  "Your cleaner brings standard cleaning supplies — mention anything special in the chat.",
+                  "Keep an eye on your messages in case they need to reach you on the day.",
+                ].map((tip) => (
+                  <li key={tip} className="flex items-start gap-2.5">
+                    <CheckCircle
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500"
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

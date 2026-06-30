@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: "getting ready" pre-arrival card
+
+- **Shipped item (IDEAS batch 6 #2, code-only, no migration):** a "Getting ready
+  for your clean" checklist card on the customer booking page (secure pets,
+  parking/access, put away valuables, the cleaner brings supplies, watch chat),
+  shown once a cleaner is matched and the job is upcoming/ongoing
+  (`accepted`/`deposit_paid`/`in_progress`). Reduces day-of access hiccups and the
+  no-show category cleaners can otherwise report.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** cleaner onboarding completeness meter (batch 6 #4) or cleaner
+  specialties/tags (batch 6 #1, needs a migration). Backlog getting thin → next
+  firing may run an ideation pass.
+
+---
+
 ## 2026-06-30 — Knight firing: customer rating on the cleaner's offer card
 
 - **Shipped item (IDEAS batch 6 #3, code-only, no migration):** each open-offer
