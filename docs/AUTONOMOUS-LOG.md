@@ -5,6 +5,19 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: admin "this month" revenue
+
+- **Item:** P3 (IDEAS batch 3). The dashboard showed only all-time revenue — no
+  sense of current-month trend.
+- **Shipped:** the Revenue stat card now shows all-time total as the headline with
+  a "$X this month" sub. Computed by adding `paid_at` to the existing paid-payments
+  query and summing rows whose `paid_at` falls in the current UTC calendar month
+  (no extra query, refunds still excluded).
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** backlog is thin/founder-gated — likely an ideation pass next.
+
+---
+
 ## 2026-06-30 — Knight iteration: cleaner "Get directions" link
 
 - **Item:** P3 (IDEAS batch 3). Cleaners had the service address but no quick way

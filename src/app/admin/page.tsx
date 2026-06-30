@@ -42,11 +42,21 @@ export default async function AdminHomePage() {
   // counted once — never negative or double-reduced).
   const { data: paidPayments } = await supabase
     .from("payments")
-    .select("amount")
+    .select("amount, paid_at")
     .eq("status", "paid")
     .neq("type", "refund");
   const totalRevenue = (paidPayments ?? []).reduce(
     (sum, p) => sum + Number(p.amount ?? 0),
+    0
+  );
+  // Revenue booked in the current calendar month (UTC month boundary).
+  const now = new Date();
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+  ).toISOString();
+  const monthRevenue = (paidPayments ?? []).reduce(
+    (sum, p) =>
+      sum + (p.paid_at && p.paid_at >= monthStart ? Number(p.amount ?? 0) : 0),
     0
   );
 
@@ -144,7 +154,7 @@ export default async function AdminHomePage() {
             </span>
           </div>
           <p className="stat-value">${money(totalRevenue)}</p>
-          <p className="stat-sub">from paid payments</p>
+          <p className="stat-sub">all-time · ${money(monthRevenue)} this month</p>
           <div className="mt-1 space-y-0.5 border-t border-emerald-200/60 pt-1.5">
             <p className="flex justify-between text-xs text-slate-500">
               <span>Platform (commission)</span>
