@@ -5,6 +5,28 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: reschedule a booking before deposit
+
+- **Item:** P2 customer value (took on a larger item — small-polish backlog was
+  exhausted). Customers could only cancel + rebook; now they can reschedule.
+- **Migration 0031** (applied + verified live via pooler): `reschedule_booking(
+  booking, scheduled_at)` SECURITY DEFINER — validates owner + pre-deposit status
+  (broadcasting/accepted/no_cleaner_found) + a ≥15-min-future time, moves
+  `scheduled_at`, resets the match (clears offers, nulls cleaner_id +
+  deposit_deadline), re-rings matching/verified/available cleaners for the new
+  time (same query as rebroadcast_booking), and releases + notifies any cleaner
+  who had accepted the old time.
+- **UI:** `reschedule-actions.ts` parses the datetime-local as Pacific
+  (parseBookingDate) and redirects with a banner on error; a "Reschedule this
+  booking" disclosure on the booking page (shown only pre-deposit) with a
+  datetime input + pending SubmitButton, plus a success banner.
+- **Verify:** migration verified live; `tsc` clean · `next build` green
+  (27 routes) · `npm test` 20/20.
+- **Next up:** backlog now mostly founder-gated (Stripe keys/deploy, email/SMS
+  keys, Stripe Connect) + rate limiting (needs a shared store) — ideation/ founder.
+
+---
+
 ## 2026-06-30 — Knight iteration: admin "this month" revenue
 
 - **Item:** P3 (IDEAS batch 3). The dashboard showed only all-time revenue — no

@@ -6,6 +6,7 @@ import MessagePanel from "./MessagePanel";
 import { payDeposit, payBalance } from "./payment-actions";
 import SubmitButton from "@/components/SubmitButton";
 import { cancelBooking } from "./cancel-actions";
+import { rescheduleBooking } from "./reschedule-actions";
 import MatchingMap, { type MatchingData } from "./matching/MatchingMap";
 import { toggleFavorite } from "./favorite-actions";
 import { bookingBadgeClass, bookingStatusLabel, paymentBadgeClass } from "@/lib/status";
@@ -27,10 +28,12 @@ import {
   Pencil,
   ShieldCheck,
   Info,
+  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 
 const CANCEL_ALLOWED = ["broadcasting", "accepted", "deposit_paid"];
+const RESCHEDULE_ALLOWED = ["broadcasting", "accepted", "no_cleaner_found"];
 const DISPUTE_ALLOWED = ["deposit_paid", "in_progress", "completed"];
 const MESSAGE_ALLOWED = ["accepted", "deposit_paid", "in_progress", "completed", "balance_paid"];
 const REVIEW_ALLOWED = ["completed", "balance_paid"];
@@ -55,12 +58,22 @@ export default async function BookingStatusPage({
     reviewError?: string;
     cancelError?: string;
     disputeError?: string;
+    rescheduleError?: string;
+    rescheduled?: string;
   }>;
 }) {
   const { id } = await params;
-  const { cancelled, payError, reviewError, cancelError, disputeError } =
-    await searchParams;
-  const actionError = payError || reviewError || cancelError || disputeError;
+  const {
+    cancelled,
+    payError,
+    reviewError,
+    cancelError,
+    disputeError,
+    rescheduleError,
+    rescheduled,
+  } = await searchParams;
+  const actionError =
+    payError || reviewError || cancelError || disputeError || rescheduleError;
   const { user } = await getSessionProfile();
   if (!user) redirect("/login");
 
@@ -176,6 +189,9 @@ export default async function BookingStatusPage({
   const showDeposit = booking.status === "accepted";
   const showBalance = booking.status === "completed";
   const showCancel = CANCEL_ALLOWED.includes(booking.status);
+  const showReschedule = RESCHEDULE_ALLOWED.includes(booking.status);
+  // Soft min for the date picker (now); the RPC enforces the real lead time.
+  const minDateTime = new Date().toISOString().slice(0, 16);
   const showDispute = DISPUTE_ALLOWED.includes(booking.status);
   const showMessages = !!booking.cleaner_id && MESSAGE_ALLOWED.includes(booking.status);
   const showReviewPrompt = REVIEW_ALLOWED.includes(booking.status) && !hasReview;
@@ -193,6 +209,15 @@ export default async function BookingStatusPage({
         <div className="alert alert-error">
           <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
           <span>{actionError}</span>
+        </div>
+      )}
+      {rescheduled && (
+        <div className="alert alert-success">
+          <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
+          <span>
+            Booking rescheduled — we&apos;re finding you a cleaner for the new
+            time.
+          </span>
         </div>
       )}
       {cancelled === "refunded" && (
@@ -348,6 +373,50 @@ export default async function BookingStatusPage({
           )}
 
           {/* Cancel booking */}
+          {showReschedule && (
+            <details className="card group">
+              <summary className="flex cursor-pointer select-none list-none items-center gap-2 font-medium text-slate-700">
+                <CalendarClock className="h-5 w-5" strokeWidth={1.5} />
+                Reschedule this booking
+              </summary>
+              <div className="mt-4 space-y-4">
+                <div className="alert alert-info">
+                  <Info className="h-5 w-5" strokeWidth={1.5} />
+                  <span>
+                    Pick a new date and time. We&apos;ll re-find a cleaner for the
+                    new slot — any current match is released. Available until you
+                    pay the deposit.
+                  </span>
+                </div>
+                <form
+                  action={async (formData: FormData) => {
+                    "use server";
+                    await rescheduleBooking(
+                      booking.id,
+                      String(formData.get("scheduled_at") ?? ""),
+                    );
+                  }}
+                  className="space-y-3"
+                >
+                  <input
+                    type="datetime-local"
+                    name="scheduled_at"
+                    min={minDateTime}
+                    required
+                    className="input-modern"
+                    aria-label="New date and time"
+                  />
+                  <SubmitButton
+                    className="w-full btn-base btn-primary"
+                    pendingText="Rescheduling…"
+                  >
+                    Reschedule booking
+                  </SubmitButton>
+                </form>
+              </div>
+            </details>
+          )}
+
           {showCancel && (
             <details className="card group">
               <summary className="flex cursor-pointer items-center gap-2 text-red-600 font-medium select-none list-none">
