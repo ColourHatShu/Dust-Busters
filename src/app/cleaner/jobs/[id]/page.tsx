@@ -90,23 +90,6 @@ export default async function CleanerJobDetailPage({
     ? checklistLabels(booking.checklist as string[] | null)
     : [];
 
-  // Load initial messages for MessagePanel
-  const { data: rawMessages } = await supabase
-    .from("booking_messages")
-    .select("id, sender_id, body, created_at, profiles(name)")
-    .eq("booking_id", id)
-    .order("created_at", { ascending: true });
-
-  const initialMessages = (rawMessages ?? []).map((m) => ({
-    id: m.id,
-    sender_id: m.sender_id,
-    body: m.body,
-    created_at: m.created_at,
-    profiles: Array.isArray(m.profiles)
-      ? (m.profiles[0] as { name: string } | null) ?? null
-      : (m.profiles as { name: string } | null),
-  }));
-
   const showStart = booking.status === "deposit_paid";
   const showComplete = booking.status === "in_progress";
   const showCalendar = ["accepted", "deposit_paid", "in_progress"].includes(
@@ -116,23 +99,46 @@ export default async function CleanerJobDetailPage({
   // Two-way reviews: once the job is done, the cleaner can rate the customer.
   const REVIEWABLE = new Set(["completed", "balance_paid", "closed"]);
   const canReviewCustomer = REVIEWABLE.has(booking.status);
-  let alreadyReviewedCustomer = false;
-  let customerRating: { avg_rating: number | null; review_count: number } | null =
-    null;
-  if (canReviewCustomer) {
-    const { data: existing } = await supabase
-      .from("customer_reviews")
-      .select("id")
-      .eq("booking_id", id)
-      .maybeSingle();
-    alreadyReviewedCustomer = !!existing;
 
-    const { data: rating } = await supabase.rpc("get_customer_rating", {
-      p_customer: booking.customer_id,
-    });
-    const r = Array.isArray(rating) ? rating[0] : rating;
-    customerRating = r ?? null;
-  }
+  // Messages + (when reviewable) the existing-review check and the customer's
+  // rating are all independent given the booking — fetch them concurrently.
+  const [rawMessagesRes, existingReviewRes, ratingRes] = await Promise.all([
+    supabase
+      .from("booking_messages")
+      .select("id, sender_id, body, created_at, profiles(name)")
+      .eq("booking_id", id)
+      .order("created_at", { ascending: true }),
+    canReviewCustomer
+      ? supabase
+          .from("customer_reviews")
+          .select("id")
+          .eq("booking_id", id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    canReviewCustomer
+      ? supabase.rpc("get_customer_rating", { p_customer: booking.customer_id })
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const initialMessages = (rawMessagesRes.data ?? []).map((m) => ({
+    id: m.id,
+    sender_id: m.sender_id,
+    body: m.body,
+    created_at: m.created_at,
+    profiles: Array.isArray(m.profiles)
+      ? (m.profiles[0] as { name: string } | null) ?? null
+      : (m.profiles as { name: string } | null),
+  }));
+
+  const alreadyReviewedCustomer = !!existingReviewRes.data;
+  const ratingData = ratingRes.data;
+  const customerRating: {
+    avg_rating: number | null;
+    review_count: number;
+  } | null =
+    ((Array.isArray(ratingData) ? ratingData[0] : ratingData) as
+      | { avg_rating: number | null; review_count: number }
+      | null) ?? null;
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-6">

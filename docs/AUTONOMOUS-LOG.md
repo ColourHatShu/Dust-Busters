@@ -5,6 +5,30 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: parallelize cleaner job-detail reads (+ safe backlog now exhausted)
+
+- **Shipped item (IDEAS batch 12 #2, code-only, no migration):** on the cleaner
+  job-detail page, messages + (when reviewable) the existing-review check + the
+  customer rating now run in one `Promise.all` (the conditional reads fall back to
+  a resolved `{data:null}`) instead of three serial round-trips. Pure read
+  reordering, no behaviour change.
+- **Verify:** `tsc` clean · `vitest` 55 green · `next build` compiled. Committed +
+  pushed.
+- **🟑 Status — safe backlog exhausted:** with the three heavy pages parallelized,
+  the **safe, non-founder, code-only backlog is genuinely done.** Across this run
+  the Knight shipped **26 items** (8 migrations 0032–0038; suite 4 → 55). Remaining
+  work is all ⛔ founder-gated or large/needs-sign-off — see below. Per the quality
+  bar, the Knight will NOT invent marginal busywork to fill firings; future firings
+  should ideate-only (no-op) until unblocked, or the loop should be paused/slowed.
+- **⛔ Needs the founder (the real next steps):** add `STRIPE_WEBHOOK_SECRET` +
+  Stripe live keys; deploy to Vercel (set `NEXT_PUBLIC_BASE_URL`); add Resend/Twilio
+  keys to activate the built email/SMS channel; Stripe Connect for tips/payouts;
+  real ID verification (Storage/Identity); decide rate-limit deploy-env + thresholds.
+- **Larger / needs scope sign-off:** recurring/weekly bookings; referral / first-clean
+  discount.
+
+---
+
 ## 2026-06-30 — Knight firing: parallelize customer booking page reads
 
 - **Shipped item (IDEAS batch 12 #1, code-only, no migration):** on the money-path
