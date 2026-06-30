@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: surface the deposit deadline (pay-by urgency)
+
+- **Item:** customer value — pairs with the 0029 deposit auto-expiry. An
+  awaiting-deposit booking gave no sense of urgency, so a customer could lose the
+  slot to expiry without warning.
+- **Shipped:** added `deposit_deadline` to the booking-detail query and a
+  "Reserve your slot — pay by <Pacific date/time> or it may be released" warning
+  banner in the deposit-pay section (shown only when a deadline is set).
+  Display-only, formatted in America/Vancouver.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 30/30.
+- **Note:** non-founder safe backlog is essentially exhausted (IDEAS batch 4
+  records this). Remaining substantial work is founder-gated or wants the founder
+  in the loop (rate limiter). Recommend pausing or a founder action (Stripe
+  webhook secret + deploy) for the next high-value step.
+- **Next up:** admin customers/cleaners CSV export (last small safe item).
+
+---
+
 ## 2026-06-30 — Knight iteration: harden the test safety net
 
 - **Item:** the high-value non-founder feature backlog is essentially done, so

@@ -9,6 +9,22 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 4 — ideation (2026-06-30, backlog refresh)
+
+1. **Deposit-deadline urgency on the booking detail** · *value:* customers see
+   "pay by X or lose the slot", reducing auto-expiry losses · *trivial* · why:
+   surfaces the 0029 deposit_deadline. → **SHIPPED this batch**.
+2. **Admin customers/cleaners CSV export** · *value:* roster/outreach reporting ·
+   *small* · why: mirrors the bookings/earnings export pattern.
+3. **Deposit-deadline countdown on the cleaner job list** (so cleaners see how
+   long a customer has to confirm) · *small* · why: sets expectations.
+
+> Note: the high-value, non-founder, unattended-safe backlog is largely
+> exhausted. Remaining substantial work is founder-gated (Stripe keys/deploy,
+> email/SMS keys, Stripe Connect, real ID verification) or wants the founder in
+> the loop (rate limiter on core RPCs). Promoted to plan: admin customers/cleaners
+> CSV export.
+
 ## Batch 3 — ideation (2026-06-30, backlog refresh)
 
 1. **Admin bookings CSV export** (respecting the current filters) · *value:* ops

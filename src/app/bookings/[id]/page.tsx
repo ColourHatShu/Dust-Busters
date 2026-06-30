@@ -86,7 +86,7 @@ export default async function BookingStatusPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id"
+      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id, deposit_deadline"
     )
     .eq("id", id)
     .eq("customer_id", user.id)
@@ -534,6 +534,25 @@ export default async function BookingStatusPage({
           {/* Deposit pay */}
           {showDeposit && (
             <div className="space-y-4">
+              {booking.deposit_deadline && (
+                <div className="alert alert-warning">
+                  <Clock className="h-5 w-5" strokeWidth={1.5} />
+                  <span>
+                    Reserve your slot — pay your deposit by{" "}
+                    <strong>
+                      {new Date(booking.deposit_deadline).toLocaleString("en-CA", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        timeZone: "America/Vancouver",
+                      })}
+                    </strong>{" "}
+                    or this booking may be released to other cleaners.
+                  </span>
+                </div>
+              )}
               <div className="alert alert-success">
                 <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
                 <span>
