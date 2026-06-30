@@ -199,6 +199,11 @@ export default async function BookingStatusPage({
   const showReviewPrompt = REVIEW_ALLOWED.includes(booking.status) && !hasReview;
   const showBookAgain = BOOK_AGAIN_ALLOWED.includes(booking.status);
   const scopeLabels = checklistLabels(booking.checklist as string[] | null);
+  // Visual deposit/balance split (percentages always sum to 100).
+  const totalAmt = Number(booking.total_amount) || 0;
+  const depositPct =
+    totalAmt > 0 ? Math.round((Number(booking.deposit_amount) / totalAmt) * 100) : 0;
+  const balancePct = totalAmt > 0 ? 100 - depositPct : 0;
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-6">
@@ -340,6 +345,29 @@ export default async function BookingStatusPage({
                 ${Number(booking.balance_amount).toFixed(2)}
               </span>
             </div>
+
+            {totalAmt > 0 && (
+              <div className="mt-4">
+                <div
+                  className="flex h-2.5 overflow-hidden rounded-full bg-slate-100"
+                  role="img"
+                  aria-label={`Deposit ${depositPct}%, balance ${balancePct}%`}
+                >
+                  <div className="bg-emerald-500" style={{ width: `${depositPct}%` }} />
+                  <div className="bg-emerald-200" style={{ width: `${balancePct}%` }} />
+                </div>
+                <div className="mt-2 flex justify-between text-xs text-slate-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                    Deposit {depositPct}%
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-200" aria-hidden="true" />
+                    Balance {balancePct}%
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Payment receipt */}

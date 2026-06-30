@@ -5,6 +5,25 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: deposit/balance split bar
+
+- **Shipped item (IDEAS batch 5 #4, code-only, no migration):** a two-segment
+  emerald bar under the Payment card on the customer booking page visualising the
+  deposit vs balance split (percentages always sum to 100), with a labelled
+  legend and a `role="img"` aria-label for screen readers. Makes the "pay a bit
+  now, the rest after" money split scannable at a glance.
+- **Also:** dropped batch 5 #5 (saved-address on reschedule) as moot — reschedule
+  only changes date/time, there's no address field to autocomplete.
+- **Verify:** `tsc` clean · `vitest` 39 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** the plan's actionable `[ ]` list is down to founder/constrained
+  items — the **next firing should run an ideation pass** (new IDEAS batch +
+  promote). Candidate themes: referral/first-clean discount, before/after photos
+  (needs Storage → likely founder), in-app tips (needs Stripe Connect → founder),
+  cleaner weekly recurring availability, customer-facing cleaner ETA.
+
+---
+
 ## 2026-06-30 — Knight firing: demand/activity indicator for cleaners
 
 - **Shipped item (IDEAS batch 5 #3, code-only, no migration):** a "Last 7 days"
