@@ -31,7 +31,7 @@ export default async function ReceiptPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, created_at",
+      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, created_at, discount_amount, promo_code",
     )
     .eq("id", id)
     .eq("customer_id", user.id)
@@ -170,6 +170,14 @@ export default async function ReceiptPage({
           <span className="font-semibold text-slate-700">Net paid</span>
           <span className="amount-lg">${netPaid.toFixed(2)}</span>
         </div>
+
+        {Number(booking.discount_amount) > 0 && (
+          <p className="text-xs text-emerald-600">
+            Discount applied
+            {booking.promo_code ? ` (${booking.promo_code})` : ""}: −$
+            {Number(booking.discount_amount).toFixed(2)}
+          </p>
+        )}
 
         <p className="text-xs text-slate-400">
           Booking total ${Number(booking.total_amount).toFixed(2)} (deposit $

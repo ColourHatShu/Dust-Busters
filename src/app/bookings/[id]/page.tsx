@@ -94,7 +94,7 @@ export default async function BookingStatusPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id, deposit_deadline, checklist"
+      "id, status, scheduled_at, hours, area, total_amount, deposit_amount, balance_amount, cleaner_id, customer_id, deposit_deadline, checklist, discount_amount, promo_code"
     )
     .eq("id", id)
     .eq("customer_id", user.id)
@@ -355,6 +355,17 @@ export default async function BookingStatusPage({
 
           {/* Payment card */}
           <div className="card">
+            {Number(booking.discount_amount) > 0 && (
+              <div className="detail-row">
+                <span className="detail-label">
+                  Discount
+                  {booking.promo_code ? ` (${booking.promo_code})` : ""}
+                </span>
+                <span className="detail-value text-emerald-600">
+                  −${Number(booking.discount_amount).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="detail-row">
               <span className="text-sm font-semibold text-slate-700">Total</span>
               <span className="amount-lg text-gradient">

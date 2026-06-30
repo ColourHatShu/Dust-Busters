@@ -156,10 +156,26 @@ payment_type); `bookings` has NO `updated_at`.
   retention/predictable-revenue engine for a cleaning marketplace. ✅ tsc + build +
   tests (55→60) green. (`0039`, `lib/recurring.ts`, `book/*`, `bookings/page.tsx`,
   `account/*`, `tests/lib/recurring.test.ts`)
-- [ ] **Referral / first-clean discount** (the other big growth feature) — promo
-  codes (percent/amount, max-uses, expiry, first-clean-only) applied at booking
-  (reduces total/deposit/balance) + an admin to create them. Touches the money math
-  (test-mode safe; no live keys needed). Next P-MAJOR candidate.
+- [x] **Referral / first-clean discount** ⭐ → migration `0040` (APPLIED + verified
+  live): `promo_codes` table (percent/amount, optional expiry / max-uses /
+  first-clean-only; admin-RLS) + `bookings.discount_amount`/`promo_code` +
+  `validate_promo(code)` (read-only preview) + `request_booking` recreated with
+  `p_promo_code` and a **platform-absorbs** discount model — the discount reduces
+  what the customer pays but the cleaner's payout is computed on the full
+  pre-discount total, so a marketing promo NEVER cuts a cleaner's pay (honest-money
+  aligned); the platform funds it (`platform_fee = discounted_total − payout`).
+  **Money math functionally tested in a rolled-back txn** (WELCOME15 on a $60 clean
+  → customer $51, cleaner $51, platform $0 — PASS). UI: a promo field on `/book`
+  (validated inline; one-time bookings only), discount shown on the booking page +
+  receipt. Seeded `WELCOME15` (15%) + `FIRST20` ($20, first-clean). New
+  `lib/promo.ts` (+2 tests, suite 60→62). ✅ tsc + build + tests green.
+  (`0040`, `lib/promo.ts`, `book/*`, `bookings/[id]/page.tsx`, `…/receipt/page.tsx`)
+- [ ] **Promo-code admin UI** (follow-up to 0040) — an `/admin/promos` page to
+  create/deactivate codes + see usage (today they're seeded/managed via SQL). Small.
+- [ ] **Before/after photos** (next big P-MAJOR) — cleaner uploads job photos
+  (Supabase Storage; bucket + RLS can be created via the pooler) shown to the
+  customer as proof. Trust + dispute evidence. Note: upload flow is hard to verify
+  without a browser — build defensively.
 
 ## ⛔ Founder-only / blocked
 > Highest leverage: add `STRIPE_WEBHOOK_SECRET` + Stripe live keys, deploy to

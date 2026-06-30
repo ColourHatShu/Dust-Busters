@@ -5,6 +5,35 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — ⭐ FEATURE: Referral / first-clean discount (promo codes)
+
+- **The second big growth feature** (after recurring), per the product-owner
+  mandate. Migration **`0040`** (APPLIED + verified live):
+  - `promo_codes` (percent/amount, optional expiry / max_uses / first_clean_only;
+    admin-only RLS) + `bookings.discount_amount` / `promo_code`.
+  - `validate_promo(code)` — read-only preview for the form (valid? why not?).
+  - `request_booking` recreated with `p_promo_code` (8th arg; 7-arg callers like
+    `create_recurring_series` still resolve via DEFAULT). **Platform-absorbs
+    model:** discount reduces the customer's total/deposit/balance, but the
+    cleaner's payout is on the FULL pre-discount total — a promo never cuts cleaner
+    pay (honest-money, 0015). `platform_fee = discounted_total − payout` (platform
+    funds the promo; can reach 0/negative for a generous code = acquisition cost).
+  - Atomic `used_count` increment (row locked); discount clamped to [0, total].
+- **Money math functionally tested** in a rolled-back transaction (faked
+  `request.jwt.claims` → a real customer): WELCOME15 on a $60 clean → total $51,
+  deposit $30.60, balance $20.40, cleaner payout $51, platform_fee $0, discount $9
+  — **PASS**. Nothing persisted.
+- **UI:** promo field on `/book` (validated inline via `validate_promo`; blocked on
+  recurring with a friendly message); discount line on the booking page payment
+  card + the printable receipt. New `lib/promo.ts` (`normalizePromoCode` + 2 tests).
+  Seeded `WELCOME15` (15% off) + `FIRST20` ($20 off, first-clean-only).
+- **Verify:** `tsc` clean · `vitest` **60 → 62** · `next build` compiled. Committed
+  + pushed.
+- **Next up:** promo-code admin UI (manage codes without SQL); then before/after
+  photos (Storage) as the next big P-MAJOR.
+
+---
+
 ## 2026-06-30 — Map improvements (live cleaner map)
 
 - **Context:** founder asked to "see how to improve the maps as well." Assessed the

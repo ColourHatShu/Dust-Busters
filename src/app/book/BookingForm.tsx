@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Sparkles,
   Repeat,
+  Tag,
 } from "lucide-react";
 
 type Fav = { id: string; name: string };
@@ -226,6 +227,27 @@ export default function BookingForm({
         />
         <span className="form-hint">
           Shared with your cleaner after you pay the deposit.
+        </span>
+      </label>
+
+      <label className="flex flex-col gap-2.5">
+        <span className="form-label">
+          <Tag className="h-4 w-4 text-accent" strokeWidth={1.75} />
+          <span>
+            Promo code{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
+          </span>
+        </span>
+        <input
+          type="text"
+          name="promo_code"
+          placeholder="e.g. WELCOME15"
+          autoCapitalize="characters"
+          className="input-modern uppercase placeholder:normal-case"
+        />
+        <span className="form-hint">
+          First-clean &amp; referral discounts. Applied to your total — one-time
+          bookings only.
         </span>
       </label>
 

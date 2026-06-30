@@ -6,6 +6,7 @@ import { AREAS } from "@/lib/areas";
 import { validateBooking } from "@/lib/booking";
 import { sanitizeChecklist } from "@/lib/checklist";
 import { parseFrequencyWeeks } from "@/lib/recurring";
+import { normalizePromoCode } from "@/lib/promo";
 
 export type BookingFormState = { error?: string } | undefined;
 
@@ -48,6 +49,23 @@ export async function submitBooking(
   // occurrence); otherwise a one-time booking. Both return the first booking id.
   const frequencyWeeks = parseFrequencyWeeks(formData.get("repeat") as string);
 
+  // Promo code (one-time bookings only). Validate up front so a typo'd/expired
+  // code shows inline instead of silently booking at full price.
+  const promo = normalizePromoCode(formData.get("promo_code") as string);
+  if (promo) {
+    if (frequencyWeeks) {
+      return {
+        error:
+          "Promo codes apply to one-time bookings — remove the code or set Repeat to One-time.",
+      };
+    }
+    const { data: vp } = await supabase.rpc("validate_promo", { p_code: promo });
+    const v0 = Array.isArray(vp) ? vp[0] : vp;
+    if (!v0?.valid) {
+      return { error: v0?.message ?? "That promo code isn't valid." };
+    }
+  }
+
   const { data: bookingId, error } = frequencyWeeks
     ? await supabase.rpc("create_recurring_series", {
         p_first_scheduled_at: v.scheduledISO,
@@ -67,6 +85,7 @@ export async function submitBooking(
         p_preferred_cleaner: preferredCleaner,
         p_notes: notes,
         p_checklist: checklistArg,
+        p_promo_code: promo || null,
       });
 
   if (error) return { error: error.message };
