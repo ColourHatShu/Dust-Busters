@@ -56,7 +56,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Booking time stored in server TZ not customer's Pacific → `parseBookingDate` now reads a bare `datetime-local` value as `America/Vancouver` wall-time (DST-aware via Intl), so a 2pm Pacific booking is no longer shifted to 2pm UTC on the Vercel host. TZ-qualified strings stay absolute (keeps existing tests). +5 unit tests (PST/PDT/passthrough). ✅ tsc+build+tests (20) green. (`lib/booking.ts`)
 - [x] `deposit_deadline` never set; unpaid `accepted` bookings never auto-expired (held the cleaner's slot forever) → migration `0029` (APPLIED + verified live via pooler): `settings.deposit_ttl_mins` (default 1440), `accept_offer` now stamps `deposit_deadline = now() + ttl`, and `expire_unpaid_acceptance(booking)` lazily cancels an overdue-unpaid acceptance (frees the cleaner, expires offers, notifies both). Enforced on read from the customer booking page + the cleaner jobs page (mirrors the 0019 broadcast expiry). ✅ tsc+build+tests green. (`0029`, `bookings/[id]/page.tsx`, `cleaner/jobs/page.tsx`)
 - [x] No notification when cleaner accepts/completes (the two transitions that require customer payment) → accept is notified by the `accept_offer` RPC (migration 0024, "Cleaner found — pay your deposit"); `completeJob` now notifies "cleaning complete — pay the balance" via `createNotification` in the action. (Note: an earlier action-side accept notification was a duplicate of the RPC's and was removed during the 0029 work.) ✅ (`cleaner/actions.ts`)
-- [ ] Cancellation never issues a refund despite stated policy. (`0008:135-168`, `bookings/[id]/page.tsx:334`)
+- [x] Cancellation refund — already implemented: `cancelBooking` issues a Stripe refund when the appointment is ≥24h out (deposit forfeit within 24h), records the refund row, and notifies the cleaner. Verified. (stale duplicate of the P0 cancellation-refund item) (`cancel-actions.ts`)
 - [x] `start_job`/`complete_job` swallow errors and fail silently → already surfaced: both log + `jobsError(...)` redirect to the jobs list with a friendly banner instead of swallowing. Verified. ✅ (`cleaner/actions.ts`)
 - [x] Live job feed ignored the `bookings` table → added a second realtime subscription on `bookings` filtered by `cleaner_id`, so the cleaner's list auto-refreshes when an assigned booking changes status (deposit_paid / cancelled / reassigned), not just on offer changes. ✅ tsc+build+tests green. (`cleaner/jobs/JobsLive.tsx`)
 - [x] Accept-offer race result (won/lost) discarded → `acceptJob` now redirects with `?notice=won`/`?notice=lost`; the jobs page shows a success banner on a win and a friendly "another cleaner accepted first" banner on a loss. ✅ tsc+build+tests green. (`cleaner/actions.ts`, `cleaner/jobs/page.tsx`)
@@ -66,7 +66,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Accept/Decline/Start/Complete buttons had no pending/disabled state → now use `SubmitButton` (Accepting…/Declining…/Starting…/Completing…). ✅ (`cleaner/jobs/page.tsx`)
 - [x] No confirmation on destructive admin actions → added a shared `ConfirmSubmit` (confirm dialog + `useFormStatus` pending/disabled) and wired it into: override status, cancel booking, reassign cleaner (`admin/bookings/[id]`), issue refund (`admin/disputes/[id]` — money, irreversible), and verify/deactivate toggles (`admin/cleaners/[id]`). ✅ tsc+build+tests green. (`components/ConfirmSubmit.tsx`)
 - [x] Settings: now validates hourly rate (>0), deposit % and commission % (0–100) and rejects blanks instead of coercing to 0. ✅ (done with the commission cluster)
-- [ ] Add nav link to cleaner profile page. (`Nav.tsx`)
+- [x] Add nav link to cleaner profile page — already present: `Nav.tsx` pushes a "Profile" link for the cleaner role. Verified.
 
 ### Resilience / security hardening
 - [x] Added `app/error.tsx` (route boundary with Try-again/Go-home + console.error), `app/global-error.tsx` (inline-styled root boundary), and `app/not-found.tsx` (branded 404). ✅
@@ -96,7 +96,7 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Route-level `loading.tsx` skeletons on all 22 data-fetching routes (customer + admin), via a shared `Skeleton` kit (List/Detail/Form/Dashboard/Table variants, animate-pulse). ✅
 - [x] Search/filter on admin lists via a shared JS-free `AdminSearch` (GET): customers + cleaners by name/phone (`.or ilike`), bookings by area + a status dropdown. Also fixed the bookings list's stale `pending`/`confirmed` status-color map → real enum values. ✅
 - [x] **Payment receipt** on the booking page — itemized deposit / balance / refund rows (date · status · amount) with a "Net paid" total; RLS-scoped to the customer's own booking. ✅
-- [ ] `no_cleaner_found` retry / re-broadcast path + customer notification.
+- [x] `no_cleaner_found` retry / re-broadcast — already shipped: `rebroadcast_booking` RPC (0017) + "Search again" on the matching map reopen the search. Verified. (stale duplicate of the flagship re-broadcast item)
 - [ ] Rate limiting on booking broadcast, messaging, checkout, auth.
 - [x] **Star-rating UI** for the review form — interactive `StarRating` (hover preview + labels) + a fully rebranded review page (card, back link, branded button). ✅
 - [x] **Mark-notification-read-on-click** — each notification is now a clickable row (`markRead` action) that clears its unread state and opens its booking if it has one. ✅
@@ -120,8 +120,12 @@ payment_type); `bookings` has NO `updated_at`.
 - [x] Offer card: live **expiry countdown** (`Countdown` client component, from `broadcast_expires_at`) + the cleaner's **take-home** (`cleaner_payout`) shown as the headline amount with the gross as subtext. ✅
 - [x] **CI workflow** (`.github/workflows/ci.yml`) — typecheck + unit tests + production build on push/PR (dummy env so build needs no secrets); pinned Node `engines` (>=20). ✅
 - [x] Expand test coverage: pure `src/lib/booking.ts` now holds the refund-window logic AND `validateBooking` (booking input validation), both extracted from their server actions and covered by boundary tests. Suite: **15 tests / 2 files**. ✅
-- [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage.
-- [ ] Static generation/revalidation for marketing pages.
+- [x] **SEO: LocalBusiness JSON-LD** structured data on the landing page (`HomeAndConstructionBusiness` — name, description, url, image, email, priceRange, serviceType, areaServed Courtenay/Comox/Cumberland/Comox Valley, BC address). Code-only + invisible; improves local search / rich results. ✅ tsc+build+tests green. (`app/page.tsx`)
+- [ ] **Cleaner earnings CSV export** (download route) — let cleaners pull their paid-job history for bookkeeping/taxes (data already on the earnings page). (IDEAS batch 2)
+- [ ] **Admin bookings date-range filter** — scope the bookings list by from/to date (current filters are area + status only). (IDEAS batch 2)
+- [ ] **Chat message report / abuse flag** — let a participant flag a message into the admin dispute/moderation queue (trust & safety). (IDEAS batch 2)
+- [ ] `vercel.json`; image optimization `remotePatterns` for Supabase storage. (defer remotePatterns until image uploads exist — no remote images today)
+- [ ] Static generation/revalidation for marketing pages. (constrained: the global Nav reads auth cookies in the root layout, forcing dynamic render — needs a split layout first)
 
 ## ⛔ Founder-only (cannot automate — log, don't attempt)
 - Stripe live keys + `STRIPE_WEBHOOK_SECRET`; `NEXT_PUBLIC_BASE_URL` real URL; Vercel deploy; rotate Supabase service-role key + DB password.

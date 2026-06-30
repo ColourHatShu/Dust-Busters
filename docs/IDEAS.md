@@ -9,6 +9,26 @@ Legend — effort: trivial / small / medium / large.
 
 ---
 
+## Batch 2 — ideation (2026-06-30, backlog refresh)
+
+1. **LocalBusiness JSON-LD** structured data on the landing · *value:* local SEO +
+   rich results for a single-town business · *trivial* · why: sitemap/robots/OG
+   exist but no structured data. → **SHIPPED this batch**.
+2. **Cleaner earnings CSV export** · *value:* cleaners/founder do their own
+   bookkeeping & taxes · *small* · why: the data is already on the earnings page.
+3. **Admin bookings date-range filter** · *value:* ops can scope the list by
+   week/month · *small* · why: it only filters by area + status today.
+4. **Chat message report / abuse flag** · *value:* trust & safety — flag a message
+   into the admin queue · *small–medium* · why: messaging has no moderation path.
+5. **Day-before booking reminder** (email/SMS, now that the channel exists) ·
+   *value:* fewer no-shows · *medium* · why: needs a scheduler/cron (founder note).
+6. **Cleaner weekly availability schedule** (beyond the on/off toggle) · *value:*
+   only ring cleaners who are genuinely free · *medium* · why: improves match
+   quality + reduces wasted offers.
+
+> Promoted to AUTONOMOUS-PLAN.md (P3): earnings CSV export, admin date-range
+> filter, chat message report/flag. JSON-LD shipped this firing.
+
 ## Batch 1 — ideation (2026-06-27, backlog refresh)
 
 1. **Favorite cleaners — phase 2: a Favorites list + book-a-favorite** · *value:* let

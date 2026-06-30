@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight iteration: ideation pass + LocalBusiness JSON-LD (SEO)
+
+- **Plan hygiene:** verified + ticked three stale `[ ]` items that were already
+  done — cancellation refund (cancelBooking refunds ≥24h out), Nav cleaner-profile
+  link (present), and no_cleaner_found re-broadcast (0017 + "Search again").
+- **Ideation pass** (actionable backlog had thinned): added IDEAS.md Batch 2 (6
+  ideas, deduped) and promoted three into the plan — cleaner earnings CSV export,
+  admin bookings date-range filter, chat message report/flag.
+- **Shipped item — SEO:** added `HomeAndConstructionBusiness` JSON-LD structured
+  data to the landing page (name, description, url, image, email, priceRange,
+  serviceType, areaServed = Courtenay/Comox/Cumberland/Comox Valley, BC address).
+  Code-only, invisible; improves local search + rich-result eligibility. Pairs
+  with the existing sitemap/robots/OG metadata.
+- **Verify:** `tsc` clean · `next build` green (27 routes) · `npm test` 20/20.
+- **Next up:** cleaner earnings CSV export; admin bookings date-range filter.
+
+---
+
 ## 2026-06-30 — Knight iteration: transactional email/SMS channel abstraction
 
 - **Item:** P0 (top backlog). Build the transactional messaging channel now so the

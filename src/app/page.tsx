@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSessionProfile } from "@/lib/auth";
+import { AREAS } from "@/lib/areas";
 import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
 import HeroBackdrop from "@/components/landing/HeroBackdrop";
 import CountUp from "@/components/landing/CountUp";
@@ -14,8 +15,37 @@ export default async function Home() {
   const { user } = await getSessionProfile();
   const isCustomer = user?.role === "customer";
 
+  // LocalBusiness structured data for local SEO / rich results. Static + invisible.
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HomeAndConstructionBusiness",
+    name: "Dust Busters",
+    description:
+      "Book a trusted, ID-verified home cleaner in Courtenay and the Comox Valley, BC. Real-time matching, secure deposit, and pay the balance only when the job is done right.",
+    url: siteUrl,
+    image: `${siteUrl}/opengraph-image`,
+    email: "support@dustbusters.ca",
+    priceRange: "$$",
+    serviceType: "Home cleaning",
+    areaServed: [...AREAS, "Comox Valley"].map((name) => ({
+      "@type": "City",
+      name,
+    })),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Courtenay",
+      addressRegion: "BC",
+      addressCountry: "CA",
+    },
+  };
+
   return (
     <main className="landing-grain flex w-full flex-col bg-[#070b14]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Hero ── */}
       <section className="hero-shell flex w-full flex-col items-center px-6 pb-28 pt-24 text-center sm:pt-28">
         <HeroBackdrop />
