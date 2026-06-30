@@ -5,6 +5,29 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — ⏸️ Knight paused: backlog exhausted (no busywork)
+
+- This firing found **no actionable, non-founder, unattended-safe item**. Per the
+  playbook quality bar ("only ship changes with real user/operator value — no
+  busywork, no bikeshedding"), no code change was made.
+- **Remaining backlog is all gated:**
+  - ⛔ Founder-only: Stripe live keys + `STRIPE_WEBHOOK_SECRET`, Vercel deploy,
+    email/SMS provider keys (the channel is built — see 0612 messaging item),
+    Stripe Connect payouts, real ID verification (Storage/Stripe Identity).
+  - Needs the founder in the loop: rate limiting (needs a shared store on
+    serverless + Supabase-side auth limits) — touches core RPCs.
+  - Constrained / low-value: `vercel.json` region pinning (speculative without the
+    deploy plan), static-gen for marketing (root layout reads auth cookies for the
+    nav → needs a split layout first).
+- **Action:** stopped the recurring cron (was every ~10 min) to avoid burning
+  cycles on marginal polish. Restart anytime with "make the knight run" — ideally
+  after a founder action (Stripe webhook secret + deploy) unlocks the real
+  launch work.
+- **Run total:** 18 verified+pushed items this session; 3 DB migrations (0029–
+  0031); test suite 15 → 30; all green on `origin/dustbusters-autonomous`.
+
+---
+
 ## 2026-06-30 — Knight iteration: admin customers/cleaners CSV export
 
 - **Item:** P3 ops tooling (IDEAS batch 4) — completes the export trio
