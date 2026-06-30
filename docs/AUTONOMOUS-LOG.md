@@ -5,6 +5,20 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: a11y aria-live on the live job feed
+
+- **Shipped item (IDEAS batch 11 #1, code-only, no migration):** an `sr-only`
+  `role="status" aria-live="polite"` line in the cleaner Job-requests header
+  announces the open-request count ("3 open job requests") so screen-reader
+  cleaners hear it change as `JobsLive` refreshes in real time (the visible list
+  has no SR cue otherwise). Mirrors the booking-status aria-live pattern.
+- **Verify:** `tsc` clean · `vitest` 55 green · `next build` compiled. Committed +
+  pushed.
+- **Next up:** jobs-page read parallelization (batch 11 #2) — the last queued safe
+  item; then the well is founder-gated/large (see Batch 11 reality check).
+
+---
+
 ## 2026-06-30 — Knight firing: work-days on reschedule + rebroadcast
 
 - **Shipped item (0037 follow-up):** migration **`0038`** recreates

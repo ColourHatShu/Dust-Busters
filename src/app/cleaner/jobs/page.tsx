@@ -440,6 +440,15 @@ export default async function CleanerJobsPage({
             New requests appear here in real time. Accept within the offer
             window!
           </p>
+          {/* SR-only live status: announces when the open-request count changes
+              as JobsLive refreshes in real time (no visual change). */}
+          <p className="sr-only" role="status" aria-live="polite">
+            {openOffers.length === 0
+              ? "No open job requests right now."
+              : `${openOffers.length} open job request${
+                  openOffers.length === 1 ? "" : "s"
+                }.`}
+          </p>
         </header>
 
         {openOffers.length === 0 ? (
