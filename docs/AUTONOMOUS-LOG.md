@@ -5,6 +5,40 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 📊 Milestone summary — 2026-06-30 (run total ~39 items, DB at 0043)
+
+Suite **62** tests. Since the last milestone the revenue/ops layer landed and the
+small backlog was cleared:
+
+- **Revenue / growth (functionally money-tested):** recurring bookings (0039) +
+  pause/resume/skip-next/remove + add-ons-on-series (0043); referral/first-clean
+  discount (0040); service add-ons (0042). Admin manages promos + add-ons; sees
+  redemptions + an 8-week bookings/revenue trend.
+- **Cleaner ops:** "on my way / running late" status, "your week" 7-day agenda,
+  earnings period summary, demand card, deposit-deadline visibility.
+- **Customer polish:** add-ons on booking page + printable receipt, deposit/balance
+  bar, getting-ready card, add-to-calendar, recurring management.
+- **⛔ Needs the founder (only big items left):** before/after photos (Storage —
+  browser upload not headlessly verifiable; wants a smoke-test); referral-credit/
+  wallet (money model); + the launch path (Stripe webhook secret + deploy, email/
+  SMS keys, Stripe Connect, ID verification).
+
+---
+
+## 2026-06-30 — Knight firing: cleaner "your week" agenda
+
+- **Shipped item (IDEAS batch 15 #3, code-only, no migration):** a glanceable
+  7-day planner on `/cleaner/jobs` (today + 6 days, Pacific) — per-day job count +
+  earliest start, free days highlighted, today ringed. Reuses the already-fetched
+  `myJobs` (no extra query); a route-planning / free-slot view distinct from the
+  status-grouped list below it.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed.
+- **Status:** the safe, autonomously-buildable backlog is now essentially complete.
+  Remaining value is founder-tied (photos smoke-test; referral credit; launch path).
+
+---
+
 ## 2026-06-30 — Knight firing: add-ons on recurring series
 
 - **Shipped item (IDEAS batch 15 #2):** migration **`0043`** — `recurring_series.addons`

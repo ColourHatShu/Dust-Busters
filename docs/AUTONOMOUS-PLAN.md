@@ -225,6 +225,11 @@ payment_type); `bookings` has NO `updated_at`.
   now itemizes each paid add-on (label · price) in its own "Add-ons" block above
   the payments (the total already includes them). Code-only. ✅ tsc + build + tests
   green. (`bookings/[id]/receipt/page.tsx`)
+- [x] **Cleaner "your week" agenda** (IDEAS batch 15 #3) → a glanceable 7-day
+  planner on `/cleaner/jobs` (today + 6 days, Pacific) — per-day job count +
+  earliest start, free days highlighted, today ringed. Reuses `myJobs` (no query/
+  migration); distinct from the status-grouped list (route planning + free slots).
+  ✅ tsc + build + tests green. (`cleaner/jobs/page.tsx`)
 - [x] **Add-ons on recurring series** (IDEAS batch 15) → migration `0043` (APPLIED +
   verified live): `recurring_series.addons` + `create_recurring_series` (9th param
   `p_addons`) + `generate_due_recurring` recreated to pass the series' add-ons to

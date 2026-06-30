@@ -257,6 +257,43 @@ export default async function CleanerJobsPage({
   for (const j of myJobs) jobGroups[dayGroup(j.scheduled_at)].push(j);
   const jobGroupOrder = ["Today", "Upcoming", "Earlier"] as const;
 
+  // "Your week" — a glanceable 7-day agenda (today + 6), Pacific. Counts + the
+  // earliest start per day so a cleaner can plan their route / see free days.
+  const keyFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const labelFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    weekday: "short",
+    month: "numeric",
+    day: "numeric",
+  });
+  const timeFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() + i * 86_400_000);
+    const key = keyFmt.format(d);
+    const dayJobs = myJobs
+      .filter((j) => keyFmt.format(new Date(j.scheduled_at)) === key)
+      .sort(
+        (a, b) =>
+          new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
+      );
+    return {
+      key,
+      label: labelFmt.format(d),
+      isToday: i === 0,
+      count: dayJobs.length,
+      first: dayJobs[0] ? timeFmt.format(new Date(dayJobs[0].scheduled_at)) : null,
+    };
+  });
+
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-6">
       <JobsLive cleanerId={user.id} />
@@ -571,6 +608,39 @@ export default async function CleanerJobsPage({
             })}
           </div>
         )}
+      </section>
+
+      {/* Your week — 7-day agenda glance */}
+      <section className="space-y-3">
+        <h2 className="section-title">Your week</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {week.map((d) => (
+            <div
+              key={d.key}
+              className={`rounded-xl border p-3 text-center ${
+                d.count > 0
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-slate-200 bg-white"
+              } ${d.isToday ? "ring-1 ring-accent" : ""}`}
+            >
+              <p className="text-xs font-medium text-slate-500">
+                {d.isToday ? "Today" : d.label}
+              </p>
+              {d.count > 0 ? (
+                <>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-emerald-700">
+                    {d.count}
+                  </p>
+                  <p className="text-[0.65rem] text-slate-500">
+                    job{d.count === 1 ? "" : "s"} · {d.first}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-xs text-slate-400">Free</p>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* My Jobs */}
