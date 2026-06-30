@@ -246,6 +246,11 @@ payment_type); `bookings` has NO `updated_at`.
   ✅ tsc + build + tests green. (`0041`, `account/{page,actions}.tsx`)
 
 ## P-OPS — Operator tooling
+- [x] **Admin payouts CSV export** → `GET /admin/payouts/export` streams outstanding
+  payouts per cleaner (name, jobs owed, amount owed; UTF-8 BOM + attachment), so the
+  founder can process manual payments from a spreadsheet. "Export CSV" button on the
+  payouts page. Mirrors the other admin exports. ✅ tsc + build (route compiled) +
+  tests green. (`admin/payouts/export/route.ts`, `admin/payouts/page.tsx`)
 - [x] **Cleaner-facing payout status** (0044 follow-up) → the cleaner earnings page
   now shows an "Awaiting payout" stat ($ take-home from settled jobs not yet paid
   out, + "$X paid out to date") and a per-job "Payout" column (Paid out / Owed / —),

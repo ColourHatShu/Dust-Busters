@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Wallet, CheckCircle } from "lucide-react";
+import { ArrowLeft, Wallet, CheckCircle, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import ConfirmSubmit from "@/components/ConfirmSubmit";
 import { markCleanerPaid } from "./actions";
@@ -103,11 +103,21 @@ export default async function AdminPayoutsPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="section-title">
               {rows.length} cleaner{rows.length === 1 ? "" : "s"} owed
             </h2>
-            <span className="amount-lg">${money(totalOwed)}</span>
+            <div className="flex items-center gap-3">
+              <span className="amount-lg">${money(totalOwed)}</span>
+              <a
+                href="/admin/payouts/export"
+                className="btn-base btn-secondary text-sm"
+                download
+              >
+                <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                Export CSV
+              </a>
+            </div>
           </div>
           <div className="card card-flush overflow-x-auto">
             <table className="data-table">

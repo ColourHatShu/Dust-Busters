@@ -5,6 +5,22 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-30 — Knight firing: admin payouts CSV export
+
+- **Shipped item (payout ops tooling, code-only, no migration):**
+  `GET /admin/payouts/export` streams outstanding payouts per cleaner (name · jobs
+  owed · amount owed; UTF-8 BOM + attachment, admin-RLS) so the founder can run
+  manual cleaner payments from a spreadsheet. "Export CSV" button on the payouts
+  page. Mirrors the existing earnings/bookings/customers/cleaners exports.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled the new
+  `/admin/payouts/export` route. Committed + pushed.
+- **Status:** the safe, non-founder backlog is complete. I will not manufacture
+  busywork — further firings should hold/ideate-only unless the founder unblocks a
+  gated item (photos smoke-test, referral credit, launch path) or requests
+  something. Recommended: pause/slow the loop.
+
+---
+
 ## 2026-06-30 — Knight firing: cleaner-facing payout status
 
 - **Shipped item (0044 follow-up, code-only, no migration):** the cleaner earnings
