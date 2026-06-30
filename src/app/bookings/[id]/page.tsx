@@ -65,9 +65,11 @@ export default async function BookingStatusPage({
   if (!user) redirect("/login");
 
   const supabase = await createClient();
-  // Self-healing timeout: flip a broadcast that's past its window to
-  // no_cleaner_found before we read it (no cron needed).
+  // Self-healing timeouts (no cron): flip a broadcast that's past its window to
+  // no_cleaner_found, and cancel an 'accepted' booking whose deposit deadline
+  // passed without payment — before we read it.
   await supabase.rpc("expire_booking_if_stale", { p_booking_id: id });
+  await supabase.rpc("expire_unpaid_acceptance", { p_booking_id: id });
   const { data: booking } = await supabase
     .from("bookings")
     .select(

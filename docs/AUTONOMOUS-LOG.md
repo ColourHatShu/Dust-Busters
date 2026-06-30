@@ -5,6 +5,33 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-06-29 — Knight iteration: deposit_deadline auto-expiry (migration 0029, founder-approved)
+
+- **Item:** P1 correctness (production DB). `deposit_deadline` (column from 0008)
+  was never set, so an 'accepted' booking whose customer never paid sat forever,
+  holding the cleaner's slot (the accept conflict-guard treats 'accepted' as
+  committed).
+- **Migration 0029** (applied + verified live via the session pooler, in a
+  transaction): added `settings.deposit_ttl_mins` (default 1440 = 24h, generous
+  so only clearly-abandoned bookings cancel); recreated `accept_offer` identical
+  to 0024 + it now stamps `deposit_deadline = now() + ttl`; added
+  `expire_unpaid_acceptance(booking)` which lazily cancels an overdue-unpaid
+  acceptance (status → cancelled, reason "Deposit not paid in time"), expires its
+  offers, and notifies both the customer and the cleaner. Mirrors the 0019
+  broadcast lazy-expiry. Enforced on read from the customer booking page and the
+  cleaner jobs page.
+- **Bug fixed in passing:** `accept_offer` (0024) already notifies the customer on
+  accept, so the action-side accept notification added earlier this session was a
+  DUPLICATE — removed it (the won/lost redirect stays; completeJob's balance
+  notification stays, since complete_job does not notify).
+- **Verify:** migration verified live (column present, accept_offer contains
+  deposit_deadline, function exists, ttl=1440); `tsc` clean · `next build` green
+  (27 routes) · `npm test` 20/20.
+- **Note for founder:** `deposit_ttl_mins` defaults to 24h; tune in `settings` if
+  you want quicker expiry of unpaid acceptances.
+
+---
+
 ## 2026-06-29 — Knight iteration: a11y — live status region + nav icons
 
 - **Item:** P3 accessibility. Booking status changes (driven by the realtime

@@ -94,6 +94,23 @@ export default async function CleanerJobsPage({
     );
   }
 
+  // Also cancel this cleaner's accepted jobs whose deposit deadline passed
+  // unpaid — frees their schedule (the accept conflict-guard treats 'accepted'
+  // as committed) and reflects the cancellation in the list below. No-op unless
+  // a deadline has actually passed.
+  const { data: acceptedRows } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("cleaner_id", user.id)
+    .eq("status", "accepted");
+  if (acceptedRows && acceptedRows.length > 0) {
+    await Promise.all(
+      acceptedRows.map((r) =>
+        supabase.rpc("expire_unpaid_acceptance", { p_booking_id: r.id }),
+      ),
+    );
+  }
+
   // Jobs this cleaner has won — join customer profile + address
   const { data: myJobsRaw } = await supabase
     .from("bookings")

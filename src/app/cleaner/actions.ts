@@ -42,22 +42,10 @@ export async function acceptJob(bookingId: string) {
   // Tell the customer a cleaner accepted so they pay the deposit — this is one of
   // the two transitions that require customer action and previously sent nothing.
   // (The cleaner is now the assigned cleaner, so they can read the booking row.)
+  // Won the race. The accept_offer RPC (migration 0024) already notifies the
+  // customer ("Cleaner found — pay your deposit"), so we do NOT notify again here
+  // (that would double-notify). Just confirm the win to the cleaner.
   if (data === true) {
-    const { data: booking } = await supabase
-      .from("bookings")
-      .select("customer_id, scheduled_at")
-      .eq("id", bookingId)
-      .single();
-    if (booking?.customer_id) {
-      await createNotification(
-        booking.customer_id,
-        "cleaner_accepted",
-        "A cleaner accepted your booking",
-        `Good news — a cleaner accepted your ${shortDate(booking.scheduled_at)} cleaning. Pay your deposit to lock it in.`,
-        bookingId,
-      );
-    }
-    // Won the race — confirm it so the cleaner knows the job is theirs.
     redirect("/cleaner/jobs?notice=won");
   }
 
