@@ -245,6 +245,14 @@ payment_type); `bookings` has NO `updated_at`.
   in a rolled-back txn** (visit cancelled, offers 0, next_at → +1 period — PASS).
   ✅ tsc + build + tests green. (`0041`, `account/{page,actions}.tsx`)
 
+## P-DESIGN — Consistency
+- [x] **Loading skeletons on the new routes** (design-consistency sweep) → the
+  pages added this run (`/admin/promos`, `/admin/addons`, `/admin/payouts`,
+  `/bookings/[id]/receipt`) had no route-level `loading.tsx`, so they flashed blank
+  on load — breaking the app-wide skeleton pattern. Added `loading.tsx` for each
+  using the shared `Skeleton` kit (TablePage/DetailPage). ✅ tsc + build + tests
+  green. (`admin/{promos,addons,payouts}/loading.tsx`, `bookings/[id]/receipt/loading.tsx`)
+
 ## P-OPS — Operator tooling
 - [x] **Admin payouts CSV export** → `GET /admin/payouts/export` streams outstanding
   payouts per cleaner (name, jobs owed, amount owed; UTF-8 BOM + attachment), so the

@@ -5,6 +5,24 @@ Operating procedure: `AUTONOMOUS-KNIGHT.md`. Backlog: `AUTONOMOUS-PLAN.md`.
 
 ---
 
+## 2026-07-01 — Design-consistency sweep: loading skeletons on new routes
+
+- **Founder asked for a design pass ("you choose").** Since I can't see rendered
+  pixels headlessly, I picked the reliable, code-verifiable design-consistency fix:
+  the 4 pages added this run (`/admin/promos`, `/admin/addons`, `/admin/payouts`,
+  `/bookings/[id]/receipt`) had **no `loading.tsx`**, so they flashed blank while
+  data loaded — inconsistent with the app-wide skeleton pattern (22 other routes).
+- **Shipped (code-only, no migration):** added `loading.tsx` for each using the
+  shared `Skeleton` kit (`TablePage wide` for the admin pages, `DetailPage` for the
+  receipt). Now every data route shows a branded skeleton, not a blank flash.
+- **Verify:** `tsc` clean · `vitest` 62 green · `next build` compiled. Committed +
+  pushed. (Loop remains paused; this was a founder-directed one-off.)
+- **Design note:** the app is visually cohesive (premium light system on every
+  page). Further design polish is subjective + needs the founder's eye / a
+  screenshot — best done interactively, not on the unattended loop.
+
+---
+
 ## ⏸️ 2026-06-30 — Knight paused: safe roadmap complete (no busywork)
 
 This firing found **no actionable, non-founder, unattended-safe item with real
